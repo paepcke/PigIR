@@ -1,0 +1,138 @@
+<project name="PigIR" default="main" 
+	xmlns:artifact="urn:maven-artifact-ant"
+	xmlns:ivy="antlib:org.apache.ivy.ant">
+	
+	<!-- Make OS environment variables accessible via ${myEnv.foo} -->
+	<property environment="myEnv" />
+	
+	<property name="project.name" value="PigIR" />
+	<property name="local.src.dir" location="src/" />
+ 	<property name="local.classes.dir" location="bin/" />
+	
+	<!-- <property name="pig.jar" location="${env.PIG_HOME}/pig-0.8.0-core-withsrc.jar" /> -->
+	<property name="pig.jar" location="C:/Users/Paepcke/Software/Hadoop/pig-0.8.0/pig-0.8.0-core-withsrc.jar" />
+	<property name="hadoop.jar" location="${env.HADOOP_HOME}/hadoop-0.20.2-core.jar" />
+	
+ 	<property name="local.jar.dir" location="contrib" />
+	<property name="local.jar.file.withSource" value="${local.jar.dir}/${project.name}WithSource.jar" />
+	<property name="local.jar.file" value="${local.jar.dir}/${project.name}.jar" />
+ 	<property name="ilc0.jar.dir" location="paepcke@ilc0.stanford.edu:/home/paepcke/mycontrib/" />
+	<property name="local.log.dir" value="${local.src.dir}/Logs" />
+	<property name="remote.dir" location="${ilc0.jar.dir}" />
+	
+    <path id="classpath">
+      <pathelement location="${pig.jar}"/>
+      <pathelement location="${hadoop.jar}"/>
+    </path>
+	
+	<property name="scp.command" value="C:\\cygwin\\bin\\scp" />
+	<property name="scp.keyfile" location="${myEnv.HOME}/.ssh/id_rsa" />
+	<!-- <property name="scp.keyfile" location="${myEnv.HOME}/.ssh/id_rsa.pub" />  -->
+	
+    <!-- ================================================================== -->
+    <!-- Main target                                                        -->
+    <!-- ================================================================== -->
+    
+ 	<target name="main" depends="compile, compressWithSource" description="Place jar file in ${basedir}/bin/contrib.">
+		<echo>*** Generating jar file locally.***</echo>
+	</target>
+	
+    <!-- ================================================================== -->
+    <!-- Compile it all                                                     -->
+    <!-- ================================================================== -->
+	
+	<target name="compile" description="Compile all java sources.">
+		<echo>*** Compiling sources.***</echo>
+		<!--
+		<javac srcdir="${local.src.dir}" destdir="${local.classes.dir}" classpath="${classpath}" />
+		-->
+		<javac srcdir="${local.src.dir}" destdir="${local.classes.dir}" 
+			classpath="${pig.jar}"
+		/>
+	</target>
+	
+    <!-- ================================================================== -->
+    <!-- Build a jar file without source                                    -->
+    <!-- ================================================================== -->
+	
+	<target name="compressNoSource" description="Build a jar file without including sources.">
+		<echo>*** Building jar file locally without sources.***</echo>
+		<mkdir dir="${local.jar.dir}" />
+		<delete file="${local.jar.file}" />
+	    <jar destfile="${local.jar.file}" basedir="${local.classes.dir}" excludes="**/*.log" />
+	</target>
+	
+    <!-- ================================================================== -->
+    <!-- Build a jar file with source                                       -->
+    <!-- ================================================================== -->
+	
+	<target name="compressWithSource" description="Build a jar file including sources.">
+		<echo>*** Building jar file locally with sources included.***</echo>
+		<mkdir dir="${local.jar.dir}" />
+		<delete file="${local.jar.file.withSource}" />
+	    <jar destfile="${local.jar.file.withSource}">
+			 <fileset dir="${local.classes.dir}" />
+			 <fileset dir="${local.src.dir}" excludes="**/Logs/,**/Save/"  />
+	    </jar>
+	</target>
+	
+    <!-- ================================================================== -->
+    <!-- Copy jar file to ilc0.stanford.edu                                 -->
+    <!-- ================================================================== -->
+    
+    <!-- By default: copy the jar that includes sources to the cluster. If that
+         file is unavailable, copy the jar without sources instead:
+         -->	
+    <target name="clusterPush" 
+         	description="Push either jar with or without sources to cluster (Default: jar with source.)">
+    	<available file="${local.jar.file.withSource}" property="local.jar.file.withSource.present" />
+		<antcall target="clusterPushJarWithSources" />
+    	<antcall target="clusterPushJarWithoutSources" />
+	</target>
+
+	<target name="clusterPushJarWithSources" 
+	        if="local.jar.file.withSource.present" 
+            description="Copy jar with sources to cluster.">
+		<echo>*** Copying source-including jar file to ilc0.stanford.edu ***</echo>
+		
+	    <scp localfile="${local.jar.file.withSource}" 
+		 	todir="${ilc0.jar.dir}" 
+	    	trust="true"
+	    	verbose="true"
+    	 	keyfile="${scp.keyfile}"
+		/> 
+
+		<!--
+		
+		<exec dir="." executable="${scp.command}" failonerror="true">
+			<arg value="${local.jar.file.withSource}" />
+			<arg value="${remote.dir}" />
+		</exec>
+		-->
+		
+	</target>
+
+	<target name="clusterPushJarWithoutSources" 
+	        unless="local.jar.file.withSource.present" 
+            description="Copy jar without sources to cluster.">
+		<echo>*** Copying jar without sources to ilc0.stanford.edu ***</echo>
+		<!--
+	    <scp file="${local.jar.file}" 
+			 basedir="${local.jar.dir}" 
+			 todir="${ilc0.jar.dir}" trust="true" 
+        />
+        -->
+		<exec dir="." executable="${scp.command}" failonerror="true">
+			<arg value="${local.jar.file}" />
+			<arg value="${remote.dir}" />
+		</exec>
+	</target>
+	
+	<target name="clean">
+		<echo>*** Clean: removing class files and logs. *** </echo>
+		<delete failonerror="false">
+			<fileset dir="${local.classes.dir}" />
+			<fileset dir="${local.log.dir}" />
+		</delete>
+	 </target>
+</project>
