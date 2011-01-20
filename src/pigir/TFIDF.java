@@ -48,7 +48,7 @@ public class TFIDF extends EvalFunc<Double> {
     			return null;
 
     		if (collSize == 0L) {
-    			getLogger().warn("IDF() encountered mal-formed input: collection size is 0.");
+    			getLogger().warn("TFIDF() encountered mal-formed input: collection size is 0.");
     			return null;
     		}
 

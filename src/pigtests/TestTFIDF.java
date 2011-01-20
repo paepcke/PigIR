@@ -107,13 +107,13 @@ public class TestTFIDF{
 		    		"										GENERATE docId,token, pigir.TFIDF(collSizeScalar.collSize,tf,df) AS tfidf;" +
 		    		"										};");
 		    
-		    pserver.registerQuery("store theTokenTfAndIdfs INTO 'Datasets/morTweetTfIDF' USING PigStorage(',');");
+		    //pserver.registerQuery("store theTokenTfAndIdfs INTO 'Datasets/morTweetTfIDF' USING PigStorage(',');");
 		    //Common.print(pserver, "collSizeScalar");
 		    //Common.print(pserver, "docTokens");
 			//Common.print(pserver, "theTokenTfs");
 			//Common.print(pserver, "theTokenGroups");
 			//Common.print(pserver, "theTokenTfAndDfs");
-			//Common.print(pserver, "theTokenTfAndIdfs");
+			Common.print(pserver, "theTokenTfAndIdfs");
 			
 			//pserver.dumpSchema("collSizeScalar");
 			//pserver.dumpSchema("theTokenTfs");
