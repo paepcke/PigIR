@@ -1,6 +1,8 @@
 package pigir;
 
 import java.io.IOException;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -35,6 +37,10 @@ import org.apache.pig.impl.util.UDFContext;
  * file, return tuples of the schema:
  *    (WARC_RECORD_ID, CONTENT_LENGTH, WARC_DATE, WARC_TYPE, {(<headerFldName>, <headerFldVal>)*}, <contentStr>)
  */
+
+//****************
+// TODO: Add optional args to limit columns to fill. Make that condition for equality, rather than the fieldDel. 
+//****************
 public class WarcLoader extends FileInputLoadFunc implements LoadPushDown {
     @SuppressWarnings("rawtypes")
 	protected RecordReader in = null;    
@@ -45,22 +51,29 @@ public class WarcLoader extends FileInputLoadFunc implements LoadPushDown {
     private ArrayList<Object> mProtoTuple = null;
     private TupleFactory mTupleFactory = TupleFactory.getInstance();
     private String loadLocation;
+    private int numColsToReturn = 6;
     
     public WarcLoader() {
     }
     
+    // Vector with true in each position that corresponds to a
+    // field that this loader is to include in its return tuples: 
     private boolean[] mRequiredColumns = null;
     
     private boolean mRequiredColumnsInitialized = false;
+    private WarcRecord warcRec = null;
 
     @Override
     public Tuple getNext() throws IOException {
+    	int errCode = 6018;
         mProtoTuple = new ArrayList<Object>();
+        
         BagFactory bagFact = DefaultBagFactory.getInstance();
         if (!mRequiredColumnsInitialized) {
             if (signature!=null) {
                 Properties p = UDFContext.getUDFContext().getUDFProperties(this.getClass());
                 mRequiredColumns = (boolean[])ObjectSerializer.deserialize(p.getProperty(signature));
+                numColsToReturn = mRequiredColumns.length;
             }
             mRequiredColumnsInitialized = true;
         }
@@ -70,35 +83,62 @@ public class WarcLoader extends FileInputLoadFunc implements LoadPushDown {
                 return null;
             }
             // Get one Warc record:
-            WarcRecord warcRec = (WarcRecord) in.getCurrentValue();
+            warcRec = (WarcRecord) in.getCurrentValue();
             
             // Create separate columns from the header information,
             // followed by the content field.
             // First the required fields that should be present in
             // order:
+            int resFieldIndex = -1;
             for (String headerKey : warcRec.mandatoryKeysHeader()) {
-            	mProtoTuple.add(warcRec.get(headerKey));
+            	// Check whether this WARC header field is wanted
+            	// in the result tuple (or is being projected out):
+            	if ((mRequiredColumns != null) && (++resFieldIndex < numColsToReturn) && mRequiredColumns[resFieldIndex]) {
+            		@SuppressWarnings("rawtypes")
+					Constructor fldConstructor = warcRec.mandatoryWarcHeaderFldTypes.get(headerKey);
+            		mProtoTuple.add(fldConstructor.newInstance(warcRec.get(headerKey)));
+            	}
+            	else break;
             }
-            // Now all the optional header keys as a bag of maps:
-            DataBag optionalHeaderFieldBag = bagFact.newDefaultBag();
-            for (String headerKey : warcRec.optionalKeysHeader()) {
-            	Tuple headerOptionalAttrValPair = mTupleFactory.newTuple(2);
-            	headerOptionalAttrValPair.set(0,headerKey);
-            	headerOptionalAttrValPair.set(1,warcRec.get(headerKey));
-            	optionalHeaderFieldBag.add(headerOptionalAttrValPair);
+            // Now all the optional header keys as a bag of maps (all strings):
+            // Check whether the bag of optional header keys is 
+            // wanted in the result tuple (or is being projected out):
+            if ((mRequiredColumns != null) && (++resFieldIndex < numColsToReturn)  && mRequiredColumns[resFieldIndex]) { 
+            	DataBag optionalHeaderFieldBag = bagFact.newDefaultBag();
+            	for (String headerKey : warcRec.optionalKeysHeader()) {
+            		Tuple headerOptionalAttrValPair = mTupleFactory.newTuple(2);
+            		headerOptionalAttrValPair.set(0,headerKey);
+            		headerOptionalAttrValPair.set(1,warcRec.get(headerKey));
+            		optionalHeaderFieldBag.add(headerOptionalAttrValPair);
+            	}
+            	mProtoTuple.add(optionalHeaderFieldBag);
             }
-            mProtoTuple.add(optionalHeaderFieldBag);
-            mProtoTuple.add(warcRec.get(WarcRecord.CONTENT));
-            
+            // Check whether the WARC record content is wanted in the 
+            // result tuple (or is being projected out):
+            if ((mRequiredColumns != null) && (++resFieldIndex < numColsToReturn)  && mRequiredColumns[resFieldIndex]) { 
+            	mProtoTuple.add(warcRec.get(WarcRecord.CONTENT));
+            }
             Tuple t =  mTupleFactory.newTupleNoCopy(mProtoTuple);
             return t;
         } catch (InterruptedException e) {
-            int errCode = 6018;
             String errMsg = "Error while reading input";
             throw new ExecException(errMsg, errCode, 
                     PigException.REMOTE_ENVIRONMENT, e);
-        }
-      
+        } catch (IllegalArgumentException e) {
+        	String errMsg = "Error creating WARC header tuple field for record:\n" + warcRec.toString(WarcRecord.DONT_INCLUDE_CONTENT);
+			throw new ExecException(errMsg, errCode, PigException.REMOTE_ENVIRONMENT, e);
+		} catch (InstantiationException e) {
+        	String errMsg = "Error creating WARC header tuple field for record:\n" + warcRec.toString(WarcRecord.DONT_INCLUDE_CONTENT);
+			throw new ExecException(errMsg, errCode, PigException.REMOTE_ENVIRONMENT, e);
+		} catch (IllegalAccessException e) {
+        	String errMsg = "Error creating WARC header tuple field for record:\n" + warcRec.toString(WarcRecord.DONT_INCLUDE_CONTENT);
+			throw new ExecException(errMsg, errCode, PigException.REMOTE_ENVIRONMENT, e);
+		} catch (InvocationTargetException e) {
+        	String errMsg = "Error creating WARC header tuple field for record:\n" + 
+        					warcRec.toString(WarcRecord.DONT_INCLUDE_CONTENT) +
+        					e.getCause().getMessage();
+			throw new ExecException(errMsg, errCode, PigException.REMOTE_ENVIRONMENT, e);
+		}
     }
 
     @Override
@@ -107,6 +147,7 @@ public class WarcLoader extends FileInputLoadFunc implements LoadPushDown {
             return null;
         if (requiredFieldList.getFields() != null)
         {
+        	// Find largest index of fields being requested:
             int lastColumn = -1;
             for (RequiredField rf: requiredFieldList.getFields())
             {
@@ -115,6 +156,8 @@ public class WarcLoader extends FileInputLoadFunc implements LoadPushDown {
                     lastColumn = rf.getIndex();
                 }
             }
+            // Build a boolean vector with a 'true' in each
+            // position of a field that is wanted in return tuples:
             mRequiredColumns = new boolean[lastColumn+1];
             for (RequiredField rf: requiredFieldList.getFields())
             {

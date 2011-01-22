@@ -33,6 +33,7 @@ class TestWarcLoad {
 			pserver.registerJar(piggybankPath.toString());
 			pserver.registerJar("contrib/PigIR.jar");
 			
+			/*
 			pserver.registerQuery(
 					//"docs = LOAD 'file://E:/users/paepcke/dldev/Datasets/ClueWeb09_English_Sample.warc' " +
 					//"docs = LOAD 'file://E:/users/paepcke/dldev/Datasets/ClueWeb09_English_SampleCompressed.warc.gz' " +
@@ -42,12 +43,39 @@ class TestWarcLoad {
 					"/dldev/Datasets/ClueWeb09_English_SampleCompressed.warc.gz' " +
 					//"/dldev/Datasets/ClueWeb09_English_Sample.warc' " +
 					"		USING pigir.WarcLoader" +
-					"       AS (warcRecordId:chararray, contentLength:chararray, date:chararray, warc_type:chararray," +
+					"       AS (warcRecordId:chararray, contentLength:int, date:chararray, warc_type:chararray," +
 					"           optionalHeaderFlds:bytearray, content:chararray);"
 			);
-					
-			Common.print(pserver, "docs");
-			pserver.dumpSchema("docs");
+			*/
+			/*
+			pserver.registerQuery(
+					//"docs = LOAD 'file://E:/users/paepcke/dldev/Datasets/ClueWeb09_English_Sample.warc' " +
+					//"docs = LOAD 'file://E:/users/paepcke/dldev/Datasets/ClueWeb09_English_SampleCompressed.warc.gz' " +
+					"docs = LOAD 'file://" +
+					//env.get("HOME") +
+					"C:/Users/Paepcke" +
+					"/dldev/Datasets/ClueWeb09_English_SampleCompressed.warc.gz' " +
+					//"/dldev/Datasets/ClueWeb09_English_Sample.warc' " +
+					"		USING pigir.WarcLoader" +
+					"       AS (warcRecordId:chararray, contentLength:int);"
+			);
+			*/
+			pserver.registerQuery(
+					//"docs = LOAD 'file://E:/users/paepcke/dldev/Datasets/ClueWeb09_English_Sample.warc' " +
+					//"docs = LOAD 'file://E:/users/paepcke/dldev/Datasets/ClueWeb09_English_SampleCompressed.warc.gz' " +
+					"docs = LOAD 'file://" +
+					//env.get("HOME") +
+					"C:/Users/Paepcke" +
+					"/dldev/Datasets/ClueWeb09_English_SampleCompressed.warc.gz' " +
+					//"/dldev/Datasets/ClueWeb09_English_Sample.warc' " +
+					"		USING pigir.WarcLoader" +
+					"       AS (warcRecordId:chararray, contentLength:int, date:chararray);"
+			);
+			pserver.registerQuery("docsCulled = FOREACH docs GENERATE contentLength,date;");
+			//Common.print(pserver, "docs");
+			Common.print(pserver, "docsCulled");
+			//pserver.dumpSchema("docs");
+			pserver.dumpSchema("docsCulled");
 			
 		} catch (Exception e) {
 			e.printStackTrace();

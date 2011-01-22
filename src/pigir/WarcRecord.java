@@ -44,6 +44,7 @@ package pigir;
 import java.io.EOFException;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.lang.reflect.Constructor;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -59,29 +60,34 @@ public class WarcRecord extends Text implements WarcRecordMap {
 	
 	public static final String CONTENT = "content";
 
-	/*
-	public static final String WARC_TYPE = "WARC-Type";
-	public static final String WARC_RECORD_ID = "WARC-Record-ID";
-	public static final String WARC_DATE = "WARC-Date";
-	public static final String CONTENT_LENGTH = "Content-Length";
-	public static final String CONTENT_LENGTH_LOWER_CASE = "content-length";  // Speed up loop below.
-	public static final String CONTENT_TYPE = "Content-Type";
-	public static final String WARC_CONCURRENT_TO = "WARC-Concurrent-To";
-	public static final String WARC_BLOCK_DIGEST = "WARC-Block-Digest";
-	public static final String WARC_PAYLOAD_DIGEST = "WARC-Payload-Digest";
-	public static final String WARC_IP_ADDRESS = "WARC-IP-Address";
-	public static final String WARC_REFERS_TO = "WARC-Refers-To";
-	public static final String WARC_TARGET_URI = "WARC-Target-URI";
-	public static final String WARC_TRUNCATED = "WARC-Truncated";
-	public static final String WARC_WARCINFO_ID = "WARC-Warcinfo-ID";
-	public static final String WARC_FILENAME = "WARC-Filename";
-	public static final String WARC_PROFILE = "WARC-Profile";
-	public static final String WARC_IDENTIFIED_PAYLOAD_TYPE = "WARC-Identified-Payload-Type";
-	public static final String WARC_SEGMENT_ORIGIN_ID = "WARC-Segment-Origin-ID";
-	public static final String WARC_SEGMENT_NUMBER = "WARC-Segment-Number";
-	public static final String WARC_SEGMENT_TOTAL_LENGTH = "WARC-Segment-Total-Length";
-	*/
-	
+	// Lookup table for properly capitalized ISO Warc header field
+	// names. Used in toString();
+	@SuppressWarnings("serial")
+	private static final Map<String, String> ISO_WARC_HEADER_FIELD_NAMES = new HashMap<String, String>(){
+		{
+			put(WARC_TYPE, "WARC-Type");
+			put(WARC_RECORD_ID, "WARC-Record-ID");
+			put(WARC_DATE, "WARC-Date");
+			put(CONTENT_LENGTH, "Content-Length");
+			put(CONTENT_TYPE, "Content-Type");
+			put(WARC_CONCURRENT_TO, "WARC-Concurrent-To");
+			put(WARC_BLOCK_DIGEST, "WARC-Block-Digest");
+			put(WARC_PAYLOAD_DIGEST, "WARC-Payload-Digest");
+			put(WARC_IP_ADDRESS, "WARC-IP-Address");
+			put(WARC_REFERS_TO, "WARC-Refers-To");
+			put(WARC_TARGET_URI, "WARC-Target-URI");
+			put(WARC_TRUNCATED, "WARC-Truncated");
+			put(WARC_WARCINFO_ID, "WARC-Warcinfo-ID");
+			put(WARC_FILENAME, "WARC-Filename");
+			put(WARC_PROFILE, "WARC-Profile");
+			put(WARC_IDENTIFIED_PAYLOAD_TYPE, "WARC-Identified-Payload-Type");
+			put(WARC_SEGMENT_ORIGIN_ID, "WARC-Segment-Origin-ID");
+			put(WARC_SEGMENT_NUMBER, "WARC-Segment-Number");
+			put(WARC_SEGMENT_TOTAL_LENGTH, "WARC-Segment-Total-Length");
+		}
+	};
+
+	// All lower-case WARC header field names:
 	public static final String WARC_TYPE = "warc-type";
 	public static final String WARC_RECORD_ID = "warc-record-id";
 	public static final String WARC_DATE = "warc-date";
@@ -104,9 +110,38 @@ public class WarcRecord extends Text implements WarcRecordMap {
 		
 	private static final String[] mandatoryHeaderFields = {WARC_RECORD_ID,
 														   CONTENT_LENGTH,
-														   WARC_DATE,
+														   WARC_DATE,          //******* Make hash of data types and use in loader
 														   WARC_TYPE
 	};
+	
+	// Provide a constructor for each of the header datatypes:
+	private static Constructor<String> strConstructor = null;
+	private static Constructor<Integer> intConstructor = null;
+	
+	{
+		try {
+			strConstructor = String.class.getConstructor(String.class);
+			intConstructor = Integer.class.getConstructor(String.class);
+		} catch (SecurityException e1) {
+			e1.printStackTrace();
+		} catch (NoSuchMethodException e1) {
+			e1.printStackTrace();
+		}
+	}
+
+	@SuppressWarnings({ "rawtypes", "serial" })
+	public HashMap<String,Constructor> mandatoryWarcHeaderFldTypes = new HashMap<String, Constructor>() {
+		{
+			put(WARC_RECORD_ID, strConstructor);
+			put(CONTENT_LENGTH, intConstructor);
+			put(WARC_DATE, strConstructor);
+			put(WARC_TYPE, strConstructor);
+		}
+	};
+	
+	public static final boolean INCLUDE_CONTENT = true; 
+	public static final boolean DONT_INCLUDE_CONTENT = false; 
+	
 	// Fast method for looking up whether a header key is mandatory or not:
 	@SuppressWarnings("serial")
 	private static final HashMap<String,Boolean> mandatoryHeaderFieldsLookup = new HashMap<String, Boolean>() {
@@ -117,7 +152,7 @@ public class WarcRecord extends Text implements WarcRecordMap {
 		}
 	};
 	
-	
+	// Marker to look for when finding the next WARC record in a stream:
 	public static String WARC_VERSION = "WARC/0.18";
 	public static String WARC_VERSION_LINE = "WARC/0.18\n";
 	private static String NEWLINE="\n";
@@ -176,9 +211,6 @@ public class WarcRecord extends Text implements WarcRecordMap {
 		while (totalRead < contentLength) {
 			try {
 				int numRead=warcLineReader.read(retContent, totalRead, totalWant);
-				//************
-				System.out.println(new String(retContent));
-				//************
 				if (numRead < 0) {
 					return null;
 				} else {
@@ -226,8 +258,8 @@ public class WarcRecord extends Text implements WarcRecordMap {
 			} else {
 				String[] thisHeaderPieceParts=line.split(":", 2);
 				if (thisHeaderPieceParts.length==2) {
-					headerAttrName  = thisHeaderPieceParts[0].toLowerCase();
-					headerAttrValue =  thisHeaderPieceParts[1];
+					headerAttrName  = (thisHeaderPieceParts[0]).trim().toLowerCase();
+					headerAttrValue =  thisHeaderPieceParts[1].trim();
 					tmpHeaderMap.put(headerAttrName, headerAttrValue);
 					
 					// Accumulate a list of optional header keys:
@@ -251,12 +283,11 @@ public class WarcRecord extends Text implements WarcRecordMap {
 	/**
 	 * @param warcLineReader
 	 * @param txtBuf
-	 * @param foundMark
-	 * @return
+	 * @return success true/false
 	 * @throws IOException
 	 */
 	private static boolean scanToRecordStart(LineAndChunkReader warcLineReader,
-			Text txtBuf) throws IOException {
+											 Text txtBuf) throws IOException {
 		String line;
 		boolean foundMark = false;
 		int bytesRead;
@@ -273,7 +304,7 @@ public class WarcRecord extends Text implements WarcRecordMap {
 
 	/**
 	 * Reads in a WARC record from a data input stream
-	 * @param in the input stream
+	 * @param Warc line reader for the stream.
 	 * @return a WARC record (or null if eof)
 	 * @throws java.io.IOException
 	 */
@@ -291,10 +322,6 @@ public class WarcRecord extends Text implements WarcRecordMap {
 		retRecord.optionalHeaderKeysThisRecord = (HashSet<String>) tmpOptionalHeaderKeys.clone();
 		retRecord.setRecordContent(recordContent);
 		
-		//************
-		System.out.println(new String(recordContent));
-		//************
-
 		return retRecord;
 	}
 
@@ -332,13 +359,25 @@ public class WarcRecord extends Text implements WarcRecordMap {
 
 	@Override
 	public String toString() {
+		return toString(DONT_INCLUDE_CONTENT);
+	}
+	
+	public String toString(boolean shouldIncludeContent) {
 		StringBuffer retBuffer=new StringBuffer();
-		//***********retBuffer.append(warcHeader.toString());
-		retBuffer.append(NEWLINE);
-		retBuffer.append(warcContent);
+		String headerVal;
+		for (String headerFldNm : headerMap.keySet()) {
+			retBuffer.append(ISO_WARC_HEADER_FIELD_NAMES.get(headerFldNm) + ":" + 
+							 ((headerVal = headerMap.get(headerFldNm)) == null ? "" : headerVal) + "\n");
+		}
+		if (shouldIncludeContent) {
+			retBuffer.append(NEWLINE);
+			retBuffer.append(getContentUTF8());
+		}
+		else
+			retBuffer.append("[Record content suppressed. Use toString(INCLUDE_CONTENT) to see the content string.\n");
 		return retBuffer.toString();
 	}
-
+	
 	//  -----------------------------------  MAP<String,String> Methods -----------------------
 
 	@Override
