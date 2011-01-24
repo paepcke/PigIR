@@ -23,8 +23,7 @@ import org.apache.hadoop.mapreduce.lib.input.LineRecordReader;
  */
 public class WarcRecordReader extends RecordReader<LongWritable, Text> {
 	
-  //private static final Log LOG = LogFactory.getLog(LineRecordReader.class);
-
+  private static final boolean DO_READ_CONTENT = true;
   private static final int DEFAULT_BUFFER_SIZE = 64 * 1024;
   private static final Log LOG = LogFactory.getLog(LineRecordReader.class);
   private long start;
@@ -42,6 +41,9 @@ public class WarcRecordReader extends RecordReader<LongWritable, Text> {
     FileSplit split = (FileSplit) genericSplit;
     Configuration job = context.getConfiguration();
 
+    //************
+    LOG.info("********* WarcRecordReader initialize called.");
+    //************
     start = split.getStart();
     end = start + split.getLength();
     final Path file = split.getPath();
@@ -89,12 +91,17 @@ public class WarcRecordReader extends RecordReader<LongWritable, Text> {
     this.pos = start;
   }
   
+  
   public boolean nextKeyValue() throws IOException {
+	  return nextKeyValue(DO_READ_CONTENT);
+  }
+  
+  public boolean nextKeyValue(boolean readContents) throws IOException {
     if (keyWarcStreamPos == null) {
       keyWarcStreamPos = new LongWritable();
     }
     keyWarcStreamPos.set(pos);
-    valueWarcRecord = WarcRecord.readNextWarcRecord(warcLineReader);
+    valueWarcRecord = WarcRecord.readNextWarcRecord(warcLineReader, readContents);
     if (valueWarcRecord == null) {
     	keyWarcStreamPos = null;
     	return false;

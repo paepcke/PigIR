@@ -35,15 +35,22 @@ import org.apache.pig.impl.util.UDFContext;
  * A load function that parses a record of WARC input into fields of a tuple.
  * Given a slice, which is a WARC file, a start, and a stop position within that
  * file, return tuples of the schema:
- *    (WARC_RECORD_ID, CONTENT_LENGTH, WARC_DATE, WARC_TYPE, {(<headerFldName>, <headerFldVal>)*}, <contentStr>)
+ *    (WARC_RECORD_ID:chararray, 
+ *     CONTENT_LENGTH:int, 
+ *     WARC_DATE:chararray, 
+ *     WARC_TYPE, {(<headerFldName>, <headerFldVal>)*}, 
+ *     CONTENT:chararray)
  */
 
 //****************
 // TODO: Add optional args to limit columns to fill. Make that condition for equality, rather than the fieldDel. 
 //****************
 public class WarcLoader extends FileInputLoadFunc implements LoadPushDown {
-    @SuppressWarnings("rawtypes")
-	protected RecordReader in = null;    
+	
+	private final int NUM_OUTPUT_COLUMNS = 5;
+	private final int CONTENT_COL_INDEX = 5;
+	
+    protected WarcRecordReader in = null;    
     protected final Log mLog = LogFactory.getLog(getClass());
     private String signature;
         
@@ -52,6 +59,9 @@ public class WarcLoader extends FileInputLoadFunc implements LoadPushDown {
     private TupleFactory mTupleFactory = TupleFactory.getInstance();
     private String loadLocation;
     private int numColsToReturn = 6;
+    
+    //protected final Log logger = LogFactory.getLog(getClass());
+    protected final Log logger = LogFactory.getLog(getClass());
     
     public WarcLoader() {
     }
@@ -73,12 +83,17 @@ public class WarcLoader extends FileInputLoadFunc implements LoadPushDown {
             if (signature!=null) {
                 Properties p = UDFContext.getUDFContext().getUDFProperties(this.getClass());
                 mRequiredColumns = (boolean[])ObjectSerializer.deserialize(p.getProperty(signature));
+                if (mRequiredColumns == null) {
+                	mRequiredColumns = new boolean[NUM_OUTPUT_COLUMNS];
+                	for (int i=0;i<NUM_OUTPUT_COLUMNS;i++)
+                		mRequiredColumns[i] = true;
+                }
                 numColsToReturn = mRequiredColumns.length;
             }
             mRequiredColumnsInitialized = true;
         }
         try {
-            boolean done = ! in.nextKeyValue();
+            boolean done = ! in.nextKeyValue((mRequiredColumns != null) && (CONTENT_COL_INDEX < numColsToReturn) && (mRequiredColumns[CONTENT_COL_INDEX]));
             if (done) {
                 return null;
             }
@@ -98,7 +113,11 @@ public class WarcLoader extends FileInputLoadFunc implements LoadPushDown {
 					Constructor fldConstructor = warcRec.mandatoryWarcHeaderFldTypes.get(headerKey);
             		mProtoTuple.add(fldConstructor.newInstance(warcRec.get(headerKey)));
             	}
-            	else break;
+            	else {
+            		if (resFieldIndex >= numColsToReturn)
+            			break;
+            		continue;
+            	}
             }
             // Now all the optional header keys as a bag of maps (all strings):
             // Check whether the bag of optional header keys is 
@@ -120,10 +139,6 @@ public class WarcLoader extends FileInputLoadFunc implements LoadPushDown {
             }
             Tuple t =  mTupleFactory.newTupleNoCopy(mProtoTuple);
             return t;
-        } catch (InterruptedException e) {
-            String errMsg = "Error while reading input";
-            throw new ExecException(errMsg, errCode, 
-                    PigException.REMOTE_ENVIRONMENT, e);
         } catch (IllegalArgumentException e) {
         	String errMsg = "Error creating WARC header tuple field for record:\n" + warcRec.toString(WarcRecord.DONT_INCLUDE_CONTENT);
 			throw new ExecException(errMsg, errCode, PigException.REMOTE_ENVIRONMENT, e);
@@ -143,6 +158,9 @@ public class WarcLoader extends FileInputLoadFunc implements LoadPushDown {
 
     @Override
     public RequiredFieldResponse pushProjection(RequiredFieldList requiredFieldList) throws FrontendException {
+    	//*************
+    	mLog.info("*******WarcLoader called (mark1)");
+    	//*************
         if (requiredFieldList == null)
             return null;
         if (requiredFieldList.getFields() != null)
@@ -189,6 +207,9 @@ public class WarcLoader extends FileInputLoadFunc implements LoadPushDown {
     @SuppressWarnings("rawtypes")
 	@Override
     public InputFormat getInputFormat() {
+    	//*****************
+    	mLog.info("*************getInputFormat() called. loadLocation: " + loadLocation);
+    	//*****************
         if(loadLocation.endsWith(".bz2") || loadLocation.endsWith(".bz")) {
             return new Bzip2TextInputFormat();
         } else {
@@ -199,7 +220,7 @@ public class WarcLoader extends FileInputLoadFunc implements LoadPushDown {
     @SuppressWarnings("rawtypes")
 	@Override
     public void prepareToRead(RecordReader reader, PigSplit split) {
-        in = reader;
+        in = (WarcRecordReader) reader;
     }
 
     @Override

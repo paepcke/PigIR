@@ -1,5 +1,6 @@
 package pigir;
 
+import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.InputSplit;
@@ -12,6 +13,9 @@ public class WarcPigTextInputFormat extends PigTextInputFormat {
   public RecordReader<LongWritable, Text>
   			createRecordReader(InputSplit split, 
   							   TaskAttemptContext context) {
-    return new WarcRecordReader();
+	  //************
+	  LogFactory.getLog(getClass()).info("*******createRecordReader called.");
+	  //************
+	  return new WarcRecordReader();
   }
 }

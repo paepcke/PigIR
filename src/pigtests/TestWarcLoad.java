@@ -33,20 +33,19 @@ class TestWarcLoad {
 			pserver.registerJar(piggybankPath.toString());
 			pserver.registerJar("contrib/PigIR.jar");
 			
-			/*
 			pserver.registerQuery(
-					//"docs = LOAD 'file://E:/users/paepcke/dldev/Datasets/ClueWeb09_English_Sample.warc' " +
+					"docs = LOAD 'file://E:/users/paepcke/dldev/Datasets/ClueWeb09_English_Sample.warc' " +
 					//"docs = LOAD 'file://E:/users/paepcke/dldev/Datasets/ClueWeb09_English_SampleCompressed.warc.gz' " +
-					"docs = LOAD 'file://" +
+					//"docs = LOAD 'file://" +
 					//env.get("HOME") +
-					"C:/Users/Paepcke" +
-					"/dldev/Datasets/ClueWeb09_English_SampleCompressed.warc.gz' " +
+					//"C:/Users/Paepcke" +
+					//"/dldev/Datasets/ClueWeb09_English_SampleCompressed.warc.gz' " +
 					//"/dldev/Datasets/ClueWeb09_English_Sample.warc' " +
 					"		USING pigir.WarcLoader" +
 					"       AS (warcRecordId:chararray, contentLength:int, date:chararray, warc_type:chararray," +
 					"           optionalHeaderFlds:bytearray, content:chararray);"
 			);
-			*/
+
 			/*
 			pserver.registerQuery(
 					//"docs = LOAD 'file://E:/users/paepcke/dldev/Datasets/ClueWeb09_English_Sample.warc' " +
@@ -60,6 +59,7 @@ class TestWarcLoad {
 					"       AS (warcRecordId:chararray, contentLength:int);"
 			);
 			*/
+			/*
 			pserver.registerQuery(
 					//"docs = LOAD 'file://E:/users/paepcke/dldev/Datasets/ClueWeb09_English_Sample.warc' " +
 					//"docs = LOAD 'file://E:/users/paepcke/dldev/Datasets/ClueWeb09_English_SampleCompressed.warc.gz' " +
@@ -71,7 +71,10 @@ class TestWarcLoad {
 					"		USING pigir.WarcLoader" +
 					"       AS (warcRecordId:chararray, contentLength:int, date:chararray);"
 			);
+			*/
+			
 			pserver.registerQuery("docsCulled = FOREACH docs GENERATE contentLength,date;");
+			//pserver.registerQuery("docsCulled = FOREACH docs GENERATE contentLength,content;");
 			//Common.print(pserver, "docs");
 			Common.print(pserver, "docsCulled");
 			//pserver.dumpSchema("docs");

@@ -114,6 +114,7 @@ public class WarcRecord extends Text implements WarcRecordMap {
 														   WARC_TYPE
 	};
 	
+	private static final boolean DO_READ_CONTENT = true;
 	// Provide a constructor for each of the header datatypes:
 	private static Constructor<String> strConstructor = null;
 	private static Constructor<Integer> intConstructor = null;
@@ -168,13 +169,17 @@ public class WarcRecord extends Text implements WarcRecordMap {
 	private HashSet<String> optionalHeaderKeysThisRecord;
 
 	/**
-	 * The actual heavy lifting of reading in the next WARC record
+	 * The actual heavy lifting of reading in the next WARC record. The
+	 * readContent parameter is used to support cases when the original
+	 * Pig query project out the content. We save time if we don't need
+	 * that content.
 	 * 
 	 * @param warcLineReader a line reader
+	 * @param readContent indicate whether the content of the record is needed, as opposed to just the WARC header info.
 	 * @return the content bytes (w/ the headerBuffer populated)
 	 * @throws java.io.IOException
 	 */
-	private static byte[] readNextRecord(LineAndChunkReader warcLineReader) throws IOException {
+	private static byte[] readNextRecord(LineAndChunkReader warcLineReader, boolean readContent) throws IOException {
 		if (warcLineReader==null) { 
 			return null;
 		}
@@ -204,8 +209,41 @@ public class WarcRecord extends Text implements WarcRecordMap {
 			return null;
 		}
 
-		// Pull the bytes of the content from the stream:
-		retContent=new byte[contentLength];
+		if (readContent) {
+			// Pull the bytes of the content from the stream:
+			retContent=new byte[contentLength];
+			Integer totalRead = pullContent(warcLineReader, retContent, contentLength);
+			if (totalRead == null)
+				throw new IOException("Could not read content from WARC record ID: " +
+						tmpHeaderMap.get(WARC_RECORD_ID) + 
+						" of supposed content length " +
+						tmpHeaderMap.get(CONTENT_LENGTH) +
+				". Reason is other than EOF.");
+
+			if (totalRead < contentLength) {
+				// Did we hit EOF in the middle of the WARC record's content?
+				throw new IOException("Hit end of file while reading content of WARC record ID: " +
+						tmpHeaderMap.get(WARC_RECORD_ID) + 
+						" of supposed content length " +
+						tmpHeaderMap.get(CONTENT_LENGTH) +
+				".");
+			}
+			tmpGrandTotalBytesRead += totalRead;
+			return retContent;
+		} else {
+			return new byte[0];
+		}
+	}
+
+	/**
+	 * @param warcLineReader
+	 * @param retContent
+	 * @param contentLength
+	 * @return
+	 * @throws IOException
+	 */
+	private static Integer pullContent(LineAndChunkReader warcLineReader,
+			byte[] retContent, int contentLength) throws IOException {
 		int totalWant=contentLength;
 		int totalRead=0;
 		while (totalRead < contentLength) {
@@ -220,18 +258,13 @@ public class WarcRecord extends Text implements WarcRecordMap {
 			} catch (EOFException eofEx) {
 				// resize to what we have
 				if (totalRead > 0) {
-					byte[] newReturn=new byte[totalRead];
-					System.arraycopy(retContent, 0, newReturn, 0, totalRead);
-					tmpGrandTotalBytesRead += totalRead;
-					return newReturn;
+					return totalRead;
 				} else {
 					return null;
 				}
 			} // end try/catch (EOFException)
 		} // end while (totalRead < contentLength)
-
-		tmpGrandTotalBytesRead += totalRead;
-		return retContent;
+		return totalRead;
 	}
 
 	/**
@@ -309,9 +342,9 @@ public class WarcRecord extends Text implements WarcRecordMap {
 	 * @throws java.io.IOException
 	 */
 	@SuppressWarnings("unchecked")
-	public static WarcRecord readNextWarcRecord(LineAndChunkReader warcInLineReader) throws IOException {
+	public static WarcRecord readNextWarcRecord(LineAndChunkReader warcInLineReader, boolean readContent) throws IOException {
 		
-		byte[] recordContent=readNextRecord(warcInLineReader);
+		byte[] recordContent=readNextRecord(warcInLineReader, readContent);
 		if (recordContent==null) { 
 			return null; 
 		}
