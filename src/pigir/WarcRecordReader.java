@@ -16,7 +16,6 @@ import org.apache.hadoop.mapreduce.InputSplit;
 import org.apache.hadoop.mapreduce.RecordReader;
 import org.apache.hadoop.mapreduce.TaskAttemptContext;
 import org.apache.hadoop.mapreduce.lib.input.FileSplit;
-import org.apache.hadoop.mapreduce.lib.input.LineRecordReader;
 
 /**
  * Treats keys as offset in file and value as one Warc record. 
@@ -25,7 +24,11 @@ public class WarcRecordReader extends RecordReader<LongWritable, Text> {
 	
   private static final boolean DO_READ_CONTENT = true;
   private static final int DEFAULT_BUFFER_SIZE = 64 * 1024;
-  private static final Log LOG = LogFactory.getLog(LineRecordReader.class);
+  private static final Log wrrLOG = LogFactory.getLog(WarcRecordReader.class.getName());
+  private static final Log pigLOG = LogFactory.getLog("org.apache.pig");
+  private  final Log classLOG = LogFactory.getLog(this.getClass());
+  private final Log hadoopLOG = LogFactory.getLog("hadoop.root.logger");
+  private static final Log rootLOG = LogFactory.getLog("log4j.rootLogger");
   private long start;
   private long pos;
   private long end;
@@ -41,8 +44,20 @@ public class WarcRecordReader extends RecordReader<LongWritable, Text> {
     FileSplit split = (FileSplit) genericSplit;
     Configuration job = context.getConfiguration();
 
-    //************
-    LOG.info("********* WarcRecordReader initialize called.");
+    //************ 
+    
+    hadoopLOG.info("********* hadoopLog WarcRecordReader initialize called.");
+    wrrLOG.info("********* wrrLog WarcRecordReader initialize called.");
+    pigLOG.info("********* pigLog WarcRecordReader initialize called.");
+    
+    hadoopLOG.info("********* WarcRecordReader initialize called. \n" +
+    		"split.getPath():" + 
+    		split.getPath() + "\n" +
+    		"split.getLength():" + "\n" +
+    		split.getLength() + "\n" +
+    		"split.getStart():" + 
+    		split.getStart() + "\n"
+    		);
     //************
     start = split.getStart();
     end = start + split.getLength();
@@ -62,7 +77,7 @@ public class WarcRecordReader extends RecordReader<LongWritable, Text> {
     		fileIn.seek(0);
     		warcInStream = new DataInputStream (fileIn);
     	} catch (Exception e1) {
-    		LOG.info("Could not open WARC split.");
+    		hadoopLOG.info("Could not open WARC split.");
     		return;
     	}
     }
@@ -100,14 +115,32 @@ public class WarcRecordReader extends RecordReader<LongWritable, Text> {
     if (keyWarcStreamPos == null) {
       keyWarcStreamPos = new LongWritable();
     }
+    //*******************
+    hadoopLOG.info("********* Will set stream to pos=" + pos);
+    pigLOG.info("********* Will set stream to pos=" + pos);
+    wrrLOG.info("********* Will set stream to pos=" + pos);
+    classLOG.info("********* (classLogger) Will set stream to pos=" + pos);
+    rootLOG.info("********* (rootLogger) Will set stream to pos=" + pos);
+    //*******************
     keyWarcStreamPos.set(pos);
-    valueWarcRecord = WarcRecord.readNextWarcRecord(warcLineReader, readContents);
+    //*******************
+    hadoopLOG.info("Just set stream to pos=" + pos);
+    System.err.println("******* WarcRecord: '" + 
+    							"Hopefully a class." +
+    							"'. warcLineReader: '" + 
+    							warcLineReader + 
+    							"'. readContents: '" +
+    							readContents +
+    							"'");		
+    //*******************
+    //*****valueWarcRecord = WarcRecord.readNextWarcRecord(warcLineReader, readContents);
+    valueWarcRecord = WarcRecord.readNextWarcRecord(null, true);
     if (valueWarcRecord == null) {
     	keyWarcStreamPos = null;
     	return false;
     }
     
-    LOG.info("Pulled another WARC record.");
+    hadoopLOG.info("Pulled another WARC record.");
     
     // Update position in the Data stream
     pos += valueWarcRecord.getTotalRecordLength();
@@ -128,6 +161,9 @@ public class WarcRecordReader extends RecordReader<LongWritable, Text> {
    * Get the progress within the split
    */
   public float getProgress() {
+	//*********
+	hadoopLOG.info("*********** getProgress pos=" + pos + ". start=" + start);
+	//*********
     if (start == end) {
       return 0.0f;
     } else {

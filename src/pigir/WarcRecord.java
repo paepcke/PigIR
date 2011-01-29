@@ -114,7 +114,6 @@ public class WarcRecord extends Text implements WarcRecordMap {
 														   WARC_TYPE
 	};
 	
-	private static final boolean DO_READ_CONTENT = true;
 	// Provide a constructor for each of the header datatypes:
 	private static Constructor<String> strConstructor = null;
 	private static Constructor<Integer> intConstructor = null;

@@ -16,7 +16,7 @@
  	<property name="local.jar.dir" location="contrib" />
 	<property name="local.jar.file.withSource" value="${local.jar.dir}/${project.name}WithSource.jar" />
 	<property name="local.jar.file" value="${local.jar.dir}/${project.name}.jar" />
- 	<property name="ilc0.jar.dir" location="paepcke@ilc0.stanford.edu:/home/paepcke/mycontrib/" />
+ 	<property name="ilc0.jar.dir" location="paepcke@ilc0.stanford.edu:contrib/" />
 	<property name="local.log.dir" value="${local.src.dir}/Logs" />
 	<property name="remote.dir" location="${ilc0.jar.dir}" />
 	
@@ -26,7 +26,8 @@
     </path>
 	
 	<property name="scp.command" value="C:\\cygwin\\bin\\scp" />
-	<property name="scp.keyfile" location="${myEnv.HOME}/.ssh/id_rsa" />
+	<!-- <property name="scp.keyfile" location="${myEnv.HOME}/.ssh/id_rsa" /> -->
+	<property name="scp.keyfile" location="C:\\Users\\Paepcke\\.ssh\\id_rsa" />
 	<!-- <property name="scp.keyfile" location="${myEnv.HOME}/.ssh/id_rsa.pub" />  -->
 	
     <!-- ================================================================== -->
@@ -95,20 +96,20 @@
             description="Copy jar with sources to cluster.">
 		<echo>*** Copying source-including jar file to ilc0.stanford.edu ***</echo>
 		
+		<!--
 	    <scp localfile="${local.jar.file.withSource}" 
 		 	todir="${ilc0.jar.dir}" 
 	    	trust="true"
 	    	verbose="true"
     	 	keyfile="${scp.keyfile}"
+	    	passphrase=""
 		/> 
+		-->
 
-		<!--
-		
 		<exec dir="." executable="${scp.command}" failonerror="true">
 			<arg value="${local.jar.file.withSource}" />
 			<arg value="${remote.dir}" />
 		</exec>
-		-->
 		
 	</target>
 
