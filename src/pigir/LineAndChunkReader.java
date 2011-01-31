@@ -11,9 +11,9 @@ public class LineAndChunkReader {
   private int bufferSize = DEFAULT_BUFFER_SIZE;
   private InputStream in;
   private byte[] buffer;
-  // the number of bytes of real data in the buffer
+  // the number of bytes of real data wbRecordReader the buffer
   private int bufferLength = 0;
-  // the current position in the buffer
+  // the current position wbRecordReader the buffer
   private int bufferPosn = 0;
 
   private static final byte CR = '\r';
@@ -25,7 +25,7 @@ public class LineAndChunkReader {
    * methods are copies of org/apache/hadoop/util/LineReader.java. Unfortunately,
    * that class keeps variable bufferPosn private. So the chunk reading could
    * not be added via inheritance, which would have been much, much better.
-   * @param in The input stream
+   * @param wbRecordReader The input stream
    * @throws IOException
    */
   public LineAndChunkReader(InputStream in) {
@@ -35,7 +35,7 @@ public class LineAndChunkReader {
   /**
    * Create a line reader that reads from the given stream using the 
    * given buffer-size.
-   * @param in The input stream
+   * @param wbRecordReader The input stream
    * @param bufferSize Size of the read buffer
    * @throws IOException
    */
@@ -47,9 +47,9 @@ public class LineAndChunkReader {
 
   /**
    * Create a line reader that reads from the given stream using the
-   * <code>io.file.buffer.size</code> specified in the given
+   * <code>io.file.buffer.size</code> specified wbRecordReader the given
    * <code>Configuration</code>.
-   * @param in input stream
+   * @param wbRecordReader input stream
    * @param conf configuration
    * @throws IOException
    */
@@ -75,7 +75,7 @@ public class LineAndChunkReader {
    * @param maxLineLength the maximum number of bytes to store into str;
    *  the rest of the line is silently discarded.
    * @param maxBytesToConsume the maximum number of bytes to consume
-   *  in this call.  This is only a hint, because if the line cross
+   *  wbRecordReader this call.  This is only a hint, because if the line cross
    *  this threshold, we allow it to happen.  It can overshoot
    *  potentially by as much as one buffer length.
    *
@@ -86,14 +86,14 @@ public class LineAndChunkReader {
    */
   public int readLine(Text str, int maxLineLength,
                       int maxBytesToConsume) throws IOException {
-    /* We're reading data from in, but the head of the stream may be
-     * already buffered in buffer, so we have several cases:
-     * 1. No newline characters are in the buffer, so we need to copy
+    /* We're reading data from wbRecordReader, but the head of the stream may be
+     * already buffered wbRecordReader buffer, so we have several cases:
+     * 1. No newline characters are wbRecordReader the buffer, so we need to copy
      *    everything and read another buffer from the stream.
-     * 2. An unambiguously terminated line is in buffer, so we just
+     * 2. An unambiguously terminated line is wbRecordReader buffer, so we just
      *    copy to str.
-     * 3. Ambiguously terminated line is in buffer, i.e. buffer ends
-     *    in CR.  In this case we copy everything up to CR to str, but
+     * 3. Ambiguously terminated line is wbRecordReader buffer, i.e. buffer ends
+     *    wbRecordReader CR.  In this case we copy everything up to CR to str, but
      *    we also need to see what follows CR: if it's LF, then we
      *    need consume LF as well, so next call to readLine will read
      *    from after that.
@@ -172,7 +172,7 @@ public class LineAndChunkReader {
   public int read (byte[] destBuf, int offset, int lengthToRead) throws IOException {
 	  int bytesConsumed = 0;
 	  int bytesToCopy = 0;
-	  // Empty what remained in the buffer during the last call
+	  // Empty what remained wbRecordReader the buffer during the last call
 	  // to the target:
 	  if ((bufferPosn < bufferSize) && bufferPosn > 0) {
 		  int bytesLeft = bufferLength - bufferPosn;

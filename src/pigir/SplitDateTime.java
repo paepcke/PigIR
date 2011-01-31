@@ -2,8 +2,8 @@ package pigir;
 
 /*
  * Takes a string and outputs a single tuple with each of the
- * constituent tokens in a field of its own. This is
- * in contrast to the built-in TOKENIZE, which returns
+ * constituent tokens wbRecordReader a field of its own. This is
+ * wbRecordReader contrast to the built-wbRecordReader TOKENIZE, which returns
  * a bag of tuples, each tuple containing one word.
  * 
  * Parameters:
@@ -40,14 +40,14 @@ public class SplitDateTime extends EvalFunc<Tuple> {
 			// If a second arg is given, it's a regexp for how to split:
 			if (input.size() > 1) {
 				if ((splitRegexp = (String) input.get(1)) == null) {
-					throw new IOException("Exception in splitField: second arg must be a string. Was null.");
+					throw new IOException("Exception wbRecordReader splitField: second arg must be a string. Was null.");
 				}
 			} else {
 				// Use whitespace as separator:
 				splitRegexp = "\\s";
 			}
 		} catch (Exception e) {
-			throw new IOException("Exception in splitField.", e);
+			throw new IOException("Exception wbRecordReader splitField.", e);
 		}
 		
 		String[] resArray = str.split(splitRegexp);

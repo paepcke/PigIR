@@ -31,7 +31,7 @@ public class IsStopword extends FilterFunc {
 			put("For", true);
 			put("has", true);
 			put("Has", true);
-			put("in", true);
+			put("wbRecordReader", true);
 			put("In", true);
 			put("is", true);
 			put("Is", true);
@@ -59,7 +59,7 @@ public class IsStopword extends FilterFunc {
 	/*
 	 * Used to filter out stopwords.
 	 * Takes a single word and returns true if the word is not a stopword.
-	 * Returns false otherwise. Usage in Pig:
+	 * Returns false otherwise. Usage wbRecordReader Pig:
 	 *     foo = FILTER bar BY pigutils.IsStopword(word); 
 	 * (non-Javadoc)
 	 * @see org.apache.pig.EvalFunc#exec(org.apache.pig.data.Tuple)

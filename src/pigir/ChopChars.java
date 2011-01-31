@@ -52,7 +52,7 @@ public class ChopChars extends EvalFunc<String> {
 		} catch (java.lang.ClassCastException e) {
 			throw new IOException("Usage: ChopChars(String str, [[Integer chompSideChoice], String regexp]\n" + e.getMessage());
 		} catch (Exception e) {
-			throw new IOException("Exception in chopChars.", e);
+			throw new IOException("Exception wbRecordReader chopChars.", e);
 		}
 			
 		if (sidesSpecGiven) {

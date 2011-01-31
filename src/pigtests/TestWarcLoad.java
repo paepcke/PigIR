@@ -34,14 +34,15 @@ class TestWarcLoad {
 			pserver.registerJar("contrib/PigIR.jar");
 			
 			pserver.registerQuery(
-					"docs = LOAD 'file://E:/users/paepcke/dldev/Datasets/ClueWeb09_English_Sample.warc' " +
+					"docs = LOAD 'Datasets/ClueWeb09_English_Sample.warc' " +
+					//"docs = LOAD 'file://E:/users/paepcke/dldev/Datasets/ClueWeb09_English_Sample.warc' " +
 					//"docs = LOAD 'file://E:/users/paepcke/dldev/Datasets/ClueWeb09_English_SampleCompressed.warc.gz' " +
 					//"docs = LOAD 'file://" +
 					//env.get("HOME") +
 					//"C:/Users/Paepcke" +
 					//"/dldev/Datasets/ClueWeb09_English_SampleCompressed.warc.gz' " +
 					//"/dldev/Datasets/ClueWeb09_English_Sample.warc' " +
-					"		USING pigir.WarcLoader" +
+					"		USING pigir.warc.WarcLoader" +
 					"       AS (warcRecordId:chararray, contentLength:int, date:chararray, warc_type:chararray," +
 					"           optionalHeaderFlds:bytearray, content:chararray);"
 			);
@@ -77,8 +78,8 @@ class TestWarcLoad {
 			//pserver.registerQuery("docsCulled = FOREACH docs GENERATE contentLength,content;");
 			//Common.print(pserver, "docs");
 			Common.print(pserver, "docsCulled");
-			//pserver.dumpSchema("docs");
-			pserver.dumpSchema("docsCulled");
+			pserver.dumpSchema("docs");
+			//pserver.dumpSchema("docsCulled");
 			
 		} catch (Exception e) {
 			e.printStackTrace();

@@ -66,7 +66,7 @@ public class StoreFDATweetTfIdf {
 			pserver.registerQuery("theWordTfs  = FOREACH docTokens GENERATE docId, wordTfs;");
 			// Get (all, {(id1, {(w1,tf1),(w2,tf2)}), (id2, {(w2,tf3), (w3,tf4)}), ...)}:
 			pserver.registerQuery("docIdPlusWordTfsBag = GROUP theWordTfs all;");
-			// The following works in the cluster, but not here:
+			// The following works wbRecordReader the cluster, but not here:
 			//pserver.registerQuery("tfidfs = FOREACH docIdPlusWordTfsBag GENERATE FLATTEN(pigutils.TfIdf(theWordTfs));");
 			// Get {(id1,w1,tfidf),(id2,w2,tfidf), ...}
 			pserver.registerQuery("tfidfs = FOREACH docIdPlusWordTfsBag {" +

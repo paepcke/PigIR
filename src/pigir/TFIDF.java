@@ -16,9 +16,9 @@ import org.apache.pig.impl.logicalLayer.schema.Schema.FieldSchema;
  /**
   * Compute IDF for one word within the context
   * of a particular document, given collection size, a
-  * token's term frequency in one document (tf), and
-  * the number of documents in which the word occurs at
-  * least once in the collection (df).
+  * token's term frequency wbRecordReader one document (tf), and
+  * the number of documents wbRecordReader which the word occurs at
+  * least once wbRecordReader the collection (df).
   * 
   * Computatoin: tf * log10(collSize/(1+df)
   * 

@@ -1,9 +1,9 @@
 package pigir;
 
 /*
- * Like the built-in TOKENIZE, takes a string and 
+ * Like the built-wbRecordReader TOKENIZE, takes a string and 
  * outputs a bag of tuples with each of the constituent 
- * tokens in a tuple of its own.
+ * tokens wbRecordReader a tuple of its own.
  * 
  * However, this function adds regular expression flexibility
  * and optional stopword elimination.
@@ -64,7 +64,7 @@ public class RegexpTokenize extends EvalFunc<DataBag> {
 		};
 	};
 
-	// Index of start of the most recently found URL in str.
+	// Index of start of the most recently found URL wbRecordReader str.
 	private int urlIndex = 0;
 	// For skipping past URL components after they have been
 	// parsed separately:
@@ -126,7 +126,7 @@ public class RegexpTokenize extends EvalFunc<DataBag> {
             			continue;
             	if (preserveURLs && (webProtocols.get(token) != null)) {
             		// Found one of the Web protocol names (http, ftp, file, ...).
-            		// We need to find that URL in the string and return it intact.
+            		// We need to find that URL wbRecordReader the string and return it intact.
             		// Find the URL, starting the search where we last found a 
             		// URL (or 0 for the first URL). The urlIndex is advanced
             		// below, but we only ever point to right after the previous
@@ -144,7 +144,7 @@ public class RegexpTokenize extends EvalFunc<DataBag> {
             	}
             	output.add(mTupleFactory.newTuple(token)); 
             	// If we are to preserve URLs, we need to keep track
-            	// of where we are in the original string:
+            	// of where we are wbRecordReader the original string:
             	if (preserveURLs) {
             		urlIndex = ((String)str).indexOf(token, urlIndex) + token.length();
             	}
@@ -246,11 +246,11 @@ public class RegexpTokenize extends EvalFunc<DataBag> {
 			parmsFour.set(0, "http://infolab.stanford.edu");
 			System.out.println("'http://infolab.stanford.edu': " + func.exec(parmsFour));
 
-			parmsFour.set(0, "And now url (embedded http://infolab.stanford.edu) in text");
-			System.out.println("'And now url (embedded http://infolab.stanford.edu) in text': " + func.exec(parmsFour));
+			parmsFour.set(0, "And now url (embedded http://infolab.stanford.edu) wbRecordReader text");
+			System.out.println("'And now url (embedded http://infolab.stanford.edu) wbRecordReader text': " + func.exec(parmsFour));
 			
-			parmsFour.set(0, "The word http in text.");
-			System.out.println("'The word http in text.': " + func.exec(parmsFour));
+			parmsFour.set(0, "The word http wbRecordReader text.");
+			System.out.println("'The word http wbRecordReader text.': " + func.exec(parmsFour));
 			
 			parmsFour.set(0, "Finally, (file://C:/Users/kennedy/.baschrc) two URLs. ftp://blue.mountain.com/?parm1=foo&parm2=bar");
 			System.out.println("'Finally, (file://C:/Users/kennedy/.baschrc) two URLs. ftp://blue.mountain.com/?parm1=foo&parm2=bar': " + func.exec(parmsFour));
