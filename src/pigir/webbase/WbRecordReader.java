@@ -15,7 +15,7 @@ import pigir.webbase.wbpull.crawlFinder.CrawlFinder;
 import pigir.webbase.wbpull.webStream.WebStreamIterator;
 import pigir.webbase.wbpull.webStream.WebStreamType;
 
-public class WbRecordReader extends RecordReader<String, Text>{
+public class WbRecordReader extends RecordReader<WbInputSplit, Text>{
 	
 	private static final boolean DO_READ_CONTENT = true;
 	private WbRecord valueWbRecord = null;
@@ -25,6 +25,7 @@ public class WbRecordReader extends RecordReader<String, Text>{
 	private WebStreamIterator webBaseStream;
 	
 	private Logger logger;
+	private WbInputSplit mySplit = null;
 	
 	@Override
 	public void initialize(InputSplit split, TaskAttemptContext context)
@@ -32,6 +33,7 @@ public class WbRecordReader extends RecordReader<String, Text>{
 		logger = Logger.getLogger(WebBaseLoader.class.getName());
 		PropertyConfigurator.configure("conf/log4j.properties");
 	
+		mySplit = (WbInputSplit) split;
 		// Process arguments
 		Configuration conf = context.getConfiguration();
 		crawlName = conf.get(WebBaseLoader.WEBBASE_CRAWL_NAME);
@@ -87,9 +89,9 @@ public class WbRecordReader extends RecordReader<String, Text>{
 	}
 	
 	@Override
-	public String getCurrentKey() throws IOException,
+	public WbInputSplit getCurrentKey() throws IOException,
 			InterruptedException {
-		return valueWbRecord.getMetadata().getURLAsString();
+		return mySplit;
 	}
 
 	@Override

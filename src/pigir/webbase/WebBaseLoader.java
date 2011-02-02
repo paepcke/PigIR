@@ -3,6 +3,7 @@ package pigir.webbase;
 import java.io.IOException;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -31,13 +32,20 @@ public class WebBaseLoader extends LoadFunc implements LoadPushDown {
 
 	public final Logger logger = Logger.getLogger(getClass().getName());
 	
+	private static final String DISTRIBUTOR_DEMON_URL_STRING = "http://wb1.stanford.edu:7008";
+
 	private final int NUM_OUTPUT_COLUMNS = 5;
 	private final int CONTENT_COL_INDEX = 5;
 	
+	public static URL DISTRIBUTOR_DEMON_URL = null;
+	
+	// Keys for property configurations:
+	public static final String WEBBASE_DISTRIBUTOR_DEMON_URL_STRING= "wbDistribDemonUrlStr";
 	public static final String WEBBASE_DISTRIBUTOR_MACHINE = "wbDistribMachine";
 	public static final String WEBBASE_DISTRIBUTOR_PORT = "wbDistribPort";
 	public static final String WEBBASE_CRAWL_NAME = "wbCrawlName";
 	public static final String WEBBASE_CRAWL_MIME = "wbCrawlMime";
+	public static final String WEBBASE_CRAWL_LIST_URL = "wbCrawlListURL";
 	
     // Vector with true wbRecordReader each position that corresponds to a
     // field that this loader is to include wbRecordReader its return tuples: 
@@ -61,8 +69,18 @@ public class WebBaseLoader extends LoadFunc implements LoadPushDown {
     		add("unknown");
     	}
     };
-	
+
+    private Job job = null;
+    
     protected WbRecordReader wbRecordReader = null;
+    
+    public WebBaseLoader() {
+    	try {
+    		DISTRIBUTOR_DEMON_URL = new URL(DISTRIBUTOR_DEMON_URL_STRING);
+    	} catch (Exception e) {
+    		// do nothing.
+    	}
+    }
     
 	@Override
 	public Tuple getNext() throws IOException {
@@ -178,8 +196,9 @@ public class WebBaseLoader extends LoadFunc implements LoadPushDown {
 	 * Location is expected to be a string <crawlName>:<mimeType>.
 	 */
 	@Override
-	public void setLocation(String location, Job job) throws IOException {
+	public void setLocation(String location, Job theJob) throws IOException {
 		
+		job = theJob;
 		String[] crawlSpec = location.split(":");
 		if (crawlSpec.length != 2) {
 			throw new IOException("WebBase crawl location must have the form <crawlName>:<crawlMime>. Instead, '" + 
@@ -205,7 +224,7 @@ public class WebBaseLoader extends LoadFunc implements LoadPushDown {
 	@SuppressWarnings("rawtypes")
 	@Override
 	public InputFormat getInputFormat() throws IOException {
-		return new WbInputFormat();
+		return new WbInputFormat(job);
 	}
 
 	@SuppressWarnings("rawtypes")
