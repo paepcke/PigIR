@@ -31,18 +31,18 @@ class TestWebBaseLoad {
 			URI piggybankPath = new File(env.get("PIG_HOME"),
 					"contrib/piggybank/java/piggybank.jar").toURI();
 			pserver.registerJar(piggybankPath.toString());
-			pserver.registerJar("contrib/PigIR.jar");
+			pserver.registerJar("contrib/PigIRWithSource.jar");
 			
 			pserver.registerQuery(
 					"docs = LOAD 'crawled_hosts.gov-12-2009.tx:text' " +
-					"		USING pigir.webbase.WebBaseLoader" +
+					"		USING pigir.webbase.WebBaseLoader() " +
 					"       AS (url:chararray, date:chararray, position:int, docid:int," +	// 
 					"           optionalHeaderFlds:bytearray, content:chararray);"
 			);
-			pserver.registerQuery("docsCulled = FOREACH docs GENERATE contentLength,date;");
+			//pserver.registerQuery("docsCulled = FOREACH docs GENERATE contentLength,date;");
 			//pserver.registerQuery("docsCulled = FOREACH docs GENERATE contentLength,content;");
-			//Common.print(pserver, "docs");
-			Common.print(pserver, "docsCulled");
+			Common.print(pserver, "docs");
+			//Common.print(pserver, "docsCulled");
 			pserver.dumpSchema("docs");
 			//pserver.dumpSchema("docsCulled");
 			

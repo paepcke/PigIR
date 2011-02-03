@@ -30,30 +30,27 @@ public class CrawlRequest implements Serializable
 	private String crawlName;
 	private String crawlMime;
 	
-	public CrawlRequest()
-	{
+	public CrawlRequest() {
 		//...
 	}
 
-	public String getCrawlName() 
-	{
+	public String getCrawlName() {
 		return crawlName;
 	}
 
-	public String getCrawlMime() 
-	{
+	public String getCrawlMime() {
 		return crawlMime;
 	}
 
-	public void setCrawlName(String crawlName) 
-	{
+	public void setCrawlName(String crawlName) {
 		this.crawlName = crawlName;
 	}
 
-	public void setCrawlMime(String crawlMime) 
-	{
+	public void setCrawlMime(String crawlMime) {
 		this.crawlMime = crawlMime;
 	}
 	
-	
+	public String toString() {
+		return "CrawlRequest[" + crawlName + ":" + crawlMime + "]";
+	}
 }

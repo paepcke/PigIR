@@ -29,13 +29,12 @@ public abstract class WbRecord extends Text implements WbRecordMap {
 	protected byte[] content;
 
 	// Instance variables:
-	private HashMap<String,String> headerMap = null;
-	private Long grandTotalBytesRead;
+	protected HashMap<String,String> headerMap = null;
 	private byte[] wbContent=null;
-	private HashSet<String> optionalHeaderKeysThisRecord;
 	
 	// Lookup table for properly capitalized WebBase header fields:
 	// Used wbRecordReader toString();
+	/*
 	@SuppressWarnings("serial")
 	private static final Map<String, String> WEBBASE_HEADER_FIELD_NAMES = new HashMap<String, String>() {
 		{
@@ -45,7 +44,7 @@ public abstract class WbRecord extends Text implements WbRecordMap {
 			put(WEBBASE_DOCID, "WebBase-DOCID");
 		}
 	};
-	
+	*/
 	
 	private static final String[] mandatoryHeaderFields = {WEBBASE_URL,
 														   WEBBASE_DATE,
@@ -275,7 +274,7 @@ public abstract class WbRecord extends Text implements WbRecordMap {
 		return res;
 	}
 	
-	private class Entry<K,V> implements Map.Entry<K,V> {
+	protected class Entry<K,V> implements Map.Entry<K,V> {
 
 		K key;
 		V value;

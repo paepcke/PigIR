@@ -37,8 +37,8 @@ import pigir.webbase.WbRecordFactory;
 public abstract class WebStream
 {
 	//constants
-	private static final int TIMESTAMP_LENGTH = 24;
-	private static final int MAX_URL_SIZE = 100*1024;
+	protected static final int TIMESTAMP_LENGTH = 24;
+	protected static final int MAX_URL_SIZE = 100*1024;
 	
 	private String ip;
 	private int port;
@@ -114,7 +114,8 @@ public abstract class WebStream
 		char	incomingDocType; //keep this here because we read it from the connection, even though we don't really use it 
 		int		docID, pageSize, urlLen, tsLen;
 		long	offset;
-		String	timeStamp, url, page;//NOTE: page variable exists only for debugging purposes
+		//String page; //NOTE: page variable exists only for debugging purposes
+		String	timeStamp, url;
 		byte[] tsBytes, urlBytes, pageBytes;
 		
 		Metadata metadata;
@@ -174,7 +175,7 @@ public abstract class WebStream
 					}
 					//page = new String(pageBytes, "UTF-8");
 					//page = new String(pageBytes, "ISO-8859-1");
-					page = new String(pageBytes, "US-ASCII");
+					//page = new String(pageBytes, "US-ASCII");
 					
 					pages.add(WbRecordFactory.getWbRecord(metadata, pageBytes));
 					this.numPagesRetrieved++;

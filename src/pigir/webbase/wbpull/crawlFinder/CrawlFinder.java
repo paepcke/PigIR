@@ -40,8 +40,9 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.PrintWriter;
 import java.net.Socket;
+import java.util.concurrent.TimeoutException;
+
 import org.apache.log4j.Logger;
-import org.apache.log4j.PropertyConfigurator;
 
 import pigir.webbase.wbpull.CrawlEntry;
 import pigir.webbase.wbpull.CrawlRequest;
@@ -53,6 +54,9 @@ import pigir.webbase.wbpull.webStream.WebStreamType;
 
 
 public class CrawlFinder {
+	
+	static final int DIRECTORY_READ_TIMEOUT = 5000; // time in msecs.
+	
 	static Logger logger = null;
 	//program arguments
 	private static final String nameArg			= "-name";
@@ -75,10 +79,11 @@ public class CrawlFinder {
 	public static void main(String[] args) {
 
 		logger = Logger.getLogger(CrawlFinder.class.getName());
-		PropertyConfigurator.configure("conf/log4j.properties");
+		//PropertyConfigurator.configure("conf/log4j.properties");
 	
 		//process arguments
-		processArguments(args);
+		//processArguments(args);
+		processArguments(new String[] {"-name:crawled_hosts.1208", "-type:text"});
 		
 		//ensure at least name and type arguments were supplied
 		if(crawlName == null || crawlType == null) {
@@ -112,7 +117,9 @@ public class CrawlFinder {
 		ws.startStream();
 	}
 	
-	public static CrawlEntry FindCrawl(String name, String mime) {		
+	public static CrawlEntry FindCrawl(String name, String mime) {
+		
+		CrawlEntry result;
 		//create a request to send to the directory service:
 		CrawlRequest cr = new CrawlRequest();
 		cr.setCrawlName(name);
@@ -120,7 +127,8 @@ public class CrawlFinder {
 		
 		try {
 			//set up socket and input/output streams
-			Socket dir_serv = new Socket(ipAddress, port);//TODO: change
+			Socket dir_serv = new Socket(ipAddress, port);//TODO: change to eventual crawl lookup server on WBxx
+			dir_serv.setSoTimeout(DIRECTORY_READ_TIMEOUT);
 			ObjectOutputStream oos = new ObjectOutputStream(dir_serv.getOutputStream());
 			ObjectInputStream ois = new ObjectInputStream(dir_serv.getInputStream());
 			
@@ -129,7 +137,14 @@ public class CrawlFinder {
 			oos.flush();
 			
 			//get the entry
-			CrawlEntry result = (CrawlEntry) ois.readObject();
+			try {
+				result = (CrawlEntry) ois.readObject();
+			} catch (Exception e) {
+				String errMsg = "Could not obtain machine name and port of distributor for crawl " +
+						name + ":" + mime; 
+				logger.error(errMsg);
+				throw new TimeoutException(errMsg);
+			}
 			
 			//close input/output streams and the socket
 			oos.close();

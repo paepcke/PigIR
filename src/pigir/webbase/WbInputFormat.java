@@ -17,6 +17,7 @@ import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.JobContext;
 import org.apache.hadoop.mapreduce.RecordReader;
 import org.apache.hadoop.mapreduce.TaskAttemptContext;
+import org.apache.log4j.Logger;
 
 /**
  * InputFormat for WebBase crawls. Mappers draw Web page streams
@@ -62,9 +63,13 @@ public class WbInputFormat extends InputFormat<WbInputSplit,Text> {
 	
 	int numOfMappers;
 	
-	//Vector<WbInputSplit> splits = new Vector<WbInputSplit>();
+	Logger logger = null;
+	
 	List<InputSplit> splits = new ArrayList<InputSplit>();
 	
+	/*-----------------------------------------------------
+	| Constructor
+	------------------------*/
 	/**
 	 * Gather necessary information, then compute split distribution.
 	 * @param jobContext
@@ -72,11 +77,16 @@ public class WbInputFormat extends InputFormat<WbInputSplit,Text> {
 	 */
 	public WbInputFormat(Job job) throws IOException {
 		
-		Configuration conf = job.getConfiguration();
+		Configuration conf;
+		if ((job == null) || ((conf = job.getConfiguration()) == null))
+			throw new IOException("Could not retrieve configuration from Job object.");
+		
+		logger = Logger.getLogger(getClass().getName());
+		// PropertyConfigurator.configure("conf/log4j.properties");
 		
 		// Get URL of distributor demon from job configuration, and
 		// get a distributor:
-		distribDemonUrlStr = conf.get(WebBaseLoader.WEBBASE_DISTRIBUTOR_DEMON_URL_STRING);
+		distribDemonUrlStr = conf.get(WebBaseLoader.WEBBASE_DISTRIBUTOR_DEMON_URL);
 		try {
 			distribDemonUrl = new URL(distribDemonUrlStr);
 		} catch (MalformedURLException e) {
@@ -87,11 +97,20 @@ public class WbInputFormat extends InputFormat<WbInputSplit,Text> {
 		
 		// Get URL of desired crawl's site list from jobContext:
 		
+		siteListUrlStr = conf.get(WebBaseLoader.WEBBASE_SITE_LIST_URL);
+		try {
+			siteListUrl = new URL(siteListUrlStr);
+		} catch (MalformedURLException e) {
+			throw new IOException("Could not obtain URL of WebBase site list. Job's respective context prop was '" + 
+								  siteListUrlStr +
+								  "'.");
+		}
+		
 		try {
 			siteListReader = new BufferedReader(new InputStreamReader(siteListUrl.openStream()));
 		} catch (IOException e) {
 			throw new IOException("Error retrieving site list from " +
-								  distribDemonUrlStr +
+								  siteListUrlStr +
 								  ". (" +
 								  e.getMessage() +
 								  ").");
@@ -99,9 +118,15 @@ public class WbInputFormat extends InputFormat<WbInputSplit,Text> {
 		
 		// Get max number of map tasks (defaulting to DEFAULT_NUM_OF_SPLITS) if needed.
 		numOfMappers = conf.getInt(NUM_OF_CPUS_PROP_NAME, DEFAULT_NUM_OF_SPLITS);
+		if (numOfMappers <= 0)
+			numOfMappers = 1;
 		
 		splits = computeSplitBoundaries();
 	}
+	
+	/*-----------------------------------------------------
+	| computeSplitBoundaries()
+	------------------------*/
 	
 	/**
 	 * Read the desired crawl's site list from WebBase site, and compute the
@@ -145,14 +170,20 @@ public class WbInputFormat extends InputFormat<WbInputSplit,Text> {
 			// Get a [<siteName>, <numPages>]:
 			siteNumPagePairs = siteAndNumPages.split("[\\s]");
 			if (siteNumPagePairs.length != 2) {
+				logger.warn("Bad site list entry (more or fewer than two tokens): '" + siteAndNumPages + "'.");
 				if (++badSiteListLine > MAX_NUM_BAD_SITELIST_ENTRIES) {
 					throw new IOException(makeSiteListErrorMsg(siteAndNumPages));
-				}
+				} else
+					continue;
 			}
 			try {
 				numPagesThisSite = Integer.parseInt(siteNumPagePairs[NUM_PAGES]);
 			} catch (NumberFormatException e) {
+				logger.warn("Bad site list entry (second token is not an integer): '" + siteAndNumPages + "'.");
+				if (++badSiteListLine > MAX_NUM_BAD_SITELIST_ENTRIES) {
 				throw new IOException(makeSiteListErrorMsg(siteAndNumPages) + "(Second token is not an integer).");
+				} else
+					continue;
 			}
 			totalNumPages += numPagesThisSite;
 			siteListEntries.add(new SiteListEntry(siteNumPagePairs[SITE], numPagesThisSite, totalNumPages, ++crawlPos));
@@ -164,10 +195,16 @@ public class WbInputFormat extends InputFormat<WbInputSplit,Text> {
 			}
 		}
 		
+		if (numOfMappers <= 0)
+			throw new IOException("Number of mappers must be at least 1. Specified instead: " + numOfMappers);
+		
 		pagesPerMapper = totalNumPages / numOfMappers;
 		return generateSplits(pagesPerMapper, siteListEntries, siteListIndex);
 	}
 	
+	/*-----------------------------------------------------
+	| generateSplits()
+	------------------------*/
 	/**
 	 * Find one split boundary after another, advancing through
 	 * the site list. Generate a split object for each split.
@@ -202,6 +239,9 @@ public class WbInputFormat extends InputFormat<WbInputSplit,Text> {
 		return splits;
 	}
 	
+	/*-----------------------------------------------------
+	| findSplitBoundary()
+	------------------------*/
 	/**
 	 * Heavy lifting for finding split boundaries in site lists. 
 	 * @param numOfAccumulatedPages Top number of pages that are contained in 
@@ -266,20 +306,26 @@ public class WbInputFormat extends InputFormat<WbInputSplit,Text> {
 		return siteListEntries.get(siteListEntries.size()-1);
 	}
 	
-	
-	
+	/*-----------------------------------------------------
+	| makeSiteListErrorMsg()
+	------------------------*/
+
 	private String makeSiteListErrorMsg (String siteListLine) {
 		return "Sitelist at " +
 			    distribDemonUrlStr +
-			    " has too many bad lines (more than " +
+			    " has too many bad lines" +
+			    "\n (more than " +
 			    MAX_NUM_BAD_SITELIST_ENTRIES +
-			    "). Most recently: '" +
+			    "). Most recently: \n'" +
 			    siteListLine +
 			    "'.";		
 	}
 
 	// ---------------------------------------  Methods Required from  Superclass ---------------------------
 	
+	/*-----------------------------------------------------
+	| createRecordReader()
+	------------------------*/
 	@Override
 	public RecordReader<WbInputSplit, Text>
 	createRecordReader(InputSplit split, 
@@ -287,6 +333,9 @@ public class WbInputFormat extends InputFormat<WbInputSplit,Text> {
 		return new WbRecordReader();
 	}
 
+	/*-----------------------------------------------------
+	| getSplits()
+	------------------------*/
 	@Override
 	public List<InputSplit> getSplits(JobContext context) throws IOException,
 	InterruptedException {
@@ -295,6 +344,11 @@ public class WbInputFormat extends InputFormat<WbInputSplit,Text> {
 
 	// ---------------------------------------  Support Classes ---------------------------	
 	
+	/**
+	 * One entry in the site list index (see head comment above)
+	 * @author paepcke
+	 *
+	 */
 	private class SiteIndexEntry {
 		public int totalPageAccumulation;
 		public int siteEntryIndex;
@@ -309,6 +363,11 @@ public class WbInputFormat extends InputFormat<WbInputSplit,Text> {
 		}
 	}
 
+	/**
+	 * One entry in the list of sites in one crawl (see head comment above)
+	 * @author paepcke
+	 *
+	 */
 	private class SiteListEntry {
 		public String site;            // Site name
 		public int numPages;           // Num pages this site
@@ -331,7 +390,10 @@ public class WbInputFormat extends InputFormat<WbInputSplit,Text> {
 	
 	public WbInputFormat() throws IOException {
 		
-		int TEST_NUM_OF_MAPPERS = 10;
+		//int TEST_NUM_OF_MAPPERS = 10;
+		//int TEST_NUM_OF_MAPPERS = 1;
+		int TEST_NUM_OF_MAPPERS = 0;
+		
 		// total num pages manually calculated: 3329
 		String fakeSiteList = "" +
 			   "www.calvoter.org	2751\n" +
@@ -368,7 +430,7 @@ public class WbInputFormat extends InputFormat<WbInputSplit,Text> {
 		System.out.println("Number of splits: " + splits.size());
 		for (InputSplit oneSplit : splits) {
 			WbInputSplit split = (WbInputSplit) oneSplit;
-			System.out.println(split.startSite + ", " + split.endSite + " (" + split.numPages + ")");
+			System.out.println(split.getStartSite() + ", " + split.getEndSite() + " (" + split.getNumPages() + ")");
 		}
 		
 	}
