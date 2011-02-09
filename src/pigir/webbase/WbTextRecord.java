@@ -35,7 +35,7 @@ public class WbTextRecord extends WbRecord  {
 
 	@Override
 	public String getContent() {
-		return new String(this.content);
+		return new String(this.wbContent);
 	}
 
 	@Override

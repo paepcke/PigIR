@@ -36,6 +36,6 @@ public abstract class WbBinaryRecord extends WbRecord {
 
 	@Override
 	public byte[] getContent() {
-		return this.content;
+		return this.wbContent;
 	}
 }

@@ -39,21 +39,22 @@ public abstract class WebStream
 	//constants
 	protected static final int TIMESTAMP_LENGTH = 24;
 	protected static final int MAX_URL_SIZE = 100*1024;
+	protected static final int MAX_WEBPAGE_SIZE = 100 * 1024 * 1024;
 	
-	private String ip;
-	private int port;
+	protected String machineName;
+	protected int port;
 	
 	private Integer offset = null;
 	
-	private int totalNumPages; //total number of pages wbRecordReader the crawl
-	private int numPagesRetrieved;
+	private int numPagesRequested; //total number of pages wbRecordReader is to pull
+	protected int totalNumPagesRetrieved; // let subclasses update this directly
 	
 	public WebStream(String ip, int port, int totalNumPages)
 	{
-		this.ip = ip;
+		this.machineName = ip;
 		this.port = port;
-		this.totalNumPages = totalNumPages;
-		this.numPagesRetrieved = 0;
+		this.numPagesRequested = totalNumPages;
+		this.totalNumPagesRetrieved = 0;
 	}
 	
 	public WebStream(String ip, String port, int totalNumPages)
@@ -61,47 +62,39 @@ public abstract class WebStream
 		this(ip, Integer.parseInt(port), totalNumPages);
 	}
 	
-	public String getIp() 
-	{
-		return ip;
+	public String getMachineName() {
+		return machineName;
 	}
 
-	public int getPort() 
-	{
+	public int getPort() {
 		return port;
 	}
 	
-	public int getOffset()
-	{
+	public int getOffset() {
 		return this.offset.intValue();
 	}
 	
-	public void setOffset(int n)
-	{
+	public void setOffset(int n) {
 		this.offset = Integer.valueOf(n);
 	}
 
-	public int getTotalNumPages()
-	{
-		return this.totalNumPages;
+	public int getNumPagesRequested() {
+		return this.numPagesRequested;
 	}
 	
-	public int getNumPagesRetrieved()
-	{
-		return this.numPagesRetrieved;
+	public int getNumPagesRetrieved() {
+		return this.totalNumPagesRetrieved;
 	}
 	
-	public Vector<WbRecord> getAllPages()
-	{
+	public Vector<WbRecord> getAllPages() {
 		//TODO: do we want to do this? this will probably take up too much memory...
 		Vector<WbRecord> content = getNPages(130000000);
-		System.out.println("Number of pages expected:	" + this.totalNumPages);
-		System.out.println("Actual number of pages wbRecordReader crawl:	" + this.numPagesRetrieved);
+		System.out.println("Number of pages expected:	" + this.numPagesRequested);
+		System.out.println("Actual number of pages wbRecordReader crawl:	" + this.totalNumPagesRetrieved);
 		return content;
 	}
 	
-	public Vector<WbRecord> getNPages(int n)
-	{
+	public Vector<WbRecord> getNPages(int n) {
 		Vector<WbRecord> pages = new Vector<WbRecord>();
 		
 		//socket info
@@ -120,10 +113,9 @@ public abstract class WebStream
 		
 		Metadata metadata;
 		
-		try 
-		{
+		try {
 			//set up socket and input/output streams
-			distributor = new Socket(ip, port);
+			distributor = new Socket(machineName, port);
 			in	= new DataInputStream(distributor.getInputStream());
 			out	= new DataOutputStream(distributor.getOutputStream());
 			
@@ -160,14 +152,13 @@ public abstract class WebStream
 					url = new String(urlBytes);
 					
 					//construct metadata
-					metadata = new Metadata(docID, offset, timeStamp, url);
+					metadata = new Metadata(docID, pageSize, offset, timeStamp, url);
 								
 					//read page
 					pageBytes = new byte[pageSize];
 					int bytesToRead = pageSize;
 					int numRead = 0; 
-					while(bytesToRead > 0)
-					{
+					while(bytesToRead > 0) {
 						numRead = in.read(pageBytes, pageSize - bytesToRead, bytesToRead);
 						if(numRead < 1)
 							break;
@@ -178,14 +169,10 @@ public abstract class WebStream
 					//page = new String(pageBytes, "US-ASCII");
 					
 					pages.add(WbRecordFactory.getWbRecord(metadata, pageBytes));
-					this.numPagesRetrieved++;
-				}
-				catch(EOFException e)
-				{
+					this.totalNumPagesRetrieved++;
+				}catch(EOFException e) {
 					break;
-				}
-				catch(IOException e)
-				{
+				} catch(IOException e){
 					break;
 				}
 			}			
@@ -194,18 +181,13 @@ public abstract class WebStream
 			distributor.close();
 			in.close();
 			out.close();
-		} 
-		catch (UnknownHostException e) 
-		{
+		} catch (UnknownHostException e) {
+			e.printStackTrace();
+			return null;
+		} catch (IOException e)	{
 			e.printStackTrace();
 			return null;
 		}
-		catch (IOException e) 
-		{
-			e.printStackTrace();
-			return null;
-		}
-		
 		return pages;
 	}
 }

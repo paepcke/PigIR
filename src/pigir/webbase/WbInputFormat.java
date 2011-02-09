@@ -1,23 +1,23 @@
 package pigir.webbase;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.StringReader;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.InputFormat;
 import org.apache.hadoop.mapreduce.InputSplit;
-import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.JobContext;
 import org.apache.hadoop.mapreduce.RecordReader;
 import org.apache.hadoop.mapreduce.TaskAttemptContext;
 import org.apache.log4j.Logger;
+
+import pigir.MultiTypeProperties;
 
 /**
  * InputFormat for WebBase crawls. Mappers draw Web page streams
@@ -50,15 +50,8 @@ import org.apache.log4j.Logger;
 public class WbInputFormat extends InputFormat<WbInputSplit,Text> {
 	
 	private static int MAX_NUM_BAD_SITELIST_ENTRIES = 100;
-	private static int DEFAULT_NUM_OF_SPLITS = 1;
-	private static String NUM_OF_CPUS_PROP_NAME = "mapred.map.tasks";
-	private final int SITE_INDEX_GRANULARITY = 10;
 
-	String distribDemonUrlStr = "";
-	URL    distribDemonUrl = null;
-	
-	String siteListUrlStr = "";
-	URL    siteListUrl = null;
+	DistributorContact distributorContact = null;
 	BufferedReader siteListReader = null;
 	
 	int numOfMappers;
@@ -75,49 +68,37 @@ public class WbInputFormat extends InputFormat<WbInputSplit,Text> {
 	 * @param jobContext
 	 * @throws IOException
 	 */
-	public WbInputFormat(Job job) throws IOException {
+	public WbInputFormat(MultiTypeProperties wbJobProperties) throws IOException {
 		
-		Configuration conf;
-		if ((job == null) || ((conf = job.getConfiguration()) == null))
-			throw new IOException("Could not retrieve configuration from Job object.");
+		if (wbJobProperties == null)
+			throw new IOException("Bad WebBase configuration: " + wbJobProperties);
 		
 		logger = Logger.getLogger(getClass().getName());
 		// PropertyConfigurator.configure("conf/log4j.properties");
 		
 		// Get URL of distributor demon from job configuration, and
 		// get a distributor:
-		distribDemonUrlStr = conf.get(WebBaseLoader.WEBBASE_DISTRIBUTOR_DEMON_URL);
-		try {
-			distribDemonUrl = new URL(distribDemonUrlStr);
-		} catch (MalformedURLException e) {
-			throw new IOException("Could not obtain URL of WebBase distributor demon from job context parameter. URL from jobContext was: '" + 
-								  distribDemonUrlStr +
-								  "'.");
-		}
 		
-		// Get URL of desired crawl's site list from jobContext:
+		String distributorContactStr = wbJobProperties.getProperty(Constants.WB_DISTRIBUTOR_DEMON_KEY); 
+		distributorContact = new DistributorContact(distributorContactStr);
 		
-		siteListUrlStr = conf.get(WebBaseLoader.WEBBASE_SITE_LIST_URL);
+		String siteListURLStr= null;
 		try {
-			siteListUrl = new URL(siteListUrlStr);
-		} catch (MalformedURLException e) {
-			throw new IOException("Could not obtain URL of WebBase site list. Job's respective context prop was '" + 
-								  siteListUrlStr +
-								  "'.");
-		}
-		
-		try {
-			siteListReader = new BufferedReader(new InputStreamReader(siteListUrl.openStream()));
+			File siteListPath = new File(distributorContact.getSiteListPath());
+			String siteListFileName = siteListPath.getName();
+			siteListURLStr = Constants.CRAWL_SITE_LIST_URL_STUB + siteListFileName; 
+			URL siteListURL = new URL(siteListURLStr);
+			siteListReader = new BufferedReader(new InputStreamReader(siteListURL.openStream()));
 		} catch (IOException e) {
 			throw new IOException("Error retrieving site list from " +
-								  siteListUrlStr +
+								  siteListURLStr +
 								  ". (" +
 								  e.getMessage() +
 								  ").");
 		}
 		
 		// Get max number of map tasks (defaulting to DEFAULT_NUM_OF_SPLITS) if needed.
-		numOfMappers = conf.getInt(NUM_OF_CPUS_PROP_NAME, DEFAULT_NUM_OF_SPLITS);
+		numOfMappers = wbJobProperties.getInt(Constants.NUM_OF_CPUS_PROP_NAME, Constants.DEFAULT_NUM_OF_SPLITS);
 		if (numOfMappers <= 0)
 			numOfMappers = 1;
 		
@@ -152,16 +133,15 @@ public class WbInputFormat extends InputFormat<WbInputSplit,Text> {
 		
 		String siteAndNumPages;
 		String[] siteNumPagePairs;
+		String siteName;
 		int numPagesThisSite;
 		int totalNumPages = 0;
 		int badSiteListLine = 0;
-		int numLinesRead = 0;
 		
 		int pagesPerMapper;
 		int crawlPos = -1;
 		
 		ArrayList<SiteListEntry> siteListEntries = new ArrayList<SiteListEntry>(); 
-		ArrayList<SiteIndexEntry> siteListIndex  = new ArrayList<SiteIndexEntry>(); 
 		
 		// Go through the site list and build two data structures:
 		//    ArrayList<SiteListEntry>: <siteName>,<numPagesThatSite>,<accumulatedPagesInclThatSite>
@@ -176,6 +156,11 @@ public class WbInputFormat extends InputFormat<WbInputSplit,Text> {
 				} else
 					continue;
 			}
+			siteName = siteNumPagePairs[SITE].trim();
+			// Skip over comments:
+			if (siteName.startsWith("#")) {
+				continue;
+			}
 			try {
 				numPagesThisSite = Integer.parseInt(siteNumPagePairs[NUM_PAGES]);
 			} catch (NumberFormatException e) {
@@ -186,124 +171,117 @@ public class WbInputFormat extends InputFormat<WbInputSplit,Text> {
 					continue;
 			}
 			totalNumPages += numPagesThisSite;
-			siteListEntries.add(new SiteListEntry(siteNumPagePairs[SITE], numPagesThisSite, totalNumPages, ++crawlPos));
+			siteListEntries.add(new SiteListEntry(siteName, numPagesThisSite, totalNumPages, ++crawlPos));
 			
-			// If appropriate, make an index entry:
-			if (++numLinesRead > SITE_INDEX_GRANULARITY) {
-				siteListIndex.add(new SiteIndexEntry(totalNumPages, siteListEntries.size() - 1));
-				numLinesRead = 0;
-			}
 		}
 		
 		if (numOfMappers <= 0)
 			throw new IOException("Number of mappers must be at least 1. Specified instead: " + numOfMappers);
 		
 		pagesPerMapper = totalNumPages / numOfMappers;
-		return generateSplits(pagesPerMapper, siteListEntries, siteListIndex);
+		return generateSplits(pagesPerMapper, numOfMappers, siteListEntries);
 	}
 	
 	/*-----------------------------------------------------
-	| generateSplits()
+	| generateSplits() 
 	------------------------*/
+	
 	/**
-	 * Find one split boundary after another, advancing through
-	 * the site list. Generate a split object for each split.
-	 * @param pagesPerMapper
-	 * @param siteListEntries
-	 * @param siteListIndex
-	 * @return
+	 * Given a list of crawl site list entries, partition the list 
+	 * into roughly equal-size sets of sites.  Return a list of WbInputSplit
+	 * objects for use by Hadoop.
+	 * @param pagesPerMapper The ideal number of pages in each split. 
+	 * @param numMappers The number of mapper tasks
+	 * @param siteListEntries ArrayList of objects that contain information 
+	 * about each Web site in the crawl.
+	 * @return A list of WbInputSplit objects.
 	 */
 	private List<InputSplit> generateSplits(int pagesPerMapper, 
-												ArrayList<SiteListEntry> siteListEntries,
-												ArrayList<SiteIndexEntry> siteListIndex) {
-		int thisSplitSize = 0;
-		int highSiteIndex;
-		SiteListEntry lowSite = siteListEntries.get(0);
-		SiteListEntry highSite = null;
-		int maxAccumulatedPages = pagesPerMapper;
-		int prevAccumulatedPages = 0;
+			                                int numMappers,
+			                                ArrayList<SiteListEntry> siteListEntries) {
+		int first = 0;
+		int upto  = siteListEntries.size();
+		int pageLimit = pagesPerMapper;
+		int seamIndex;
+		int prevSeam = -1;
+		int[] splitSeamIndices = new int[numMappers];
 		
-		for (int i=0; i<numOfMappers; i++) {
-			highSite = findSplitBoundary(maxAccumulatedPages, siteListEntries, siteListIndex);
-			highSiteIndex = highSite.crawlPosition;
-			thisSplitSize = highSite.accumulatedPages - prevAccumulatedPages;
-			prevAccumulatedPages = highSite.accumulatedPages;
-			// Next upper split boundary:
-			maxAccumulatedPages += thisSplitSize;
-			splits.add(new WbInputSplit(lowSite.site, highSite.site, thisSplitSize, distribDemonUrl));
-			lowSite = siteListEntries.get(Math.min(highSiteIndex + 1, siteListEntries.size() - 1));
-			if (lowSite == highSite)
-				break;
+		// Find the indices into the site list that are seams
+		// of splits. We'll get an array like [10,45,72]. This array
+		// would be for four splits: 0-10, 11-45, 46-72, 73-end. Each
+		// range of sites will contain just under the pagesPerMapper
+		// number of pages:
+		for (int mapperNum=0; mapperNum<numMappers; mapperNum++) {
+			// Do a binary search over the part of the site list that
+			// is still to be partitioned. The result will be the index
+			// into the site list to the site that will keep the total
+			// of this split to just below the optimal (pagesPerMapper):
+			seamIndex = indexIntoSiteEntryList(siteListEntries, first, upto, pageLimit);
+			splitSeamIndices[mapperNum] = seamIndex;
+			pageLimit = siteListEntries.get(seamIndex).accumulatedPages + pagesPerMapper;
+			first = seamIndex + 1;
+		}
+		
+		// Now we have the list of split indices. Generate
+		// WbInputSplit objects for each split:
+		int lastIndex = splitSeamIndices[splitSeamIndices.length - 1];
+		SiteListEntry lowSite = null;
+		SiteListEntry highSite = null;
+		int numPagesPrevSplit = 0;
+		int numPagesCurrSplit = 0;
+		for (int currentSeam : splitSeamIndices) {
+			lowSite  = siteListEntries.get(prevSeam + 1);
+			highSite = siteListEntries.get(currentSeam < lastIndex ? currentSeam : siteListEntries.size() - 1);
+			numPagesCurrSplit = highSite.accumulatedPages - numPagesPrevSplit;
+			WbInputSplit oneSplit = new WbInputSplit(lowSite.site, 
+													 highSite.site,
+													 numPagesCurrSplit,
+													 distributorContact);
+			splits.add(oneSplit);
+			numPagesPrevSplit = numPagesCurrSplit;
+			prevSeam = currentSeam;
 		}
 		
 		return splits;
 	}
 	
 	/*-----------------------------------------------------
-	| findSplitBoundary()
+	| indexIntoSiteEntryList() 
 	------------------------*/
+	
 	/**
-	 * Heavy lifting for finding split boundaries in site lists. 
-	 * @param numOfAccumulatedPages Top number of pages that are contained in 
-	 * all splits up to, and including the one that we are trying to find in
-	 * this method.
-	 * @param siteListEntries List of site list entry objects.
-	 * @param siteListIndex   The index we build in computeSplitBoundaries().
-	 * @return The sitelist entry that is the upper bound of the split.
+	 * Given the complete site entry list, two indices into
+	 * the list to denote a slice of the list, and a target
+	 * number of pages, find the index to the entry whose cumulative 
+	 * number of pages is just below the given target.
+	 * 
+	 * Uses efficient binary search, since the lists contain tens
+	 * of thousands of entries.
+	 * @param siteList
+	 * @param first
+	 * @param upto
+	 * @param numPagesWanted
+	 * @return An integer that is the index into siteList to the entry.
 	 */
-	private SiteListEntry findSplitBoundary(int numOfAccumulatedPages,
-			                      ArrayList<SiteListEntry> siteListEntries,
-								  ArrayList<SiteIndexEntry> siteListIndex) {
-		
-		int halfPoint;
-		int lowPoint = 0;
-		int highPoint = siteListIndex.size() - 1;
-		int lowBallSiteEntryPt;
-		SiteIndexEntry indexEntry;
-		
-		while (true) {
-			halfPoint = (highPoint - lowPoint) / 2;
-			indexEntry = siteListIndex.get(lowPoint + halfPoint);
-			if (indexEntry.totalPageAccumulation == numOfAccumulatedPages) {
-				break;			}
-			if (indexEntry.totalPageAccumulation > numOfAccumulatedPages) {
-				highPoint = halfPoint;			
-				if (highPoint <= lowPoint)
-					break;
+	private int indexIntoSiteEntryList (ArrayList<SiteListEntry> siteList,
+										int first,
+										int upto,
+										int numPagesWanted) {
+		int mid = -1;
+		while (first < upto) {
+			mid = (first + upto) / 2;  // Compute mid point.
+			if (numPagesWanted < siteList.get(mid).accumulatedPages) {
+				upto = mid;     // repeat search in bottom half.
+			} else if (numPagesWanted > siteList.get(mid).accumulatedPages) {
+				first = mid + 1;  // Repeat search in top half.
 			} else {
-				lowPoint += halfPoint + 1;
-				if (lowPoint >= highPoint) {
-					break;
-				}
+				break;     // Found it. return position
 			}
 		}
-		if ((siteListIndex.get(lowPoint)).totalPageAccumulation > numOfAccumulatedPages)
-			lowBallSiteEntryPt = siteListIndex.get(Math.max(0,lowPoint - 1)).siteEntryIndex;
+		if (mid >= 0)
+			return mid;
 		else
-			lowBallSiteEntryPt = siteListIndex.get(lowPoint).siteEntryIndex;
-		
-		// Was the maximum split size reached within the first 
-		// index granule?
-		if (lowBallSiteEntryPt == SITE_INDEX_GRANULARITY)
-			lowBallSiteEntryPt = 0;
-
-		// We now know the index into the site entry list at which 
-		// split size pages, or just below are contained. Since the
-		// index only has entries every SITE_INDEX_GRANULARITY entries,
-		// we now find the precise point in the site list where a split
-		// boundary sits:
-		
-		SiteListEntry resListEntry;
-		// If 
-		for (int siteEntryPt=lowBallSiteEntryPt; 
-			 siteEntryPt < Math.min(siteListEntries.size(), siteEntryPt + SITE_INDEX_GRANULARITY);
-			 siteEntryPt++) {
-			resListEntry = siteListEntries.get(siteEntryPt);
-			if (resListEntry.accumulatedPages >= numOfAccumulatedPages)
-				return resListEntry;
-		}
-		// Return the last entry:
-		return siteListEntries.get(siteListEntries.size()-1);
+			return upto;
 	}
 	
 	/*-----------------------------------------------------
@@ -312,7 +290,7 @@ public class WbInputFormat extends InputFormat<WbInputSplit,Text> {
 
 	private String makeSiteListErrorMsg (String siteListLine) {
 		return "Sitelist at " +
-			    distribDemonUrlStr +
+			    distributorContact.getSiteListPath() + 
 			    " has too many bad lines" +
 			    "\n (more than " +
 			    MAX_NUM_BAD_SITELIST_ENTRIES +
@@ -344,25 +322,6 @@ public class WbInputFormat extends InputFormat<WbInputSplit,Text> {
 
 	// ---------------------------------------  Support Classes ---------------------------	
 	
-	/**
-	 * One entry in the site list index (see head comment above)
-	 * @author paepcke
-	 *
-	 */
-	private class SiteIndexEntry {
-		public int totalPageAccumulation;
-		public int siteEntryIndex;
-		
-		public SiteIndexEntry(int theTotalPages, int theEntryIndex) {
-			totalPageAccumulation = theTotalPages;
-			siteEntryIndex = theEntryIndex;
-		}
-		
-		public String toString() {
-			return "SiteIndexEntry[Sofar: " + totalPageAccumulation + "; EntryIndex: " + siteEntryIndex + "]";
-		}
-	}
-
 	/**
 	 * One entry in the list of sites in one crawl (see head comment above)
 	 * @author paepcke
@@ -433,14 +392,5 @@ public class WbInputFormat extends InputFormat<WbInputSplit,Text> {
 			System.out.println(split.getStartSite() + ", " + split.getEndSite() + " (" + split.getNumPages() + ")");
 		}
 		
-	}
-	
-	public static void main(String[] args) {
-		try {
-			new WbInputFormat();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
 	}
  }

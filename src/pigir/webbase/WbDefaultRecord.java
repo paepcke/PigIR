@@ -39,6 +39,6 @@ public class WbDefaultRecord extends WbBinaryRecord {
 	}
 	
 	public String getContentAsString() {
-		return new String(this.content);
+		return new String(this.wbContent);
 	}
 }

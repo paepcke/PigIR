@@ -34,10 +34,9 @@ class TestWebBaseLoad {
 			pserver.registerJar("contrib/PigIRWithSource.jar");
 			
 			pserver.registerQuery(
-					"docs = LOAD 'crawled_hosts.gov-12-2009.tx:text' " +
+					"docs = LOAD 'crawled_hosts.1105.tx.f:text' " +
 					"		USING pigir.webbase.WebBaseLoader() " +
-					"       AS (url:chararray, date:chararray, position:int, docid:int," +	// 
-					"           optionalHeaderFlds:bytearray, content:chararray);"
+					"       AS (url:chararray, date:chararray, pageSize:int, position:int, docid:int, content:chararray);"
 			);
 			//pserver.registerQuery("docsCulled = FOREACH docs GENERATE contentLength,date;");
 			//pserver.registerQuery("docsCulled = FOREACH docs GENERATE contentLength,content;");

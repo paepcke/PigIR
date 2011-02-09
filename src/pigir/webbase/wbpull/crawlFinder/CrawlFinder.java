@@ -105,7 +105,7 @@ public class CrawlFinder {
 			return;
 		}
 		
-		logger.info(ws.getIp() + ":" + ws.getPort());
+		logger.info(ws.getMachineName() + ":" + ws.getPort());
 		
 		/*for(int i = 0; i < 2; i++) {
 			if(ws.hasNext())

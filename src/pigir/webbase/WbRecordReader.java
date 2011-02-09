@@ -2,15 +2,12 @@ package pigir.webbase;
 
 import java.io.IOException;
 
-import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.InputSplit;
 import org.apache.hadoop.mapreduce.RecordReader;
 import org.apache.hadoop.mapreduce.TaskAttemptContext;
 import org.apache.log4j.Logger;
 
-import pigir.webbase.wbpull.CrawlEntry;
-import pigir.webbase.wbpull.crawlFinder.CrawlFinder;
 import pigir.webbase.wbpull.webStream.BufferedWebStreamIterator;
 
 /**
@@ -31,13 +28,24 @@ public class WbRecordReader extends RecordReader<WbInputSplit, Text>{
 	
 	private static final boolean DO_READ_CONTENT = true;
 	private WbRecord valueWbRecord = null;
-	private String crawlName;
-	private String crawlType;
+	//private String crawlName;
+	//private String crawlType;
+	private DistributorContact distributorDemonContact = null;
 	
 	private BufferedWebStreamIterator webBaseStream;
 	
-	private Logger logger;
+	private static Logger logger = null;
 	private WbInputSplit mySplit = null;
+	
+	/*-----------------------------------------------------
+	| getLogger() 
+	------------------------*/
+	
+	public static Logger getLogger() {
+		if (logger == null)
+			logger = Logger.getLogger(WebBaseLoader.class.getName());
+		return logger;
+	}
 	
 	/*-----------------------------------------------------
 	| initialize()
@@ -50,33 +58,14 @@ public class WbRecordReader extends RecordReader<WbInputSplit, Text>{
 		//PropertyConfigurator.configure("conf/log4j.properties");
 	
 		mySplit = (WbInputSplit) split;
-		// Process arguments
-		Configuration conf = context.getConfiguration();
-		crawlName = conf.get(WebBaseLoader.WEBBASE_CRAWL_NAME);
-		crawlType = conf.get(WebBaseLoader.WEBBASE_CRAWL_TYPE);
-		
-		// Ensure that name and type arguments were supplied
-		if(crawlName == null || crawlType == null) {
-			logger.error("Either crawl name or crawl type not specified.");
-			throw new IOException("Either WebBase crawl name or crawl type not specified.");
-		}
-		
-		// Get a distributor for this split:
-		logger.info("Getting distributor address for " + crawlName + ":" + crawlType);
-		CrawlEntry entry = CrawlFinder.FindCrawl(crawlName, crawlType);
-		if(entry == null) {
-			String errMsg = "Crawl access information for '" + 
-						  crawlName + ":" + crawlType + 
-						  "' could not be obtained from WebBase distributor demon."; 
-			logger.error(errMsg);
-			throw new IOException(errMsg);
-		}
+		distributorDemonContact = mySplit.getDistributorDemonContact();
 		
 		logger.info("Attempt to start WebBase stream from distributor " + 
-				entry.getMachineName() + ".stanford.edu:" + entry.getPort());
+				distributorDemonContact.getDistributorMachineName() + ":" + 
+				distributorDemonContact.getDistributorPortAsStr());
 		
-		webBaseStream = new BufferedWebStreamIterator(entry.getMachineName(), 
-													  entry.getPort(), 
+		webBaseStream = new BufferedWebStreamIterator(distributorDemonContact.getDistributorMachineName(), 
+													  distributorDemonContact.getDistributorPort(), 
 													  mySplit.getStartSite(), 
 													  mySplit.getEndSite(), 
 													  mySplit.getNumPages());
@@ -88,7 +77,7 @@ public class WbRecordReader extends RecordReader<WbInputSplit, Text>{
 		}
 		
 		logger.info("Successfully obtained WebBase stream " + 
-					webBaseStream.getIp() + ":" + webBaseStream.getPort());
+					webBaseStream.getMachineName() + ":" + webBaseStream.getPort());
 		
 		/*for(int i = 0; i < 2; i++) {
 			if(webBaseStream.hasNext())
@@ -136,7 +125,7 @@ public class WbRecordReader extends RecordReader<WbInputSplit, Text>{
 	------------------------*/
 	@Override
 	public float getProgress() throws IOException, InterruptedException {
-		return 100.0f * (((float) webBaseStream.getNumPagesRetrieved()) / ((float)webBaseStream.getTotalNumPages()));   
+		return 100.0f * (((float) webBaseStream.getNumPagesRetrieved()) / ((float)webBaseStream.getNumPagesRequested()));   
 	}
 
 	/*-----------------------------------------------------

@@ -19,6 +19,7 @@ public abstract class WbRecord extends Text implements WbRecordMap {
 	// All lower-case WebBase header field names:
 	public static final String WEBBASE_URL = "webbase-url";
 	public static final String WEBBASE_DATE = "webbase-date";
+	public static final String WEBBASE_SIZE = "webbase-pageSize";
 	public static final String WEBBASE_POSITION = "webbase-position";
 	public static final String WEBBASE_DOCID = "webbase-docid";
 	public static final String CONTENT = "content";
@@ -26,41 +27,25 @@ public abstract class WbRecord extends Text implements WbRecordMap {
 	
 	private Metadata md;
 	private Vector<String> httpHeader;
-	protected byte[] content;
-
-	// Instance variables:
-	protected HashMap<String,String> headerMap = null;
-	private byte[] wbContent=null;
-	
-	// Lookup table for properly capitalized WebBase header fields:
-	// Used wbRecordReader toString();
-	/*
-	@SuppressWarnings("serial")
-	private static final Map<String, String> WEBBASE_HEADER_FIELD_NAMES = new HashMap<String, String>() {
-		{
-			put(WEBBASE_URL, "WebBase-URL");
-			put(WEBBASE_DATE, "WebBase-Date");
-			put(WEBBASE_POSITION, "WebBase-Position");
-			put(WEBBASE_DOCID, "WebBase-DOCID");
-		}
-	};
-	*/
+	protected byte[] wbContent=null;
 	
 	private static final String[] mandatoryHeaderFields = {WEBBASE_URL,
 														   WEBBASE_DATE,
+														   WEBBASE_SIZE,
 														   WEBBASE_POSITION,
 														   WEBBASE_DOCID
 	};
 		
-	
 	// Provide a constructor for each of the header datatypes:
 	private static Constructor<String> strConstructor = null;
 	private static Constructor<Integer> intConstructor = null;
+	private static Constructor<Long> longConstructor = null;
 	
 	{
 		try {
 			strConstructor = String.class.getConstructor(String.class);
 			intConstructor = Integer.class.getConstructor(String.class);
+			longConstructor = Long.class.getConstructor(String.class);
 		} catch (SecurityException e1) {
 			e1.printStackTrace();
 		} catch (NoSuchMethodException e1) {
@@ -73,41 +58,81 @@ public abstract class WbRecord extends Text implements WbRecordMap {
 		{
 			put(WEBBASE_URL, strConstructor);
 			put(WEBBASE_DATE, strConstructor);
-			put(WEBBASE_POSITION, intConstructor);
+			put(WbRecord.WEBBASE_SIZE, intConstructor);
+			put(WEBBASE_POSITION, longConstructor);
 			put(WEBBASE_DOCID, intConstructor);
 		}
 	};
 	
 	public abstract WebContentType getContentType();
 
+	/*-----------------------------------------------------
+	| Constructors 
+	------------------------*/
+	
 	public WbRecord(Metadata md, String httpHeader, byte[] content){
 		this(md, WbRecordFactory.getHTTPHeader(httpHeader), content);
 	}
 	
 	public WbRecord(Metadata md, Vector<String> httpHeader, byte[] content) {
 		this.md = md;
-		this.content = content;
+		this.wbContent = content;
 		this.httpHeader = httpHeader;
+		/*
+		this.headerMap = new HashMap<String,String>() {
+				{
+					add(WEBBASE_URL, md.);
+				}
+		};
 	}
+	
+	private static final String[] mandatoryHeaderFields = {WEBBASE_URL,
+														   WEBBASE_DATE,
+														   WEBBASE_SIZE,
+														   WEBBASE_POSITION,
+														   WEBBASE_DOCID
+	};
+	*/
+	}
+	/*-----------------------------------------------------
+	| getContent()
+	------------------------*/
 	
 	public abstract Object getContent();
 	
+	/*-----------------------------------------------------
+	| setContent() 
+	------------------------*/
+	
 	protected void setContent(byte[] c) {
-		this.content = c;
+		this.wbContent = c;
 	}
 	
+	/*-----------------------------------------------------
+	| getMetadata() 
+	------------------------*/
+
 	public Metadata getMetadata() {
 		return md;
 	}
 	
+	/*-----------------------------------------------------
+	| setMetadata()
+	------------------------*/
 	protected void setMetadata(Metadata d) {
 		this.md = d;
 	}
 	
+	/*-----------------------------------------------------
+	| getHTTPHeaderAsVector()
+	------------------------*/
 	public Vector<String> getHTTPHeaderAsVector() {
 		return httpHeader;
 	}
 	
+	/*-----------------------------------------------------
+	| getHTTPHeaderAsString()
+	------------------------*/
 	public String getHTTPHeaderAsString() {
 		String retString = "";
 		for(String s : this.httpHeader) {
@@ -118,6 +143,9 @@ public abstract class WbRecord extends Text implements WbRecordMap {
 		return retString;
 	}
 	
+	/*-----------------------------------------------------
+	| setHTTPHeader()
+	------------------------*/
 	protected void setHTTPHeader(Vector<String> header) {
 		this.httpHeader = header;
 	}
@@ -126,17 +154,23 @@ public abstract class WbRecord extends Text implements WbRecordMap {
 		this.httpHeader = WbRecordFactory.getHTTPHeader(header);
 	}
 	
+	/*-----------------------------------------------------
+	| toString()
+	------------------------*/
 	public String toString () {
 		return toString(DONT_INCLUDE_CONTENT);
 	}
 	
 	public String toString(Boolean includeContent) {
 		if (includeContent)
-			return md.toString() + getHTTPHeaderAsString() + (new String(this.content));
+			return md.toString() + getHTTPHeaderAsString() + (new String(this.wbContent));
 		else
 			return md.toString() + getHTTPHeaderAsString();
 	}
 	
+	/*-----------------------------------------------------
+	| getContent() 
+	------------------------*/
 	/**
 	 * Retrieves the bytes content as a UTF-8 string
 	 * @return
@@ -144,6 +178,7 @@ public abstract class WbRecord extends Text implements WbRecordMap {
 	public String getContentUTF8() {
 		String retString=null;
 		try {
+			//retString = new String(wbContent, "UTF-8");
 			retString = new String(wbContent, "UTF-8");
 		} catch (UnsupportedEncodingException ex) {
 			retString=new String(wbContent);
@@ -151,10 +186,16 @@ public abstract class WbRecord extends Text implements WbRecordMap {
 		return retString;
 	}
 	
+	/*-----------------------------------------------------
+	| mandatoryKeysHeader()
+	------------------------*/
 	public String[] mandatoryKeysHeader() {
 		return mandatoryHeaderFields;
 	}
 	
+	/*-----------------------------------------------------
+	| mandatoryValuesHeader()
+	------------------------*/
 	public String[] mandatoryValuesHeader() {
 		String[] res = new String[mandatoryHeaderFields.length];
 		for (int i=0; i<mandatoryHeaderFields.length; i++) {
@@ -169,23 +210,23 @@ public abstract class WbRecord extends Text implements WbRecordMap {
 	public int size() {
 		// Plus 1 is for the pseudo 'content' byte array
 		// that's not really part of the hash:
-		return headerMap.size() + 1;
+		return md.size() + 1;
 	}
 
 	@Override
 	public boolean isEmpty() {
-		return headerMap.isEmpty() && (wbContent.length == 0); 
+		return (md == null) || (wbContent.length == 0); 
 	}
 
 	@Override
 	public boolean containsKey(Object key) {
 		String lowerCaseKey = ((String) key).toLowerCase();
-		return (headerMap.containsKey(lowerCaseKey) || lowerCaseKey.equals(CONTENT));
+		return (md.containsKey(lowerCaseKey) || lowerCaseKey.equals(CONTENT));
 	}
 
 	@Override
 	public boolean containsValue(Object value) {
-		if (headerMap.containsValue(value))
+		if (md.containsValue(value))
 			return true;
 		String content = getContentUTF8();
 		return content.contains((String) value);
@@ -196,7 +237,7 @@ public abstract class WbRecord extends Text implements WbRecordMap {
 		if (((String) key).equalsIgnoreCase(CONTENT)) {
 			return getContentUTF8();
 		}
-		return headerMap.get(((String)key).toLowerCase());
+		return (md.get(key)).toString();
 	}
 
 	@Override
@@ -208,9 +249,7 @@ public abstract class WbRecord extends Text implements WbRecordMap {
 			wbContent = value.getBytes();
 			return prevValue;
 		}
-		prevValue = headerMap.get(lowerCaseKey);
-		headerMap.put(lowerCaseKey, value);
-		return prevValue;
+		return (md.put(key, value)).toString();
 	}
 	
 	@Override
@@ -222,7 +261,7 @@ public abstract class WbRecord extends Text implements WbRecordMap {
 			wbContent = new byte[0];
 			return prevValue;
 		}
-		return headerMap.remove(lowerCaseKey);
+		return (md.remove(lowerCaseKey)).toString();
 	}
 
 	@Override
@@ -234,25 +273,24 @@ public abstract class WbRecord extends Text implements WbRecordMap {
 
 	@Override
 	public Set<String> keySet() {
-		Set<String> res = headerMap.keySet();
+		Set<String> res = md.keySet();
 		res.add(CONTENT);
 		return res;
 	}
 	
 	public Set<String> keySetHeader() {
-		return headerMap.keySet();
+		return md.keySet();
 	}
 	
 	@Override
 	public Collection<String> values() {
-		Collection<String> res = headerMap.values();
+		Collection<Object> objVals = md.values();
+		HashSet<String> res = new HashSet<String>();
+		for (Object item : objVals) {
+			res.add(item.toString());
+		}
 		res.add(getContentUTF8());
 		return res;
-	}
-	
-	@Override
-	public Collection<String> valuesHeader() {
-		return headerMap.values();
 	}
 	
 	@SuppressWarnings({ "unchecked", "rawtypes" })
@@ -261,11 +299,17 @@ public abstract class WbRecord extends Text implements WbRecordMap {
 		return entrySet(true);
 	}
 	
+	@Override
+	public Collection<String> valuesHeader() {
+		return values();
+	}
+	
 	public Set<Entry<String,String>> entrySet(boolean readContent) {
 		//Set<Entry> res = new HashSet<Entry>();
 		HashSet<Entry<String,String>> res = new HashSet<Entry<String,String>>();
-		for (Map.Entry<String, String> headerMapEntry : headerMap.entrySet()){
-			res.add(new Entry<String,String>(headerMapEntry.getKey(), headerMapEntry.getValue()));
+		
+		for (Map.Entry<String, Object> mdEntry : md.entrySet()){
+			res.add(new Entry<String,String>(mdEntry.getKey(), mdEntry.getValue().toString()));
 		}
 		if (readContent) {
 			res.add(new Entry<String,String>(CONTENT, getContentUTF8()));

@@ -3,14 +3,12 @@ package pigir.webbase;
 import java.io.IOException;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Properties;
 
-import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapreduce.InputFormat;
 import org.apache.hadoop.mapreduce.Job;
@@ -27,27 +25,17 @@ import org.apache.pig.impl.logicalLayer.FrontendException;
 import org.apache.pig.impl.util.ObjectSerializer;
 import org.apache.pig.impl.util.UDFContext;
 
+import pigir.MultiTypeProperties;
 import pigir.warc.WarcRecord;
 
 public class WebBaseLoader extends LoadFunc implements LoadPushDown {
 
 	public final Logger logger = Logger.getLogger(getClass().getName());
 	
-	private static final String DISTRIBUTOR_DEMON_URL_STR = "http://wb1.stanford.edu:7008";
-	// TODO: Cannot be hard-wired. Need server to find this URL.
-	private final String SITE_LIST_URL_STR = "http://dbpubs.stanford.edu:8091/%7Etestbed/doc2/WebBase/crawl_lists/crawled.122010";
-	private URL SITE_LIST_URL = null;
-
+	private MultiTypeProperties wbJobProperties = 
+		new MultiTypeProperties(UDFContext.getUDFContext().getUDFProperties(getClass()));
 	private final int NUM_OUTPUT_COLUMNS = 5;
 	private final int CONTENT_COL_INDEX = 5;
-	
-	public static URL DISTRIBUTOR_DEMON_URL = null;
-	
-	// Keys for property configurations:
-	public static final String WEBBASE_DISTRIBUTOR_DEMON_URL = "wbDistribDemonUrlStr";
-	public static final String WEBBASE_CRAWL_NAME = "wbCrawlName";
-	public static final String WEBBASE_CRAWL_TYPE = "wbCrawlMime";
-	public static final String WEBBASE_SITE_LIST_URL = "siteListURL";
 	
     // Vector with true wbRecordReader each position that corresponds to a
     // field that this loader is to include wbRecordReader its return tuples: 
@@ -60,7 +48,7 @@ public class WebBaseLoader extends LoadFunc implements LoadPushDown {
 
     private String signature;
     
-    @SuppressWarnings("serial")
+    @SuppressWarnings({ "serial", "unused" })
 	private HashSet<String> wbMimeTypes = new HashSet<String>() {
     	{
     		add("audio");
@@ -70,9 +58,9 @@ public class WebBaseLoader extends LoadFunc implements LoadPushDown {
     	}
     };
 
-    private Job job = null;
     private String crawlName = null;
     private String crawlType = null;
+    private DistributorContact distributorContact = null;
     
     protected WbRecordReader wbRecordReader = null;
     
@@ -81,17 +69,6 @@ public class WebBaseLoader extends LoadFunc implements LoadPushDown {
 	------------------------*/
     
     public WebBaseLoader() {
-    	try {
-    		DISTRIBUTOR_DEMON_URL = new URL(DISTRIBUTOR_DEMON_URL_STR);
-    	} catch (Exception e) {
-    		logger.error("Badly formatted distributor demon URL: " + DISTRIBUTOR_DEMON_URL_STR);
-    		return;
-    	}
-    	try {
-    		SITE_LIST_URL = new URL(SITE_LIST_URL_STR);
-    	}  catch (Exception e) {
-    		logger.error("Badly formatted site list URL: " + SITE_LIST_URL_STR);
-    	}
     }
     
 	/*-----------------------------------------------------
@@ -111,17 +88,12 @@ public class WebBaseLoader extends LoadFunc implements LoadPushDown {
      * @param crawlNameType Example: LOAD 'crawled_hosts.gov-12-2009.tx:text' ...;
      */
     
+    @Override
     public String relativeToAbsolutePath(String location, Path curDir) 
     throws IOException {      
-    	String[] crawlAndType = location.split(":");
-    	if (crawlAndType.length != 2) {
-    		logger.error("Badly formatted crawl name/type string. Should be <name>:<type>. Was " + location);
-    		return "";
-    	}
-    	crawlName = crawlAndType[0].trim();
-    	crawlType = crawlAndType[1].trim();
+
     	return "/" + location;
-    }    
+    }   
  
 	/*-----------------------------------------------------
 	| getNext() 
@@ -166,7 +138,8 @@ public class WebBaseLoader extends LoadFunc implements LoadPushDown {
             	if ((mRequiredColumns != null) && (++resFieldIndex < numColsToReturn) && mRequiredColumns[resFieldIndex]) {
             		@SuppressWarnings("rawtypes")
 					Constructor fldConstructor = wbRec.mandatoryWbHeaderFldTypes.get(headerKey);
-            		mProtoTuple.add(fldConstructor.newInstance(wbRec.get(headerKey)));
+            		String headerVal = wbRec.get(headerKey);
+            		mProtoTuple.add(fldConstructor.newInstance(headerVal));
             	}
             	else {
             		if (resFieldIndex >= numColsToReturn)
@@ -250,39 +223,46 @@ public class WebBaseLoader extends LoadFunc implements LoadPushDown {
 	
 	/* (non-Javadoc)
 	 * @see org.apache.pig.LoadFunc#setLocation(java.lang.String, org.apache.hadoop.mapreduce.Job)
-	 * Location is expected to be a string /<crawlName>:<mimeType>, which is 
-	 * returned from our relativeToAbsolutePath() method (which is called earlier)
+	 * Location is expected to be a string /<crawlName>[:<numPages>], which is 
+	 * returned from our relativeToAbsolutePath() method (which is called earlier). If 
+	 * numPages is omitted, all pages is assumed. 
+	 * 
+	 * The leading'/' is only to fool the LoadFunc superclass' call to getAbsolutePath(). That class
+	 * has a file mindset and checks whether the 'location' has a leading '/'.
+	 * 
+	 * 
 	 */
 	
 	@Override
 	public void setLocation(String location, Job theJob) throws IOException {
 		
-		job = theJob;
-		
-		// Strip off the silly '/', which we had to add in relativeToAbsolutePath():
-		if (location.startsWith("/"))
-			location = location.substring(1);
-		
-		String[] crawlSpec = location.split(":");
-		if (crawlSpec.length != 2) {
-			throw new IOException("WebBase crawl location must have the form <crawlName>:<crawlMime>. Instead, '" + 
-								  location +
-								  "' was passed wbRecordReader.");
-		}
-		crawlName = crawlSpec[0];
-		crawlType= crawlSpec[1];
-		if (!wbMimeTypes.contains(crawlType)) {
-			throw new IOException("Specified WebBase crawl mime was '" +
-						           crawlType +
-						           "'. Must be one of " +
-						           wbMimeTypes.toString());
-								  
-		}
-		Configuration hadoopConf = job.getConfiguration();
-		hadoopConf.set(WEBBASE_DISTRIBUTOR_DEMON_URL, DISTRIBUTOR_DEMON_URL.toExternalForm());
-		hadoopConf.set(WEBBASE_SITE_LIST_URL, SITE_LIST_URL.toString());
-		hadoopConf.set(WEBBASE_CRAWL_NAME, crawlName);
-		hadoopConf.set(WEBBASE_CRAWL_TYPE, crawlType);
+		// Get rid of the '/'
+		location = location.substring(1);
+    	String[] crawlAndType = location.split(":");
+    	if (crawlAndType.length > 2) {
+    		String errMsg = "Badly formatted crawl name/numPages string. Should be <name>:<numPages>. Was " + location; 
+    		logger.error(errMsg);
+    		throw new IOException(errMsg);
+    	}
+    	
+    	crawlName = crawlAndType[0].trim();
+    	
+    	if (crawlAndType.length > 1) {
+    		
+    	}
+    	
+    	crawlType = crawlAndType[1].trim();
+    	distributorContact = DistributorContact.getCrawlDistributorAddr(crawlName, crawlType);
+				
+		int numReducers = theJob.getNumReduceTasks();
+		if (numReducers <= 0)
+			wbJobProperties.setInt(Constants.NUM_OF_CPUS_PROP_NAME, Constants.DEFAULT_NUM_OF_SPLITS);
+		else
+			wbJobProperties.setInt(Constants.NUM_OF_CPUS_PROP_NAME, theJob.getNumReduceTasks());
+
+		// Make the distributor demon contact available 
+		// to all the splits via the job property list.
+		wbJobProperties.setProperty(Constants.WB_DISTRIBUTOR_DEMON_KEY, distributorContact.toConfigStr());
 	}
 	
 	/*-----------------------------------------------------
@@ -301,7 +281,7 @@ public class WebBaseLoader extends LoadFunc implements LoadPushDown {
 	@SuppressWarnings("rawtypes")
 	@Override
 	public InputFormat getInputFormat() throws IOException {
-		return new WbInputFormat(job);
+		return new WbInputFormat(wbJobProperties);
 	}
 
 	
@@ -314,5 +294,13 @@ public class WebBaseLoader extends LoadFunc implements LoadPushDown {
 	public void prepareToRead(RecordReader reader, PigSplit split)
 			throws IOException {
 		wbRecordReader = (WbRecordReader) reader;
+	}
+	
+	/*-----------------------------------------------------
+	| getDistributorContact() 
+	------------------------*/
+	
+	public DistributorContact getDistributorContact() {
+		return distributorContact;
 	}
 }
