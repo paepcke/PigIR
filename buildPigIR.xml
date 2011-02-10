@@ -5,9 +5,13 @@
 	<!-- Make OS environment variables accessible via ${myEnv.foo} -->
 	<property environment="myEnv" />
 	
+	<!-- Various dirs. Lib has jar files of third-party dependencies: -->
 	<property name="project.name" value="PigIR" />
 	<property name="local.src.dir" location="src/" />
  	<property name="local.classes.dir" location="bin/" />
+	<property name="local.lib.dir" location="lib/" /> 
+	
+	<property name="local.pigtest.dir" location="${local.src.dir}/PigScripts/" />
 	
 	<!-- <property name="pig.jar" location="${env.PIG_HOME}/pig-0.8.0-core-withsrc.jar" /> -->
 	<property name="pig.jar" location="C:/Users/Paepcke/Software/Hadoop/pig-0.8.0/pig-0.8.0-core-withsrc.jar" />
@@ -60,7 +64,11 @@
 		<echo>*** Building jar file locally without sources.***</echo>
 		<mkdir dir="${local.jar.dir}" />
 		<delete file="${local.jar.file}" />
-	    <jar destfile="${local.jar.file}" basedir="${local.classes.dir}" excludes="**/*.log" />
+	    <jar destfile="${local.jar.file}">
+	    	<fileset dir="${local.classes.dir}" excludes="**/*.log" />
+	        <fileset dir="${local.pigtest.dir}" includes="testWebBaseLoad.pig" />
+	        <zipfileset src="${local.lib.dir}/commons-io-2.0.1.jar" />
+	    </jar>
 	</target>
 	
     <!-- ================================================================== -->
@@ -73,6 +81,8 @@
 		<delete file="${local.jar.file.withSource}" />
 	    <jar destfile="${local.jar.file.withSource}">
 			 <fileset dir="${local.classes.dir}" />
+	    	 <fileset dir="${local.pigtest.dir}" includes="testWebBaseLoad.pig" />
+	    	 <zipfileset src="${local.lib.dir}/commons-io-2.0.1.jar" />
 			 <fileset dir="${local.src.dir}" excludes="**/Logs/,**/Save/"  />
 	    </jar>
 	</target>
