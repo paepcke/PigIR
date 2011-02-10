@@ -24,8 +24,9 @@ package pigir.webbase;
 
 import java.util.Vector;
 
+@SuppressWarnings("unchecked")
 public abstract class WbBinaryRecord extends WbRecord {
-
+	
 	public WbBinaryRecord(Metadata md, Vector<String> httpHeader, byte[] content) {
 		super(md, httpHeader, content);
 	}
@@ -37,5 +38,14 @@ public abstract class WbBinaryRecord extends WbRecord {
 	@Override
 	public byte[] getContent() {
 		return this.wbContent;
+	}
+	
+	@Override
+	public boolean containsValue(Object value) {
+		if (md.containsValue(value))
+			return true;
+		String errMsg = "Cannot use 'containsValue()' on binary content.";
+		logger.error(errMsg);
+		return false;
 	}
 }

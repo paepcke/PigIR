@@ -24,7 +24,9 @@ package pigir.webbase;
 
 import java.util.Vector;
 
+@SuppressWarnings("unchecked")
 public class WbDefaultRecord extends WbBinaryRecord { 
+	
 	public WbDefaultRecord(Metadata md, String httpHeader, byte[] content) {
 		super(md, httpHeader, content);
 	}

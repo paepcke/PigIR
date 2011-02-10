@@ -10,8 +10,11 @@ import java.util.Set;
 import java.util.Vector;
 
 import org.apache.hadoop.io.Text;
+import org.apache.log4j.Logger;
 
-public abstract class WbRecord extends Text implements WbRecordMap {
+public abstract class WbRecord extends Text implements WbRecordMap<String, Object> {
+	
+	protected Logger logger;
 	
 	public static final boolean INCLUDE_CONTENT = true; 
 	public static final boolean DONT_INCLUDE_CONTENT = false; 
@@ -23,10 +26,11 @@ public abstract class WbRecord extends Text implements WbRecordMap {
 	public static final String WEBBASE_POSITION = "webbase-position";
 	public static final String WEBBASE_DOCID = "webbase-docid";
 	public static final String CONTENT = "content";
+	public static final String HTTP_HEADER_MAP = "http-header";
 	
 	
-	private Metadata md;
-	private Vector<String> httpHeader;
+	protected Metadata md;
+	private HashMap<String,String> httpHeader = new HashMap<String,String>();
 	protected byte[] wbContent=null;
 	
 	private static final String[] mandatoryHeaderFields = {WEBBASE_URL,
@@ -74,26 +78,29 @@ public abstract class WbRecord extends Text implements WbRecordMap {
 		this(md, WbRecordFactory.getHTTPHeader(httpHeader), content);
 	}
 	
-	public WbRecord(Metadata md, Vector<String> httpHeader, byte[] content) {
+	public WbRecord(Metadata md, Vector<String> httpHeaderVec, byte[] content) {
 		this.md = md;
 		this.wbContent = content;
-		this.httpHeader = httpHeader;
-		/*
-		this.headerMap = new HashMap<String,String>() {
-				{
-					add(WEBBASE_URL, md.);
-				}
-		};
+		this.logger = WbRecordReader.getLogger();
+		
+		if (httpHeaderVec.size() < 1)
+			return;
+		
+		if (httpHeaderVec.get(0).startsWith("HTTP")) {
+			this.httpHeader.put("Server-response", httpHeaderVec.get(0));
+		}
+		String headerLine;
+		int colonIndx;
+		for (int i=1; i<httpHeaderVec.size(); i++) {
+			headerLine = httpHeaderVec.get(i);
+			// Can't conveniently use split(":") b/c date/time has colons.
+			colonIndx = headerLine.indexOf(':');
+			if (colonIndx < 0)
+				continue;
+			this.httpHeader.put(headerLine.substring(0, colonIndx).trim(), headerLine.substring(colonIndx + 1).trim());
+		}
 	}
 	
-	private static final String[] mandatoryHeaderFields = {WEBBASE_URL,
-														   WEBBASE_DATE,
-														   WEBBASE_SIZE,
-														   WEBBASE_POSITION,
-														   WEBBASE_DOCID
-	};
-	*/
-	}
 	/*-----------------------------------------------------
 	| getContent()
 	------------------------*/
@@ -124,34 +131,14 @@ public abstract class WbRecord extends Text implements WbRecordMap {
 	}
 	
 	/*-----------------------------------------------------
-	| getHTTPHeaderAsVector()
-	------------------------*/
-	public Vector<String> getHTTPHeaderAsVector() {
-		return httpHeader;
-	}
-	
-	/*-----------------------------------------------------
 	| getHTTPHeaderAsString()
 	------------------------*/
 	public String getHTTPHeaderAsString() {
 		String retString = "";
-		for(String s : this.httpHeader) {
-			retString += s;
-			retString += "\r\n";
+		for (String key : httpHeader.keySet()) {
+			retString += key + "=" + httpHeader.get(key) + "\r\n";
 		}
-		retString += "\r\n";
 		return retString;
-	}
-	
-	/*-----------------------------------------------------
-	| setHTTPHeader()
-	------------------------*/
-	protected void setHTTPHeader(Vector<String> header) {
-		this.httpHeader = header;
-	}
-	
-	protected void setHTTPHeader(String header) {
-		this.httpHeader = WbRecordFactory.getHTTPHeader(header);
 	}
 	
 	/*-----------------------------------------------------
@@ -169,7 +156,7 @@ public abstract class WbRecord extends Text implements WbRecordMap {
 	}
 	
 	/*-----------------------------------------------------
-	| getContent() 
+	| getContentUTF8() 
 	------------------------*/
 	/**
 	 * Retrieves the bytes content as a UTF-8 string
@@ -178,7 +165,6 @@ public abstract class WbRecord extends Text implements WbRecordMap {
 	public String getContentUTF8() {
 		String retString=null;
 		try {
-			//retString = new String(wbContent, "UTF-8");
 			retString = new String(wbContent, "UTF-8");
 		} catch (UnsupportedEncodingException ex) {
 			retString=new String(wbContent);
@@ -189,6 +175,10 @@ public abstract class WbRecord extends Text implements WbRecordMap {
 	/*-----------------------------------------------------
 	| mandatoryKeysHeader()
 	------------------------*/
+	/* (non-Javadoc)
+	 * @see pigir.webbase.WbRecordMap#mandatoryKeysHeader()
+	 * Keys that are present in every WebBase page header.
+	 */
 	public String[] mandatoryKeysHeader() {
 		return mandatoryHeaderFields;
 	}
@@ -196,6 +186,10 @@ public abstract class WbRecord extends Text implements WbRecordMap {
 	/*-----------------------------------------------------
 	| mandatoryValuesHeader()
 	------------------------*/
+	/* (non-Javadoc)
+	 * @see pigir.webbase.WbRecordMap#mandatoryValuesHeader()
+	 * Values that are present in every WebBase page header.
+	 */
 	public String[] mandatoryValuesHeader() {
 		String[] res = new String[mandatoryHeaderFields.length];
 		for (int i=0; i<mandatoryHeaderFields.length; i++) {
@@ -215,82 +209,159 @@ public abstract class WbRecord extends Text implements WbRecordMap {
 
 	@Override
 	public boolean isEmpty() {
-		return (md == null) || (wbContent.length == 0); 
+		return (md == null) && (wbContent.length == 0); 
 	}
 
+	/* (non-Javadoc)
+	 * @see java.util.Map#containsKey(java.lang.Object)
+	 * Looks through keys in the metadata, like docID, numPages, etc.,
+	 * as well as through the HTTP header keys that are contained
+	 * in the httpHeader HashMap, and the keys CONTENT and HTTP_HEADER_MAP.
+	 */
 	@Override
 	public boolean containsKey(Object key) {
 		String lowerCaseKey = ((String) key).toLowerCase();
-		return (md.containsKey(lowerCaseKey) || lowerCaseKey.equals(CONTENT));
+		return (md.containsKey(lowerCaseKey) || 
+				lowerCaseKey.equals(CONTENT) ||
+				lowerCaseKey.equals(HTTP_HEADER_MAP) ||
+				httpHeader.containsKey(lowerCaseKey));
 	}
 
+	/* (non-Javadoc)
+	 * @see java.util.Map#containsValue(java.lang.Object)
+	 * <b>Note:</b> If used on a binary record, like audio or image,
+	 * this method returns 'false', if a match is not found in
+	 * any of the metadata. No attempt is made to search through
+	 * the binary content. We can't throw an error,
+	 * because that breaks the Map interface contract. 
+	 */
 	@Override
 	public boolean containsValue(Object value) {
 		if (md.containsValue(value))
 			return true;
-		String content = getContentUTF8();
-		return content.contains((String) value);
+		if (httpHeader.containsValue(value))
+			return true;
+		if (getContentType() == WebContentType.TEXT)
+			return ((String) getContent()).contains((String) value);
+		else {
+			logger.warn("Called 'containsValue() on binary content. Did not match '" + value + "' against content itself; only against metadata.");
+			return false;
+		}
 	}
 
+	/* (non-Javadoc)
+	 * @see java.util.Map#get(java.lang.Object)
+	 * <b>Note:</b> This method only works for the metadata. You
+	 * must use getContent() to retrieve content from binary records.
+	 */
 	@Override
 	public String get(Object key) {
-		if (((String) key).equalsIgnoreCase(CONTENT)) {
-			return getContentUTF8();
+		String val;
+		// Is the key from one of the WebBase header fields?
+		if ((val = md.fieldToString((String) key)) != null)
+			return val;
+		// Nope, is the key from an HTTP header field?
+		if ((val = httpHeader.get(key)) != null)
+			return val;
+		// Nope. Does caller want the HTTP header map as a whole?
+		if (key.equals(HTTP_HEADER_MAP))
+			return httpHeader.toString();
+		// Nope. Do they want the content?
+		if (key.equals(CONTENT)) {
+			// We do serve content via the Map interface for text pages...
+			if (getContentType() == WebContentType.TEXT) {
+				return (String) getContent();
+			} else {
+				// ... but not for binaries:
+				logger.warn("Called 'get()' to retrieve the content of a binary record. Use getContent() instead.");
+			}
 		}
-		return (md.get(key)).toString();
+		return null;
+	}
+	
+	/* (non-Javadoc)
+	 * @see java.util.Map#put(java.lang.Object, java.lang.Object)
+	 * All key/values are added to the metadata record.
+	 */
+	public String put(String key, Object value) {
+		String lowerCaseKey = key.toLowerCase();
+		return (md.put(lowerCaseKey, value)).toString();
 	}
 
+	/* (non-Javadoc)
+	 * @see java.util.Map#remove(java.lang.Object)
+	 * <b>Note</b>If called to remove the CONTENT value on a binary record
+	 * the return value is a String whose content is the old byte array.
+	 * I'm not sure whether this 
+	 * 
+	 */
 	@Override
-	public String put(String key, String value) {
-		String prevValue;
-		String lowerCaseKey = key.toLowerCase();
-		if (lowerCaseKey.equals(CONTENT)) {
-			prevValue = getContentUTF8();
-			wbContent = value.getBytes();
-			return prevValue;
+	public String remove(Object key) {
+		String lowerCaseKey = ((String)key).toLowerCase();
+		Object oldVal;
+		if ((oldVal = md.remove(lowerCaseKey)) != null)
+			return oldVal.toString();
+		if ((oldVal = httpHeader.remove(lowerCaseKey)) != null)
+				return oldVal.toString();
+		if (key == HTTP_HEADER_MAP) {
+			logger.error("Attempt to delete HTTP header from record. Can't be done.");
+			return null;
 		}
-		return (md.put(key, value)).toString();
+		if (key == CONTENT) {
+			if (getContentType() == WebContentType.TEXT) {
+				String oldContent = (String) getContent();
+				wbContent = new byte[0];
+				return oldContent;
+			}
+			else {
+				logger.warn("Used remove() to delete content from binary record. Content was removed, but old content was not returned.");
+				wbContent = new byte[0];
+				return null;
+			}
+		}
+		return null;
+	}
+
+	public Collection<Object> values() {
+		Collection<Object> objVals = md.values();
+		// Add the HTTP header vals flat:
+		objVals.add(httpHeader);
+		objVals.add(getContent());
+		return objVals;
 	}
 	
 	@Override
-	public String remove(Object key) {
-		String prevValue;
-		String lowerCaseKey = ((String)key).toLowerCase();
-		if (lowerCaseKey.equalsIgnoreCase(CONTENT)) {
-			prevValue = getContentUTF8();
-			wbContent = new byte[0];
-			return prevValue;
-		}
-		return (md.remove(lowerCaseKey)).toString();
-	}
-
-	@Override
-	public void putAll(Map<? extends String, ? extends String> m) {
-		for (String key : m.keySet()) {
-			put(key, m.get(key));
-		}
-	}
-
-	@Override
 	public Set<String> keySet() {
 		Set<String> res = md.keySet();
+		res.addAll(httpHeader.keySet());
 		res.add(CONTENT);
 		return res;
 	}
 	
+	/* (non-Javadoc)
+	 * @see pigir.webbase.WbRecordMap#keySetHeader()
+	 * Return the keys of non-content fields. This
+	 * includes the header fields in every WebBase 
+	 * record, plus the HTTP fields that were present in
+	 * this record's HTTP header. All the respective
+	 * values are relatively short.
+	 */
 	public Set<String> keySetHeader() {
-		return md.keySet();
+		Set<String> allKeys = md.keySet();
+		allKeys.addAll(httpHeader.keySet());
+		return allKeys;
 	}
 	
-	@Override
-	public Collection<String> values() {
-		Collection<Object> objVals = md.values();
-		HashSet<String> res = new HashSet<String>();
-		for (Object item : objVals) {
-			res.add(item.toString());
+	/* (non-Javadoc)
+	 * @see pigir.webbase.WbRecordMap#valuesHeader()
+	 * Return the values of the non-content header fields.
+	 */
+	public Collection<Object> valuesHeader() {
+		Collection<Object> coll = new HashSet<Object>();
+		for (String key : keySetHeader()) {
+			coll.add(get(key));
 		}
-		res.add(getContentUTF8());
-		return res;
+		return coll;
 	}
 	
 	@SuppressWarnings({ "unchecked", "rawtypes" })
@@ -299,25 +370,28 @@ public abstract class WbRecord extends Text implements WbRecordMap {
 		return entrySet(true);
 	}
 	
-	@Override
-	public Collection<String> valuesHeader() {
-		return values();
-	}
-	
-	public Set<Entry<String,String>> entrySet(boolean readContent) {
+	public Set<Entry<String,Object>> entrySet(boolean readContent) {
 		//Set<Entry> res = new HashSet<Entry>();
-		HashSet<Entry<String,String>> res = new HashSet<Entry<String,String>>();
+		HashSet<Entry<String,Object>> res = new HashSet<Entry<String,Object>>();
 		
 		for (Map.Entry<String, Object> mdEntry : md.entrySet()){
-			res.add(new Entry<String,String>(mdEntry.getKey(), mdEntry.getValue().toString()));
+			res.add(new Entry<String,Object>(mdEntry.getKey(), mdEntry.getValue()));
 		}
 		if (readContent) {
-			res.add(new Entry<String,String>(CONTENT, getContentUTF8()));
+			res.add(new Entry<String,Object>(CONTENT, getContent()));
 		}
 			
 		return res;
 	}
+
+	@Override
+	public void putAll(Map<? extends String, ? extends Object> m) {
+		for (String key : keySet()) {
+			put(key, m);
+		}
+	}
 	
+	//--------------------------------------------   Inner Class Entry ----------------------
 	protected class Entry<K,V> implements Map.Entry<K,V> {
 
 		K key;

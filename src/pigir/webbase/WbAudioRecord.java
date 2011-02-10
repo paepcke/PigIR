@@ -24,7 +24,9 @@ package pigir.webbase;
 
 import java.util.Vector;
 
+@SuppressWarnings("unchecked")
 public class WbAudioRecord extends WbBinaryRecord {
+	
 	public WbAudioRecord(Metadata md, Vector<String> httpHeader, byte[] content) {
 		super(md, httpHeader, content);
 	}

@@ -12,6 +12,7 @@ import java.io.ObjectInputStream;
 import java.io.Serializable;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.HashMap;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.hadoop.io.Writable;
@@ -40,10 +41,23 @@ public class DistributorContact implements Writable, Serializable {
 	int distributorPort = -1;
 	String distributorDate = null;
 	int numPages = -1;
+	int numPagesWanted = Constants.ALL_PAGES_WANTED;
 	String crawlName = null;
+	String startSite = null;
+	String endSite = null;
 	String crawlType = null;
 	String siteListPath = null;
 
+	private static final HashMap<String,String> wbMimeTypes = new HashMap<String,String>() {
+		private static final long serialVersionUID = 1L;
+		{
+    		put("au", "audio");
+    		put("im", "image");
+    		put("tx", "text");
+    		put("un", "unknown");
+    	}
+    };
+	
 	/*-----------------------------------------------------
 	| Constructors 
 	------------------------*/
@@ -76,6 +90,9 @@ public class DistributorContact implements Writable, Serializable {
 			int theDistributorPort,
 			String theDate,
 			int theNumPages,
+			int theNumPagesWanted,
+			String theStartSite,
+			String theEndSite,
 			String theCrawlName,
 			String theCrawlType,
 			String theSiteListPath) throws IOException {
@@ -84,6 +101,9 @@ public class DistributorContact implements Writable, Serializable {
 				theDistributorPort, 
 				theDate,
 				theNumPages,
+				theNumPagesWanted,
+				theStartSite,
+				theEndSite,
 				theCrawlName,
 				theCrawlType,
 				theSiteListPath);
@@ -94,6 +114,9 @@ public class DistributorContact implements Writable, Serializable {
 			String theDistributorPort,
 			String theDate,
 			int theNumPages,
+			int theNumPagesWanted,			
+			String theStartSite,
+			String theEndSite,
 			String theCrawlName,
 			String theCrawlType,
 			String theSiteListPath) throws IOException {
@@ -102,6 +125,9 @@ public class DistributorContact implements Writable, Serializable {
 				theDistributorPort,
 				theDate,
 				theNumPages,
+				theNumPagesWanted,
+				theStartSite,
+				theEndSite,
 				theCrawlName,
 				theCrawlType,
 				theSiteListPath);
@@ -111,11 +137,15 @@ public class DistributorContact implements Writable, Serializable {
 	| initVars() 
 	------------------------*/
 	
+	// port as integer. Actual initialization happens here:
 	private void initVars(
 			String theDistributorMachineName, 
 			int 	theDistributorPort,
 			String	theDate,
 			int		theNumPages,
+			int  	theNumPagesWanted,
+			String  theStartSite,
+			String  theEndSite,
 			String	theCrawlName,
 			String	theCrawlType,
 			String theSiteListPath) {
@@ -130,6 +160,12 @@ public class DistributorContact implements Writable, Serializable {
 		distributorPort = theDistributorPort;
 		distributorDate = theDate;
 		numPages = theNumPages;
+		if (theNumPagesWanted < 0)
+			numPagesWanted = theNumPages;
+		else
+			numPagesWanted = theNumPagesWanted;
+		startSite = theStartSite;
+		endSite   = theEndSite;
 		crawlName = theCrawlName;
 		crawlType = theCrawlType;
 		siteListPath = theSiteListPath;
@@ -138,14 +174,18 @@ public class DistributorContact implements Writable, Serializable {
 			logger = WbRecordReader.getLogger();
 	}
 
+	// port as string:
 	private void initVars(
 			String theDistributorMachineName, 
 			String theDistributorPort,
 			String	theDate,
 			int		theNumPages,
+			int  	theNumPagesWanted,			
+			String  theStartSite,
+			String  theEndSite,
 			String	theCrawlName,
 			String	theCrawlType,
-			String theSiteListPath) throws IOException {
+			String  theSiteListPath) throws IOException {
 		int port;
 		try {
 			port = Integer.parseInt(theDistributorPort);
@@ -158,13 +198,16 @@ public class DistributorContact implements Writable, Serializable {
 				port,
 				theDate,
 				theNumPages,
+				theNumPagesWanted,
+				theStartSite,
+				theEndSite,
 				theCrawlName,
 				theCrawlType,
 				theSiteListPath);
 	}
 	
 	/*-----------------------------------------------------
-	| getCrawlDistributorAddr() 
+	| getCrawlDistributorContact() 
 	------------------------*/
 	
 	/**
@@ -177,7 +220,7 @@ public class DistributorContact implements Writable, Serializable {
 	 * request a distributor. 
 	 * @throws IOException
 	 */
-	public static DistributorContact getCrawlDistributorAddr(String crawlName, String crawlType) 
+	public static DistributorContact getCrawlDistributorContact(String crawlName, int numPagesWanted, String startSite, String endSite) 
 	throws IOException {
 		
 		File directoryListFile;
@@ -186,7 +229,22 @@ public class DistributorContact implements Writable, Serializable {
 		if (!directoryListFile.exists() || isOld(directoryListFile))
 			refreshDirectoryListFile();
 		crawlName = crawlName.trim();
-		crawlType = crawlType.trim();
+
+		// Derive the crawl type from the crawl name. The
+		// element after the last '.' is a two-char code for
+		// the type: tx for text, au for audio, etc (see WbMimeTypes above).
+		File crawlNameFile = new File(crawlName);
+		String crawlFileNamePart = crawlNameFile.getName();
+		String[] crawlNameElements = crawlFileNamePart.split("\\.");
+		if (crawlNameElements.length < 1) {
+			String errMsg = "Bad crawl name. All crawl names have an extension '.xx' where 'xx' is a mime type code, like 'tx' or 'au'. This name was: " + crawlFileNamePart;
+			logger.error(errMsg);
+			throw new IOException(errMsg);
+		}
+		String mimeTypeCode = crawlNameElements[crawlNameElements.length - 1];
+		String crawlMimeType = wbMimeTypes.get(mimeTypeCode);
+		if (crawlMimeType == null)
+			crawlMimeType = "text";
 		
 		try {
 			FileInputStream fstream = new FileInputStream(Constants.CRAWL_DIRECTORY_LIST_FILE_NAME);
@@ -196,7 +254,7 @@ public class DistributorContact implements Writable, Serializable {
 				line = line.trim(); //trim any leading/trailing whitespace in the line
 				//logger.debug("Crawl file line: " + line);
 				// If the current line contains both the name and mime, then all good:
-				if(line.indexOf(crawlName) != -1 && line.indexOf(crawlType) != -1) {
+				if(line.indexOf(crawlName) != -1) {
 					String[] crawlWords = line.split(" ");
 					String machine = crawlWords[0];
 					String port = crawlWords[1];
@@ -219,12 +277,15 @@ public class DistributorContact implements Writable, Serializable {
 												  port,
 												  date,
 												  numPages,
+												  numPagesWanted,
+												  startSite,
+												  endSite,
 												  crawlName,
-												  crawlType,
+												  crawlMimeType,
 												  siteListPath);
 				}
 			}
-			logger.debug("No distributor address found for " + crawlName + ":" + crawlType);
+			logger.debug("No distributor address found for " + crawlName);
 			return null;
 		}
 		catch(IOException e) {
@@ -319,6 +380,9 @@ public class DistributorContact implements Writable, Serializable {
 		 out.writeInt(distributorPort);
 		 out.writeUTF(distributorDate);
 		 out.writeInt(numPages);
+		 out.writeInt(numPagesWanted);
+		 out.writeUTF(startSite);
+		 out.writeUTF(endSite);
 		 out.writeUTF(crawlName);
 		 out.writeUTF(crawlType);
 		 out.writeUTF(siteListPath);
@@ -343,6 +407,9 @@ public class DistributorContact implements Writable, Serializable {
 		 distributorPort        = in.readInt();
 		 distributorDate	    = in.readUTF();
 		 numPages				= in.readInt();
+		 numPagesWanted         = in.readInt();
+		 startSite 				= in.readUTF();
+		 endSite 				= in.readUTF();
 		 crawlName				= in.readUTF();
 		 crawlType				= in.readUTF();
 		 siteListPath			= in.readUTF();
@@ -446,6 +513,10 @@ public class DistributorContact implements Writable, Serializable {
 		return numPages;
 	}
 
+	public int getNumPagesWanted() {
+		return numPagesWanted;
+	}
+	
 	public String getCrawlName() {
 		return crawlName;
 	}

@@ -50,6 +50,7 @@ import pigir.MultiTypeProperties;
 public class WbInputFormat extends InputFormat<WbInputSplit,Text> {
 	
 	private static int MAX_NUM_BAD_SITELIST_ENTRIES = 100;
+	private static int MAX_SITE_LIST_LINE_LEN = 200; // Maximum number of bytes in a line in site list files.
 
 	DistributorContact distributorContact = null;
 	BufferedReader siteListReader = null;
@@ -114,15 +115,6 @@ public class WbInputFormat extends InputFormat<WbInputSplit,Text> {
 	 * number of splits. Strategy:
 	 *   o Collect all site/numPages pairs from the site list
 	 *   o In an ArrayList accumulate total number of pages as we go.
-	 *   o Also keep an index of pointers into the ArrayList that will at the
-	 *     end allow us to quickly find the first and last site for each split.
-	 *     
-	 * Since crawls can contain tens of thousands of sites, we build an index
-	 * as we go to make split boundary finding easier. The index maps a total number
-	 * of pages to a pointer into list site entry list. We make an entry every
-	 * SITE_INDEX_GRANULARITY'th site list entry. The index looks like this:
-	 * 
-	 *     <cumulativeNumOfPages> --> <ptIntoSiteList>
 	 * 
 	 * @throws IOException
 	 */
@@ -143,9 +135,33 @@ public class WbInputFormat extends InputFormat<WbInputSplit,Text> {
 		
 		ArrayList<SiteListEntry> siteListEntries = new ArrayList<SiteListEntry>(); 
 		
-		// Go through the site list and build two data structures:
+		// Go through the site list and build a data structure that holds the wanted sites:
 		//    ArrayList<SiteListEntry>: <siteName>,<numPagesThatSite>,<accumulatedPagesInclThatSite>
-		//    ArrayList<SiteIndexEntry: <accumulatedPages>,<pt into site entry list>
+		
+		// First, if user specified a 'firstSite', skip all entries up to
+		// that site:
+		boolean foundIt = false;
+		if (!distributorContact.startSite.isEmpty()) {
+			siteListReader.mark(MAX_SITE_LIST_LINE_LEN);
+			while ((siteAndNumPages = siteListReader.readLine()) != null) {
+				if (siteAndNumPages.startsWith(distributorContact.startSite)) {
+					// Have code below re-read this entry in the site list:
+					siteListReader.reset();
+					foundIt = true;
+					break;
+				}
+				siteListReader.mark(MAX_SITE_LIST_LINE_LEN);
+			}
+			// Did not find the startSite entry. Complain:
+			if (!foundIt) {
+				String errMsg = "LOAD command called for '" + distributorContact.startSite + "' to be the first site to retrieve. That site does not exist in this crawl " +
+				"(" + distributorContact.getCrawlName() +
+				" at " + distributorContact.getDistributorMachineName() + ":" + distributorContact.getDistributorPort() + ".";
+				logger.error(errMsg);
+				throw new IOException(errMsg);
+			}
+		}
+		
 		while ((siteAndNumPages = siteListReader.readLine()) != null) {
 			// Get a [<siteName>, <numPages>]:
 			siteNumPagePairs = siteAndNumPages.split("[\\s]");
@@ -157,6 +173,7 @@ public class WbInputFormat extends InputFormat<WbInputSplit,Text> {
 					continue;
 			}
 			siteName = siteNumPagePairs[SITE].trim();
+			
 			// Skip over comments:
 			if (siteName.startsWith("#")) {
 				continue;
@@ -172,13 +189,18 @@ public class WbInputFormat extends InputFormat<WbInputSplit,Text> {
 			}
 			totalNumPages += numPagesThisSite;
 			siteListEntries.add(new SiteListEntry(siteName, numPagesThisSite, totalNumPages, ++crawlPos));
-			
+			// If user's LOAD command specified an end site, check
+			// whether this one was it:
+			if (!distributorContact.endSite.isEmpty() && siteName.equalsIgnoreCase(distributorContact.endSite))
+				break;
 		}
-		
 		if (numOfMappers <= 0)
 			throw new IOException("Number of mappers must be at least 1. Specified instead: " + numOfMappers);
 		
-		pagesPerMapper = totalNumPages / numOfMappers;
+		if (distributorContact.numPagesWanted == Constants.ALL_PAGES_WANTED)
+			pagesPerMapper = distributorContact.numPagesWanted / numOfMappers;
+		else
+			pagesPerMapper = totalNumPages / numOfMappers;
 		return generateSplits(pagesPerMapper, numOfMappers, siteListEntries);
 	}
 	

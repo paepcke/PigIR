@@ -24,7 +24,9 @@ package pigir.webbase;
 
 import java.util.Vector;
 
+@SuppressWarnings("unchecked")
 public class WbImageRecord extends WbBinaryRecord {
+	
 	public WbImageRecord(Metadata md, Vector<String> httpHeader, byte[] content) {
 		super(md, httpHeader, content);
 	}
@@ -36,5 +38,10 @@ public class WbImageRecord extends WbBinaryRecord {
 	@Override
 	public WebContentType getContentType() {
 		return WebContentType.IMAGE;
+	}
+	
+	@Override
+	public byte[] getContent() {
+		return this.wbContent;
 	}
 }

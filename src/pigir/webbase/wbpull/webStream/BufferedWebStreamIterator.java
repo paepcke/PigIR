@@ -50,7 +50,7 @@ public class BufferedWebStreamIterator extends WebStream implements Iterator<WbR
 		logger = WbRecordReader.getLogger();
 
 		Socket distributorDemonSocket = openDistribDemonSocket(machineName, distribDemonPort);
-		String[] distribIPAndPort = getDistributorIPAndPort(machineName, distribDemonPort, distributorDemonSocket);
+		String[] distribIPAndPort = getDistributorIPAndPort(machineName, distribDemonPort, distributorDemonSocket, startSite, endSite);
 		String distributorIP   = distribIPAndPort[0];
 		String distributorPort = distribIPAndPort[1];
 		
@@ -112,8 +112,11 @@ public class BufferedWebStreamIterator extends WebStream implements Iterator<WbR
 	 * @param distributorDemonSocket
 	 * @throws IOException
 	 */
-	private String[] getDistributorIPAndPort(String machineName, int port,
-			Socket distributorDemonSocket) throws IOException {
+	private String[] getDistributorIPAndPort(String machineName, 
+											 int port, 
+											 Socket distributorDemonSocket,
+											 String startSite, 
+											 String endSite) throws IOException {
 		
 		int responseLen = -1;
 		
@@ -122,7 +125,9 @@ public class BufferedWebStreamIterator extends WebStream implements Iterator<WbR
 		
 		logger.info("Obtained distributor demon at " + machineName + ":" + port + ". Requesting distributor.");
 		
-		out.writeBytes("new,0,\r\n");
+		// new,<offset>,<startSite>,<endSite>,lfcr:
+		String distribDemonRequest = "new,0," + startSite + "," + endSite + ",\r\n"; 
+		out.writeBytes(distribDemonRequest);
 		out.flush();
 		
 		// Ask the distributor demon for a distributor:
@@ -315,7 +320,6 @@ public class BufferedWebStreamIterator extends WebStream implements Iterator<WbR
 						break;
 					bytesToRead -= numRead;
 				}
-
 				if (streamCompressed) {
 					ByteArrayOutputStream uncompressedTxt = decompress(pageBytes, pageSize);
 					truePageLen = uncompressedTxt.size();

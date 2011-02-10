@@ -24,7 +24,9 @@ package pigir.webbase;
 
 import java.util.Vector;
 
-public class WbTextRecord extends WbRecord  {
+@SuppressWarnings("unchecked")
+public class WbTextRecord extends WbRecord {
+	
 	public WbTextRecord(Metadata md, String httpHeader, byte[] content) {
 		super(md, httpHeader, content);
 	}	
@@ -41,5 +43,40 @@ public class WbTextRecord extends WbRecord  {
 	@Override
 	public WebContentType getContentType() {
 		return WebContentType.TEXT;
+	}
+
+	public boolean containsValue(String value) {
+		if (super.containsValue(value))
+			return true;
+		return getContent().contains(value);
+	}
+	
+	public String get(String key) {
+		if (key.equalsIgnoreCase(CONTENT)) {
+			return getContent();
+		}
+		return (md.get(key)).toString();
+	}
+
+	public String put(String key, String value) {
+		String prevValue;
+		String lowerCaseKey = key.toLowerCase();
+		if (lowerCaseKey.equals(CONTENT)) {
+			prevValue = getContent();
+			wbContent = value.getBytes();
+			return prevValue;
+		}
+		return super.put(key, value);
+	}
+	
+	public String remove(String key) {
+		String prevValue;
+		String lowerCaseKey = ((String)key).toLowerCase();
+		if (lowerCaseKey.equalsIgnoreCase(CONTENT)) {
+			prevValue = getContent();
+			wbContent = new byte[0];
+			return prevValue;
+		}
+		return super.remove(key);
 	}
 }

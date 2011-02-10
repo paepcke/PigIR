@@ -5,7 +5,6 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Properties;
 
@@ -32,6 +31,8 @@ public class WebBaseLoader extends LoadFunc implements LoadPushDown {
 
 	public final Logger logger = Logger.getLogger(getClass().getName());
 	
+	private final String usage = "LOAD crawlName[colon-separated numPages, startSite, endSite]. Ex: LOAD 'foo:10' or LOAD 'foo:10:www.adobe.com' or LOAD 'foo:::zookeeper.com'";
+	
 	private MultiTypeProperties wbJobProperties = 
 		new MultiTypeProperties(UDFContext.getUDFContext().getUDFProperties(getClass()));
 	private final int NUM_OUTPUT_COLUMNS = 5;
@@ -48,18 +49,7 @@ public class WebBaseLoader extends LoadFunc implements LoadPushDown {
 
     private String signature;
     
-    @SuppressWarnings({ "serial", "unused" })
-	private HashSet<String> wbMimeTypes = new HashSet<String>() {
-    	{
-    		add("audio");
-    		add("image");
-    		add("text");
-    		add("unknown");
-    	}
-    };
-
-    private String crawlName = null;
-    private String crawlType = null;
+    private CommandLineSpec loadCommand;
     private DistributorContact distributorContact = null;
     
     protected WbRecordReader wbRecordReader = null;
@@ -127,14 +117,18 @@ public class WebBaseLoader extends LoadFunc implements LoadPushDown {
             // Get one WebBase record:
             wbRec = (WbRecord) wbRecordReader.getCurrentValue();
             
-            // Create separate columns from the header information,
-            // followed by the content field.
-            // First the required fields that should be present wbRecordReader
-            // order:
+            // Create separate columns from the WebBase header information,
+            // followed by a bag of Pig Maps containing the HTTP header
+            // fields that happened to be present in the Web page,
+            // followed by the the content field.
+            
+            // See WbRecord.mandatoryHeaderFields for the mandatory
+            // WebBase header fields we include in the following 'for' loop:
+
             int resFieldIndex = -1;
             for (String headerKey : wbRec.mandatoryKeysHeader()) {
             	// Check whether this WebBase header field is wanted
-            	// wbRecordReader the result tuple (or is being projected out):
+            	// in the result tuple (or is being projected out):
             	if ((mRequiredColumns != null) && (++resFieldIndex < numColsToReturn) && mRequiredColumns[resFieldIndex]) {
             		@SuppressWarnings("rawtypes")
 					Constructor fldConstructor = wbRec.mandatoryWbHeaderFldTypes.get(headerKey);
@@ -147,10 +141,15 @@ public class WebBaseLoader extends LoadFunc implements LoadPushDown {
             		continue;
             	}
             }
+            
+            // Now the bag of HTTP header fields:
+            if ((mRequiredColumns != null) && (++resFieldIndex < numColsToReturn)  && mRequiredColumns[resFieldIndex]) { 
+            	mProtoTuple.add(wbRec.get(WbRecord.HTTP_HEADER_MAP));
+            }
             // Check whether the WebBase record content is wanted wbRecordReader the 
             // result tuple (or is being projected out):
             if ((mRequiredColumns != null) && (++resFieldIndex < numColsToReturn)  && mRequiredColumns[resFieldIndex]) { 
-            	mProtoTuple.add(wbRec.get(WarcRecord.CONTENT));
+            	mProtoTuple.add(wbRec.get(WbRecord.CONTENT));
             }
             Tuple t =  mTupleFactory.newTupleNoCopy(mProtoTuple);
             return t;
@@ -238,21 +237,9 @@ public class WebBaseLoader extends LoadFunc implements LoadPushDown {
 		
 		// Get rid of the '/'
 		location = location.substring(1);
-    	String[] crawlAndType = location.split(":");
-    	if (crawlAndType.length > 2) {
-    		String errMsg = "Badly formatted crawl name/numPages string. Should be <name>:<numPages>. Was " + location; 
-    		logger.error(errMsg);
-    		throw new IOException(errMsg);
-    	}
     	
-    	crawlName = crawlAndType[0].trim();
-    	
-    	if (crawlAndType.length > 1) {
-    		
-    	}
-    	
-    	crawlType = crawlAndType[1].trim();
-    	distributorContact = DistributorContact.getCrawlDistributorAddr(crawlName, crawlType);
+		loadCommand = parseCrawlSpec(location);
+    	distributorContact = DistributorContact.getCrawlDistributorContact(loadCommand.crawlName, loadCommand.numPagesWanted, loadCommand.startSite, loadCommand.endSite);
 				
 		int numReducers = theJob.getNumReduceTasks();
 		if (numReducers <= 0)
@@ -263,6 +250,47 @@ public class WebBaseLoader extends LoadFunc implements LoadPushDown {
 		// Make the distributor demon contact available 
 		// to all the splits via the job property list.
 		wbJobProperties.setProperty(Constants.WB_DISTRIBUTOR_DEMON_KEY, distributorContact.toConfigStr());
+	}
+	
+	/*-----------------------------------------------------
+	| parseCrawlSpec() 
+	------------------------*/
+	
+	private CommandLineSpec parseCrawlSpec(String loadCommandArg) throws IOException {
+		
+		String[] loadCommandPieces = loadCommandArg.split(":");
+		CommandLineSpec command = new CommandLineSpec();
+		
+    	if (loadCommandPieces.length > 4) {
+    		String errMsg = "Too many parameters to Pig LOAD command. Usage: " + usage + ". Was " + loadCommandArg; 
+    		logger.error(errMsg);
+    		throw new IOException(errMsg);
+    	}
+    	
+    	command.crawlName = loadCommandPieces[0].trim();
+    	
+    	if (loadCommandPieces.length > 1) {
+    		// Second parm needs to be a number or empty, indicating that all pages are wanted:
+    		if (loadCommandPieces[1].isEmpty())
+    			command.numPagesWanted = Constants.ALL_PAGES_WANTED;
+    		else 
+    			try {
+    				command.numPagesWanted = Integer.parseInt(loadCommandPieces[1]);
+    			} catch (NumberFormatException e) {
+    				String errMsg = "Bad page number in Pig LOAD command. Usage: " + usage + ". Was " + loadCommandArg; 
+    				logger.error(errMsg);
+    				throw new IOException(errMsg);
+    			}
+    	}
+    	
+    	if (loadCommandPieces.length > 2) {
+    		command.startSite = loadCommandPieces[2];
+    	}
+    	
+    	if (loadCommandPieces.length > 3) {
+    		command.endSite = loadCommandPieces[3];
+    	}
+    	return command;
 	}
 	
 	/*-----------------------------------------------------
@@ -302,5 +330,18 @@ public class WebBaseLoader extends LoadFunc implements LoadPushDown {
 	
 	public DistributorContact getDistributorContact() {
 		return distributorContact;
+	}
+	
+	// ------------------------------  Class CommandLineSpec -------------------------
+	
+	protected class CommandLineSpec {
+		public String crawlName;
+		public int numPagesWanted = Constants.ALL_PAGES_WANTED;
+		public String startSite = "";
+		public String endSite = "";
+
+		public CommandLineSpec () {
+			
+		}
 	}
 }

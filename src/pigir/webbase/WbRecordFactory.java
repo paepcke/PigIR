@@ -30,7 +30,8 @@ import java.util.Vector;
 public class WbRecordFactory {
 	
 	public static WbRecord getWbRecord(Metadata md, byte[] page) {
-		//get the page as a string to extract the http header
+		
+		// Get the page as a string to extract the http header
 		String pageStr = new String(page);
 		Vector<String> httpHeader = getHTTPHeader(pageStr);
 		
@@ -55,7 +56,7 @@ public class WbRecordFactory {
 		}
 	}
 	
-	//TODO: right now this assumes there is exactly 1 HTTP header as the first part of every page
+	// Right now this assumes there is exactly 1 HTTP header as the first part of every page
 	static Vector<String> getHTTPHeader(String page) {
 		Vector<String> httpHeader = new Vector<String>();
 		BufferedReader reader = new BufferedReader(new StringReader(page));

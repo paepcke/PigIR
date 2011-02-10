@@ -111,6 +111,21 @@ public class Metadata implements Map<String,Object> {
 	
 	// ------------------------------------------  Methods for implementing Map<String,String> ------------
 
+	/**
+	 * Given the key of the Map view, return a String
+	 * form of the respective value.
+	 * @param key
+	 * @return
+	 */
+	public String fieldToString(String key) {
+		if (key.equals(WbRecord.WEBBASE_URL)) return url;
+		if (key.equals(WbRecord.WEBBASE_DATE)) return timeStamp;
+		if (key.equals(WbRecord.WEBBASE_SIZE)) return new Integer(pageSize).toString();
+		if (key.equals(WbRecord.WEBBASE_POSITION)) return new Long(offset).toString();
+		if (key.equals(WbRecord.WEBBASE_DOCID)) return new Integer(docID).toString();
+		return null;
+	}
+	
 	@Override
 	public boolean isEmpty() {
 		return false;
@@ -143,7 +158,9 @@ public class Metadata implements Map<String,Object> {
 	
 	@Override
 	public Object put(String key, Object value) {
+		
 		Object prevValue = null;
+		
 		if (key.equals(WbRecord.WEBBASE_URL)) {
 			prevValue = url;
 			url = (String) value;
@@ -152,17 +169,36 @@ public class Metadata implements Map<String,Object> {
 			prevValue = timeStamp;
 			timeStamp = (String) value;
 		}
+		
 		if (key.equals(WbRecord.WEBBASE_SIZE)) {
 			prevValue = pageSize;
-			pageSize = (Integer) value;
+			// Handle string values:
+			try {
+				pageSize = Integer.parseInt((String)value);
+			} catch (NumberFormatException e) {
+				// ... or hope that type casting will work:
+				pageSize = (Integer) value;
+			}
 		}
 		if (key.equals(WbRecord.WEBBASE_POSITION)) {
 			prevValue = offset;
-			offset = (Long) value;
+			// Handle string values:
+			try {
+				offset = Long.parseLong((String)value);
+			} catch (NumberFormatException e) {
+				// ... or hope that type casting will work:
+				offset = (Long) value;
+			}
 		}
 		if (key.equals(WbRecord.WEBBASE_DOCID)) {
 			prevValue = docID;
-			docID = (Integer) value;
+			// Handle string values:
+			try {
+				docID = Integer.parseInt((String)value);
+			} catch (NumberFormatException e) {
+				// ... or hope that type casting will work:
+				docID = (Integer) value;
+			}
 		}
 		return prevValue;
 	}

@@ -3,6 +3,9 @@ package pigir.webbase;
 
 public final class Constants {
 	
+	// Indicator that all pages are wanted (for use in LOAD command):
+	public static final int ALL_PAGES_WANTED = -1;
+	
 	// Number pages after which WebBaseLoader should log progress:
 	public static final int WB_PAGE_LOAD_REPORT_GRANULARITY = 100;
 	
