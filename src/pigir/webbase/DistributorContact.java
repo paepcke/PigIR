@@ -88,7 +88,6 @@ public class DistributorContact implements Writable, Serializable {
 	public DistributorContact(
 			String theDistributorMachineName, 
 			int theDistributorPort,
-			String theDate,
 			int theNumPages,
 			int theNumPagesWanted,
 			String theStartSite,
@@ -99,7 +98,6 @@ public class DistributorContact implements Writable, Serializable {
 		
 		initVars(theDistributorMachineName, 
 				theDistributorPort, 
-				theDate,
 				theNumPages,
 				theNumPagesWanted,
 				theStartSite,
@@ -112,7 +110,6 @@ public class DistributorContact implements Writable, Serializable {
 	public DistributorContact(
 			String theDistributorMachineName, 
 			String theDistributorPort,
-			String theDate,
 			int theNumPages,
 			int theNumPagesWanted,			
 			String theStartSite,
@@ -123,7 +120,6 @@ public class DistributorContact implements Writable, Serializable {
 
 		initVars(theDistributorMachineName, 
 				theDistributorPort,
-				theDate,
 				theNumPages,
 				theNumPagesWanted,
 				theStartSite,
@@ -141,7 +137,6 @@ public class DistributorContact implements Writable, Serializable {
 	private void initVars(
 			String theDistributorMachineName, 
 			int 	theDistributorPort,
-			String	theDate,
 			int		theNumPages,
 			int  	theNumPagesWanted,
 			String  theStartSite,
@@ -158,7 +153,6 @@ public class DistributorContact implements Writable, Serializable {
 			distributorMachineName = theDistributorMachineName + Constants.WB_DOMAIN;
 		distributorPort = theDistributorPort;
 		distributorPort = theDistributorPort;
-		distributorDate = theDate;
 		numPages = theNumPages;
 		if (theNumPagesWanted < 0)
 			numPagesWanted = theNumPages;
@@ -170,6 +164,15 @@ public class DistributorContact implements Writable, Serializable {
 		crawlType = theCrawlType;
 		siteListPath = theSiteListPath;
 		
+		// TODO: Derive the crawl date from the the crawl name, unless Gary inludes in crawlDirectory.txt.
+		// Example crawl names: 
+		// 01-2008, 2008-02, 10-2006-images, gov200307, gov-2004-06, city-2005-05, 
+		// states-2005-5-2, recall-10-2-2003, hurricane0909, virginia-tech-coverage-5-3-2007,
+		// 2008-Election-09-20, obama.transition.05.18.2009
+
+		distributorDate = "00/00/0000";
+
+		
 		if (logger == null)
 			logger = WbRecordReader.getLogger();
 	}
@@ -178,7 +181,6 @@ public class DistributorContact implements Writable, Serializable {
 	private void initVars(
 			String theDistributorMachineName, 
 			String theDistributorPort,
-			String	theDate,
 			int		theNumPages,
 			int  	theNumPagesWanted,			
 			String  theStartSite,
@@ -196,7 +198,6 @@ public class DistributorContact implements Writable, Serializable {
 		}
 		initVars(theDistributorMachineName,
 				port,
-				theDate,
 				theNumPages,
 				theNumPagesWanted,
 				theStartSite,
@@ -217,7 +218,8 @@ public class DistributorContact implements Writable, Serializable {
 	 * @param crawlName
 	 * @param crawlType
 	 * @return a DistributorContact instance that holds all information necessary to 
-	 * request a distributor. 
+	 * request a distributor. If no distributor is found for the given crawl name,
+	 * returns null.
 	 * @throws IOException
 	 */
 	public static DistributorContact getCrawlDistributorContact(String crawlName, int numPagesWanted, String startSite, String endSite) 
@@ -225,7 +227,7 @@ public class DistributorContact implements Writable, Serializable {
 		
 		File directoryListFile;
 		
-		directoryListFile = new File(Constants.CRAWL_DIRECTORY_LIST_FILE_NAME);
+		directoryListFile = new File(Constants.LOCAL_CRAWL_DIRECTORY_FILE_NAME);
 		if (!directoryListFile.exists() || isOld(directoryListFile))
 			refreshDirectoryListFile();
 		crawlName = crawlName.trim();
@@ -247,20 +249,24 @@ public class DistributorContact implements Writable, Serializable {
 			crawlMimeType = "text";
 		
 		try {
-			FileInputStream fstream = new FileInputStream(Constants.CRAWL_DIRECTORY_LIST_FILE_NAME);
+			FileInputStream fstream = new FileInputStream(Constants.LOCAL_CRAWL_DIRECTORY_FILE_NAME);
 			BufferedReader buf = new BufferedReader(new InputStreamReader(fstream));
 			String line;
 			while((line = buf.readLine()) != null) {
+				
 				line = line.trim(); //trim any leading/trailing whitespace in the line
+				
 				//logger.debug("Crawl file line: " + line);
-				// If the current line contains both the name and mime, then all good:
+				// The crawl directory consists of lines like this:
+				//    <crawlName> <crawlType> <machineName> <port> <numPages> <siteListFileName>
+				// Example:
+				//    2003-06 text WB1 7006 96060000 2003-06.tx
+				
 				if(line.indexOf(crawlName) != -1) {
 					String[] crawlWords = line.split(" ");
-					String machine = crawlWords[0];
-					String port = crawlWords[1];
-					String date = crawlWords[3];
+					String machine = crawlWords[2];
+					String port = crawlWords[3];
 					String numPagesStr = crawlWords[4];
-					numPagesStr = numPagesStr.replaceAll("[^0-9]", "");
 					int numPages;
 					try {
 						numPages = Integer.parseInt(numPagesStr);
@@ -275,7 +281,6 @@ public class DistributorContact implements Writable, Serializable {
 					String siteListPath = crawlWords[5];
 					return new DistributorContact(machine + Constants.WB_DOMAIN, // the .stanford.edu
 												  port,
-												  date,
 												  numPages,
 												  numPagesWanted,
 												  startSite,
@@ -319,7 +324,7 @@ public class DistributorContact implements Writable, Serializable {
 	 */
 	private static void refreshDirectoryListFile() throws IOException {
 		// Is there an old copy around?
-		File oldDirectoryListFile = new File(Constants.CRAWL_DIRECTORY_LIST_FILE_NAME);
+		File oldDirectoryListFile = new File(Constants.LOCAL_CRAWL_DIRECTORY_FILE_NAME);
 		File tmpFile = new File(oldDirectoryListFile.getAbsolutePath() + ".tmp");
 		URL crawlListURL = null;
 		
@@ -339,14 +344,14 @@ public class DistributorContact implements Writable, Serializable {
 		try {
 			FileUtils.copyURLToFile(crawlListURL, tmpFile, Constants.WB_CONNECTING_TIMEOUT, Constants.WB_INTERNET_READ_TIMEOUTE);
 		} catch (Exception e) {
-			String errMsg = "Could not copy fresh WebBase crawl directory list into cash:\n" +
+			String errMsg = "Could not copy fresh WebBase crawl directory list into cash:\n     " +
 							e.getMessage();
 			if (oldDirectoryListFile.exists()) {
-				errMsg += "\nUsing cached version.";
+				errMsg += "\n     Using cached version.";
 				logger.warn(errMsg);
 				return;
 			} else {
-				errMsg += "\nNo previous version exists.";
+				errMsg += "\n     No previous version exists.";
 				logger.error(errMsg);
 				throw new IOException(errMsg);
 			}

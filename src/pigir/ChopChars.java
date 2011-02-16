@@ -177,7 +177,6 @@ public class ChopChars extends EvalFunc<String> {
 
 			
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}	

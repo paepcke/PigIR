@@ -39,7 +39,7 @@ public class WbInputSplit extends InputSplit implements Writable {
 
 	@Override
 	public String[] getLocations() throws IOException, InterruptedException {
-		return new String[]{};
+		return new String[]{startSite + "->" + endSite};
 	}
 	
 	public int getNumPages() {

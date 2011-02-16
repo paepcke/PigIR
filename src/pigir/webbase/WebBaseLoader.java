@@ -5,9 +5,12 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapreduce.InputFormat;
 import org.apache.hadoop.mapreduce.Job;
@@ -51,7 +54,8 @@ public class WebBaseLoader extends LoadFunc implements LoadPushDown {
     
     private CommandLineSpec loadCommand;
     private DistributorContact distributorContact = null;
-    
+
+    private WbInputFormat wbInputFormat = null;
     protected WbRecordReader wbRecordReader = null;
     
 	/*-----------------------------------------------------
@@ -238,59 +242,30 @@ public class WebBaseLoader extends LoadFunc implements LoadPushDown {
 		// Get rid of the '/'
 		location = location.substring(1);
     	
-		loadCommand = parseCrawlSpec(location);
+		loadCommand = new CommandLineSpec(location);
+		// Set the job configuration to know that the proper
+		// InputFormat subclass to use is our WbInputFormat.class.
+		// Else the default PigInputFormat is used, which assumes
+		// files as input.
+		theJob.setInputFormatClass(WbInputFormat.class);
+		
     	distributorContact = DistributorContact.getCrawlDistributorContact(loadCommand.crawlName, loadCommand.numPagesWanted, loadCommand.startSite, loadCommand.endSite);
-				
+    	if (distributorContact == null) {
+    		String errMsg = "No distributor found for crawl named '" + loadCommand.crawlName + "'. Double check the name and spelling.";
+    		logger.error(errMsg);
+    		throw new IOException(errMsg);
+    	}
 		int numReducers = theJob.getNumReduceTasks();
+		logger.info("Number of reduce tasks from Job object is " + numReducers);
 		if (numReducers <= 0)
 			wbJobProperties.setInt(Constants.NUM_OF_CPUS_PROP_NAME, Constants.DEFAULT_NUM_OF_SPLITS);
 		else
 			wbJobProperties.setInt(Constants.NUM_OF_CPUS_PROP_NAME, theJob.getNumReduceTasks());
 
+		logger.info("Setting number of slices to " + wbJobProperties.getInt(Constants.NUM_OF_CPUS_PROP_NAME, -1));
 		// Make the distributor demon contact available 
 		// to all the splits via the job property list.
 		wbJobProperties.setProperty(Constants.WB_DISTRIBUTOR_DEMON_KEY, distributorContact.toConfigStr());
-	}
-	
-	/*-----------------------------------------------------
-	| parseCrawlSpec() 
-	------------------------*/
-	
-	private CommandLineSpec parseCrawlSpec(String loadCommandArg) throws IOException {
-		
-		String[] loadCommandPieces = loadCommandArg.split(":");
-		CommandLineSpec command = new CommandLineSpec();
-		
-    	if (loadCommandPieces.length > 4) {
-    		String errMsg = "Too many parameters to Pig LOAD command. Usage: " + usage + ". Was " + loadCommandArg; 
-    		logger.error(errMsg);
-    		throw new IOException(errMsg);
-    	}
-    	
-    	command.crawlName = loadCommandPieces[0].trim();
-    	
-    	if (loadCommandPieces.length > 1) {
-    		// Second parm needs to be a number or empty, indicating that all pages are wanted:
-    		if (loadCommandPieces[1].isEmpty())
-    			command.numPagesWanted = Constants.ALL_PAGES_WANTED;
-    		else 
-    			try {
-    				command.numPagesWanted = Integer.parseInt(loadCommandPieces[1]);
-    			} catch (NumberFormatException e) {
-    				String errMsg = "Bad page number in Pig LOAD command. Usage: " + usage + ". Was " + loadCommandArg; 
-    				logger.error(errMsg);
-    				throw new IOException(errMsg);
-    			}
-    	}
-    	
-    	if (loadCommandPieces.length > 2) {
-    		command.startSite = loadCommandPieces[2];
-    	}
-    	
-    	if (loadCommandPieces.length > 3) {
-    		command.endSite = loadCommandPieces[3];
-    	}
-    	return command;
 	}
 	
 	/*-----------------------------------------------------
@@ -309,9 +284,10 @@ public class WebBaseLoader extends LoadFunc implements LoadPushDown {
 	@SuppressWarnings("rawtypes")
 	@Override
 	public InputFormat getInputFormat() throws IOException {
-		return new WbInputFormat(wbJobProperties);
+		if (wbInputFormat == null)
+			wbInputFormat = new WbInputFormat(wbJobProperties);
+		return wbInputFormat;
 	}
-
 	
 	/*-----------------------------------------------------
 	| prepareToRead() 
@@ -340,8 +316,65 @@ public class WebBaseLoader extends LoadFunc implements LoadPushDown {
 		public String startSite = "";
 		public String endSite = "";
 
-		public CommandLineSpec () {
-			
+	/*-----------------------------------------------------
+	| Constructor 
+	------------------------*/
+		
+		public CommandLineSpec (String loadCommandArg) throws IOException {
+			parseCrawlSpec(loadCommandArg);
 		}
+		
+	/*-----------------------------------------------------
+	| parseCrawlSpec() 
+	------------------------*/
+	
+	/**
+	 * Given the argument to the Pig LOAD command, tease out the
+	 * components, and initialize the relevant instance variables.
+	 * Examples: LOAD '2003-06:2:www.hp.com:www.ssa.gov' AS ...
+	 * 
+	 * @param loadCommandArg <crawlName>[:<numPages>[:<startSite>[:<endSite]]].
+	 * Default when <numPages> is absent: all.
+	 * @throws IOException
+	 */
+	private void parseCrawlSpec(String loadCommandArg) throws IOException {
+		
+		String[] loadCommandPieces = loadCommandArg.split(":");
+		
+    	if (loadCommandPieces.length > 4) {
+    		String errMsg = "Too many parameters to Pig LOAD command. Usage: " + usage + ". Was " + loadCommandArg; 
+    		logger.error(errMsg);
+    		throw new IOException(errMsg);
+    	}
+    	
+    	crawlName = loadCommandPieces[0].trim();
+    	
+    	if (loadCommandPieces.length > 1) {
+    		// Second parm needs to be a number or empty, indicating that all pages are wanted:
+    		if (loadCommandPieces[1].isEmpty())
+    			numPagesWanted = Constants.ALL_PAGES_WANTED;
+    		else 
+    			try {
+    				numPagesWanted = Integer.parseInt(loadCommandPieces[1]);
+    			} catch (NumberFormatException e) {
+    				String errMsg = "Bad page number in Pig LOAD command. Usage: " + usage + ". Was " + loadCommandArg; 
+    				logger.error(errMsg);
+    				throw new IOException(errMsg);
+    			}
+    	}
+    	
+    	if (loadCommandPieces.length > 2) {
+    		startSite = loadCommandPieces[2];
+    	}
+    	
+    	if (loadCommandPieces.length > 3) {
+    		endSite = loadCommandPieces[3];
+    	}
+	}
+			
+	public String toString() {
+		return "LoadCommand<" + crawlName + ":" + numColsToReturn + ":" + startSite + ":" + endSite + ">";
+	}
+	
 	}
 }

@@ -127,7 +127,8 @@ public class CrawlFinder {
 		
 		try {
 			//set up socket and input/output streams
-			Socket dir_serv = new Socket(ipAddress, port);//TODO: change to eventual crawl lookup server on WBxx
+			Socket dir_serv = new Socket(ipAddress, port);
+			
 			dir_serv.setSoTimeout(DIRECTORY_READ_TIMEOUT);
 			ObjectOutputStream oos = new ObjectOutputStream(dir_serv.getOutputStream());
 			ObjectInputStream ois = new ObjectInputStream(dir_serv.getInputStream());

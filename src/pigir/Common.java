@@ -35,7 +35,6 @@ public final class Common {
 			try {
 				System.out.println(tuple.get(i));
 			} catch (ExecException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 		}

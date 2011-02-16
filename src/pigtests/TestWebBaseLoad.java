@@ -34,9 +34,9 @@ class TestWebBaseLoad {
 			pserver.registerJar("contrib/PigIRWithSource.jar");
 			
 			pserver.registerQuery(
-					//"docs = LOAD 'crawled_hosts.1105.tx.f:1' " +
-					//"docs = LOAD 'crawled_hosts.1105.tx.f:1:www.hp.com' " +
-					"docs = LOAD 'crawled_hosts.1105.tx.f:2:www.hp.com:www.ssa.gov' " +
+					//"docs = LOAD '2003-06:1' " +
+					//"docs = LOAD '2003-06-tx:1:www.hp.com' " +
+					"docs = LOAD '2003-06:2:www.hp.com:www.ssa.gov' " +
 					"		USING pigir.webbase.WebBaseLoader() " +
 					"       AS (url:chararray, date:chararray, pageSize:int, position:int, docidInCrawl:int, httpHeader:chararray, content:chararray);"
 			);

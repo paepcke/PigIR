@@ -87,7 +87,7 @@ public abstract class WebStream
 	}
 	
 	public Vector<WbRecord> getAllPages() {
-		//TODO: do we want to do this? this will probably take up too much memory...
+		// Not a realistic method for large crawls!
 		Vector<WbRecord> content = getNPages(130000000);
 		System.out.println("Number of pages expected:	" + this.numPagesRequested);
 		System.out.println("Actual number of pages wbRecordReader crawl:	" + this.totalNumPagesRetrieved);
@@ -135,9 +135,9 @@ public abstract class WebStream
 					urlLen			= in.readInt();
 					pageSize		= in.readInt();
 						
-					if(tsLen > TIMESTAMP_LENGTH || urlLen > MAX_URL_SIZE) //TODO: check for MAX_FILE_SIZE
+					if(tsLen > TIMESTAMP_LENGTH || urlLen > MAX_URL_SIZE)
 					{
-						//TODO: maybe output an error message? just continue for now...
+						// aybe output an error message? just continue for now...
 						continue;
 					}
 					

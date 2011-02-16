@@ -105,7 +105,7 @@ public class IsStopword extends FilterFunc {
 			System.out.println("'FDA' stopword?: " + func.exec(parms));
 			
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
+
 			e.printStackTrace();
 		}
 	}

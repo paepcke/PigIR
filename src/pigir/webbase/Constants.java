@@ -10,15 +10,17 @@ public final class Constants {
 	public static final int WB_PAGE_LOAD_REPORT_GRANULARITY = 100;
 	
 	public static final String WB_DOMAIN = ".stanford.edu";
-	public static final String CRAWL_DIRECTORY_LIST_FILE_NAME = "resources/crawl.directory.list";
+	public static final String REMOTE_CRAWL_DIRECTORY_FILE_NAME = "crawlDirectory.txt";
+	public static final String LOCAL_CRAWL_DIRECTORY_FILE_NAME = "resources/" + REMOTE_CRAWL_DIRECTORY_FILE_NAME;
+	public static final String CRAWL_DIR_LIST_URL_STR =	
+		"http://infolab.stanford.edu/~testbed/WBMetadata/" + REMOTE_CRAWL_DIRECTORY_FILE_NAME;
+	public static final String CRAWL_SITE_LIST_URL_STUB =
+		"http://infolab.stanford.edu/~testbed/WBMetadata/";
+	
 	// Time to live for crawl directory cache in milliseconds. The 
 	// 24 is the number of hours.
 	public static final long CRAWL_DIR_LIST_TTL = 24 * 3600 * 1000;
-	public static final int DEFAULT_NUM_OF_SPLITS = 1;
-	public static final String CRAWL_DIR_LIST_URL_STR =	
-		"http://infolab.stanford.edu/~testbed/WBMetadata/crawl.directory.list";
-	public static final String CRAWL_SITE_LIST_URL_STUB =
-		"http://infolab.stanford.edu/~testbed/WBMetadata/";
+	public static final int DEFAULT_NUM_OF_SPLITS = 2; // 40;
 	
 	// Job configuration keys:
 	public static final String WB_DISTRIBUTOR_DEMON_KEY = "distribDemonKey";

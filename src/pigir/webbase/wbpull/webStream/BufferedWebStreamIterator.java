@@ -123,7 +123,10 @@ public class BufferedWebStreamIterator extends WebStream implements Iterator<WbR
 		in	= new DataInputStream(distributorDemonSocket.getInputStream());
 		out	= new DataOutputStream(distributorDemonSocket.getOutputStream());
 		
-		logger.info("Obtained distributor demon at " + machineName + ":" + port + ". Requesting distributor.");
+		logger.info("Obtained distributor demon at " + 
+					 machineName + ":" + port + 
+					 ". Requesting distributor for " + 
+					 startSite + "-->" + endSite + ".");
 		
 		// new,<offset>,<startSite>,<endSite>,lfcr:
 		String distribDemonRequest = "new,0," + startSite + "," + endSite + ",\r\n"; 

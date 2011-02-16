@@ -66,11 +66,12 @@ public class WbInputFormat extends InputFormat<WbInputSplit,Text> {
 	------------------------*/
 	/**
 	 * Gather necessary information, then compute split distribution.
-	 * @param jobContext
+	 * @param jobwbJobProperties
 	 * @throws IOException
 	 */
 	public WbInputFormat(MultiTypeProperties wbJobProperties) throws IOException {
-		
+	
+		// TODO: Check whether WbInputFormat constructor is called multiple times, and only compute slices once.
 		if (wbJobProperties == null)
 			throw new IOException("Bad WebBase configuration: " + wbJobProperties);
 		
@@ -93,7 +94,7 @@ public class WbInputFormat extends InputFormat<WbInputSplit,Text> {
 		} catch (IOException e) {
 			throw new IOException("Error retrieving site list from " +
 								  siteListURLStr +
-								  ". (" +
+								  " (" +
 								  e.getMessage() +
 								  ").");
 		}
@@ -339,6 +340,12 @@ public class WbInputFormat extends InputFormat<WbInputSplit,Text> {
 	@Override
 	public List<InputSplit> getSplits(JobContext context) throws IOException,
 	InterruptedException {
+		long largestSplit = 0;
+		for (InputSplit split : (List<InputSplit>) splits) {
+			if (split.getLength() > largestSplit)
+				largestSplit = split.getLength();
+		}				
+		context.getConfiguration().setLong("pig.maxCombinedSplitSize", largestSplit);
 		return splits;
 	}
 
