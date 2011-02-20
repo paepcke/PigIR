@@ -11,7 +11,7 @@
  	<property name="local.classes.dir" location="bin/" />
 	<property name="local.lib.dir" location="lib/" /> 
 	
-	<property name="local.pigtest.dir" location="${local.src.dir}/PigScripts/" />
+	<property name="local.pigtest.dir" location="PigScripts/" />
 	
 	<!-- <property name="pig.jar" location="${env.PIG_HOME}/pig-0.8.0-core-withsrc.jar" /> -->
 	<property name="pig.jar" location="C:/Users/Paepcke/Software/Hadoop/pig-0.8.0/pig-0.8.0-core-withsrc.jar" />

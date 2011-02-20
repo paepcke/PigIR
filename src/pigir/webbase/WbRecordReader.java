@@ -62,7 +62,9 @@ public class WbRecordReader extends RecordReader<WbInputSplit, Text>{
 		mySplit = (WbInputSplit) split;
 		distributorDemonContact = mySplit.getDistributorDemonContact();
 		
-		logger.info("Attempt to start WebBase stream from distributor " + 
+		logger.info("From " +
+					Constants.getHostInfo() +
+					": attempt to start WebBase stream using distributor demon at " + 
 				distributorDemonContact.getDistributorMachineName() + ":" + 
 				distributorDemonContact.getDistributorPortAsStr());
 		
@@ -78,7 +80,9 @@ public class WbRecordReader extends RecordReader<WbInputSplit, Text>{
 			throw new IOException(errMsg);
 		}
 		
-		logger.info("Successfully obtained WebBase stream " + 
+		logger.info("On " +
+					Constants.getHostInfo() +
+					": successfully obtained WebBase stream " + 
 					webBaseStream.getMachineName() + ":" + webBaseStream.getPort());
 		
 		/*for(int i = 0; i < 2; i++) {

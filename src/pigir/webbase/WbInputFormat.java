@@ -72,6 +72,7 @@ public class WbInputFormat extends InputFormat<WbInputSplit,Text> {
 	public WbInputFormat(MultiTypeProperties wbJobProperties) throws IOException {
 	
 		// TODO: Check whether WbInputFormat constructor is called multiple times, and only compute slices once.
+
 		if (wbJobProperties == null)
 			throw new IOException("Bad WebBase configuration: " + wbJobProperties);
 		

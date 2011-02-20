@@ -123,7 +123,9 @@ public class BufferedWebStreamIterator extends WebStream implements Iterator<WbR
 		in	= new DataInputStream(distributorDemonSocket.getInputStream());
 		out	= new DataOutputStream(distributorDemonSocket.getOutputStream());
 		
-		logger.info("Obtained distributor demon at " + 
+		logger.info("From " +
+					Constants.getHostInfo() +
+					": obtained distributor demon at " + 
 					 machineName + ":" + port + 
 					 ". Requesting distributor for " + 
 					 startSite + "-->" + endSite + ".");
@@ -167,9 +169,15 @@ public class BufferedWebStreamIterator extends WebStream implements Iterator<WbR
 		
 		Socket distributor;
 		// Always the pessimist:
-		String errMsg = "Could not open a distributor at " + distributorIP + ":" + distributorPort + ". ";
+		String errMsg = "From " +
+						Constants.getHostInfo() +
+						": could not open a distributor at " + distributorIP + ":" + distributorPort + ". ";
 		
 		// Set up socket and input/output streams
+		logger.info("From " +
+				    Constants.getHostInfo() +
+				    ": attempt to open socket to distributor at " +
+				    distributorIP + ":" + distributorPort);
 		try {
 			distributor = new Socket(getInetAddressFromAsciiIP(distributorIP), Integer.parseInt(distributorPort));
 		} catch (UnknownHostException e) {

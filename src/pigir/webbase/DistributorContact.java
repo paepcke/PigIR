@@ -256,17 +256,11 @@ public class DistributorContact implements Writable, Serializable {
 				
 				line = line.trim(); //trim any leading/trailing whitespace in the line
 				
-				//logger.debug("Crawl file line: " + line);
-				// The crawl directory consists of lines like this:
-				//    <crawlName> <crawlType> <machineName> <port> <numPages> <siteListFileName>
-				// Example:
-				//    2003-06 text WB1 7006 96060000 2003-06.tx
-				
 				if(line.indexOf(crawlName) != -1) {
-					String[] crawlWords = line.split(" ");
-					String machine = crawlWords[2];
-					String port = crawlWords[3];
-					String numPagesStr = crawlWords[4];
+					String[] crawlWords = line.split(",");
+					String machine = crawlWords[Constants.CRAWL_DIR_DISTRIB_DEMON_MACHINE_NAME];
+					String port = crawlWords[Constants.CRAWL_DIR_DISTRIB_DEMON_MACHINE_PORT];
+					String numPagesStr = crawlWords[Constants.CRAWL_DIR_NUM_PAGES];
 					int numPages;
 					try {
 						numPages = Integer.parseInt(numPagesStr);
@@ -278,7 +272,7 @@ public class DistributorContact implements Writable, Serializable {
 						logger.error(errMsg);
 						throw new IOException(errMsg);
 					}
-					String siteListPath = crawlWords[5];
+					String siteListPath = crawlWords[Constants.CRAWL_DIR_SITELIST_FILENAME];
 					return new DistributorContact(machine + Constants.WB_DOMAIN, // the .stanford.edu
 												  port,
 												  numPages,
