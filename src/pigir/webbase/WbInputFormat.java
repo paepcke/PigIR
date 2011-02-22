@@ -8,6 +8,7 @@ import java.io.StringReader;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Pattern;
 
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.InputFormat;
@@ -52,6 +53,10 @@ public class WbInputFormat extends InputFormat<WbInputSplit,Text> {
 	private static int MAX_NUM_BAD_SITELIST_ENTRIES = 100;
 	private static int MAX_SITE_LIST_LINE_LEN = 200; // Maximum number of bytes in a line in site list files.
 
+	// Pattern to match the site list summary at the end of site list files:
+	private static final Pattern SITE_LIST_SUMMARY_LINE_Pattern = Pattern.compile("[\\d]* pages in repository.*");
+
+	
 	DistributorContact distributorContact = null;
 	BufferedReader siteListReader = null;
 	
@@ -168,6 +173,11 @@ public class WbInputFormat extends InputFormat<WbInputSplit,Text> {
 			// Get a [<siteName>, <numPages>]:
 			siteNumPagePairs = siteAndNumPages.split("[\\s]");
 			if (siteNumPagePairs.length != 2) {
+				// Is this the (usually) final line in the site list file that
+				// summarizes how many pages there are?
+				// (E.g. "70918411 pages in repository, 31777 sites of 36181 were found for mimetype text'."
+				if (SITE_LIST_SUMMARY_LINE_Pattern.matcher(siteAndNumPages).matches())
+					continue;
 				logger.warn("Bad site list entry (more or fewer than two tokens): '" + siteAndNumPages + "'.");
 				if (++badSiteListLine > MAX_NUM_BAD_SITELIST_ENTRIES) {
 					throw new IOException(makeSiteListErrorMsg(siteAndNumPages));

@@ -17,7 +17,20 @@ public final class Constants {
 	// 24 is the number of hours.
 	public static final long CRAWL_DIR_LIST_TTL = 24 * 3600 * 1000;
 	//****public static final int DEFAULT_NUM_OF_SPLITS = 2; // 40;
-	public static final int DEFAULT_NUM_OF_SPLITS = 1;
+	public static final int DEFAULT_NUM_OF_SPLITS = 2;
+	
+	// Number of times to try contacting a distributor demon:
+	public static final int NUM_DISTRIB_DEMON_ATTEMPTS = 4;
+	// Distrib demon repeat attempts wait times in seconds:
+	public static final int[] DISTRIB_DEMON_ATTEMPT_PAUSES = {4,6,8};
+	
+	// Number of times to try contacting a distributor:
+	public static final int NUM_DISTRIB_ATTEMPTS = 4;
+	// Distrib repeat attempts wait times in seconds. The first wait time
+	// will always be honored to give the distributor time to fire up
+	// after the distributor demon spawned it:
+	public static final int[] DISTRIB_ATTEMPT_PAUSES = {6,6,10,10};
+	
 	
 	
 	//-------------------------------- WebBase Server Related Constants --------------------------
