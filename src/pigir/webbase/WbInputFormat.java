@@ -250,8 +250,24 @@ public class WbInputFormat extends InputFormat<WbInputSplit,Text> {
 			// Do a binary search over the part of the site list that
 			// is still to be partitioned. The result will be the index
 			// into the site list to the site that will keep the total
-			// of this split to just below the optimal (pagesPerMapper):
+			// of this split to just below the optimal (pagesPerMapper)
+			// However: we want to prevent sites with less than 3 pages 
+			// from becoming their own split. Those are sites whose robots.txt 
+			// keeps us out. The situation arises when the next site has more 
+			// pages than the per-slice limit.
 			seamIndex = indexIntoSiteEntryList(siteListEntries, first, upto, pageLimit);
+			if ((lastComputedSeamIndex >= 0) &&
+				(siteListEntries.size() > seamIndex) &&
+				(seamIndex == splitSeamIndices[lastComputedSeamIndex] + 1) &&
+				(siteListEntries.get(seamIndex)).numPages < 3) {
+				// Keep looking for a site that's larger than just 2 pages:
+				int newSeamIndex = seamIndex + 1;
+				while ((newSeamIndex < siteListEntries.size()) &&
+					   (siteListEntries.get(newSeamIndex)).numPages < 3) {
+					newSeamIndex++;
+				}
+				seamIndex = newSeamIndex;
+			}
 			splitSeamIndices[mapperNum] = seamIndex;
 			// Point to this last seam in the splitSeamIndices:
 			lastComputedSeamIndex++;
@@ -260,6 +276,7 @@ public class WbInputFormat extends InputFormat<WbInputSplit,Text> {
 			// requested:
 			if (siteListEntries.size() <= seamIndex)
 				break;
+			// Next total accumulated pages we will look for to identify a seam:
 			pageLimit = siteListEntries.get(seamIndex).accumulatedPages + pagesPerMapper;
 			first = seamIndex + 1;
 		}
@@ -273,7 +290,7 @@ public class WbInputFormat extends InputFormat<WbInputSplit,Text> {
 		SiteListEntry highSite = null;
 		int accumulatedNumPagesPrevSplit = 0;
 		int numPagesCurrSplit = -1;
-		for (int i=0; i<=lastComputedSeamIndex-1; i++) {
+		for (int i=0; i<=lastComputedSeamIndex; i++) {
 			if (i == lastComputedSeamIndex) {
 				// No matter how many pages we absorbed into the
 				// earlier splits, we must absorb all the rest into
@@ -291,10 +308,11 @@ public class WbInputFormat extends InputFormat<WbInputSplit,Text> {
 			splits.add(oneSplit);
 			// The next site in the sitelist; the one after the current 
 			// highSite:
-			if (siteListEntries.size() > i + 1) {
+			if (siteListEntries.size() > splitSeamIndices[i] + 1) {
 				lowSite =  siteListEntries.get(splitSeamIndices[i] + 1);
 				accumulatedNumPagesPrevSplit = highSite.accumulatedPages;
-			}
+			} else
+				break;
 		}
 		
 		String logMsg = "Computed the following splits:";

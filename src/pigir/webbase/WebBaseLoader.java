@@ -254,7 +254,7 @@ public class WebBaseLoader extends LoadFunc implements LoadPushDown {
 			wbJobProperties.setInt(Constants.NUM_OF_CPUS_PROP_NAME, Constants.DEFAULT_NUM_OF_SPLITS);
 		else
 			//*******wbJobProperties.setInt(Constants.NUM_OF_CPUS_PROP_NAME, numMappers);
-			wbJobProperties.setInt(Constants.NUM_OF_CPUS_PROP_NAME, 3);
+			wbJobProperties.setInt(Constants.NUM_OF_CPUS_PROP_NAME, 1);
 
 		logger.info("Setting number of slices to " + wbJobProperties.getInt(Constants.NUM_OF_CPUS_PROP_NAME, -1));
 		// Make the distributor demon contact available 
