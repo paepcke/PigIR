@@ -6,7 +6,6 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.EOFException;
 import java.io.IOException;
-import java.net.InetAddress;
 import java.net.Socket;
 import java.net.UnknownHostException;
 import java.util.Iterator;
@@ -15,6 +14,7 @@ import java.util.zip.InflaterInputStream;
 
 import org.apache.log4j.Logger;
 
+import pigir.Common;
 import pigir.webbase.Constants;
 import pigir.webbase.Metadata;
 import pigir.webbase.WbRecord;
@@ -49,112 +49,34 @@ public class BufferedWebStreamIterator extends WebStream implements Iterator<WbR
 
 		logger = WbRecordReader.getLogger();
 
-		Socket distributorDemonSocket = openDistribDemonSocket(machineName, distribDemonPort);
-		String[] distribIPAndPort = getDistributorIPAndPort(machineName, distribDemonPort, distributorDemonSocket, startSite, endSite);
-		String distributorIP   = distribIPAndPort[0];
-		String distributorPort = distribIPAndPort[1];
-		
-		Socket distributorSocket = openDistributorSocket(distributorIP, distributorPort);
-		in	= new DataInputStream(distributorSocket.getInputStream());
-		out	= new DataOutputStream(distributorSocket.getOutputStream());
-
-		// Request all pages at once:
-		String request = "" + totalNumPages + "," + startSite + "," + endSite + "\n";
-		out.write(request.getBytes());
-		
-		// Read the one-char doc type of incoming info. It tells us whether
-		// the incoming stream is compressed:
-		byte docType;
-		try {
-			docType = in.readByte();
-		} catch (IOException e1) {
-			throw new IOException("Could not read from distributor.");
-		}
-		streamCompressed = (docType & COMPRESSED_MASK) == COMPRESSED_MASK;
-		fillBuffer();
-	}
-	
-	/*-----------------------------------------------------
-	| openDistribDemonSocket() 
-	------------------------*/
-
-	/**
-	 * @param machineName
-	 * @param port
-	 * @return
-	 * @throws IOException
-	 */
-	private Socket openDistribDemonSocket(String machineName, int port)
-			throws IOException {
-		Socket distributor = null;	
-		int attempts     = Constants.NUM_DISTRIB_DEMON_ATTEMPTS;
-		// Index into array of wait-between-attempts times (DISTRIB_DEMON_ATTEMPT_PAUSES):
-		int timeoutIndex = 0;
-		
-		while (--attempts >= 0) {
-			// Set up socket and input/output streams
-			try {
-				distributor = new Socket(machineName, port);
-			} catch (UnknownHostException e) {
-				String errMsg = "Could not contact a distributor demon at " + machineName + ":" + port + ". Unknown host.";
-				logger.error(errMsg);
-				throw new IOException(errMsg);
-			} catch (IOException e) {
-				if (attempts > 0) {
-					try {
-						logger.warn("Failed attempt to contact distributor demon at " + machineName + ":" + port + ". Retrying...");
-						Thread.sleep(1000 * Constants.DISTRIB_DEMON_ATTEMPT_PAUSES[timeoutIndex++]);
-					} catch (InterruptedException e1) {
-						// ignore
-					}
-					// Try again:
-					continue;
-				}
-				String errMsg = "Could not contact a distributor demon at " + machineName + ":" + port + ". " + e.getMessage();
-				logger.error(errMsg);
-				throw new IOException(errMsg);
-			}
-		}
-		return distributor;
-	}
-
-	/*-----------------------------------------------------
-	| getDistributorIPAndPort()
-	------------------------*/
-
-	/**
-	 * @param machineName
-	 * @param port
-	 * @param distributorDemonSocket
-	 * @throws IOException
-	 */
-	private String[] getDistributorIPAndPort(String machineName, 
-											 int port, 
-											 Socket distributorDemonSocket,
-											 String startSite, 
-											 String endSite) throws IOException {
-		
-		int responseLen = -1;
+		//************
+		//distribDemonPort = 7785;
+		//************
+		Socket distributorDemonSocket = Common.getSocket(machineName, 
+														 distribDemonPort, 
+														 Constants.NUM_DISTRIB_DEMON_ATTEMPTS, 
+														 "Get distributor address from distributor demon.");
 		
 		in	= new DataInputStream(distributorDemonSocket.getInputStream());
 		out	= new DataOutputStream(distributorDemonSocket.getOutputStream());
 		
-		logger.info("From " +
-					Constants.getHostInfo() +
-					": obtained distributor demon at " + 
-					 machineName + ":" + port + 
-					 ".\n     Requesting distributor for " + 
-					 startSite + "-->" + endSite + ".");
-		
-		// new,<offset>,<startSite>,<endSite>,lfcr:
-		String distribDemonRequest = "new,0," + startSite + "," + endSite + ",\r\n"; 
-		out.writeBytes(distribDemonRequest);
+		// Ask the distributor demon for a distributor:		
+		String distribDemonRequest = "new,0," + 
+									 startSite + 
+									 "," + 
+									 endSite + "," + 
+									 System.getProperty("user.name") + "," +
+									 Constants.APPLICATION_ID +
+									 "\r\n";
+		logger.info("Distributor request: " + distribDemonRequest.trim());
+		byte[] request = distribDemonRequest.getBytes();
+		out.write(request, 0, request.length);
 		out.flush();
 		
-		// Ask the distributor demon for a distributor:
+		// Read the answer:
 		byte[] distributorIPAndPortArr = new byte[200];
+		int responseLen;
 		try {
-			// TODO: wait for in.available() > 0, or die at some point:
 			responseLen = in.read(distributorIPAndPortArr,0, 200);
 			if (responseLen < 13)
 				throw new IOException("Distributor demon provided unexpected response. Expected <ip><sp><port>. Got: " + new String(distributorIPAndPortArr));
@@ -163,14 +85,53 @@ public class BufferedWebStreamIterator extends WebStream implements Iterator<WbR
 			logger.error(errMsg);
 			throw new IOException(errMsg);
 		}
-		in.close();
+		
 		out.close();
+		in.close();
 		distributorDemonSocket.close();
-
-		String response = new String(distributorIPAndPortArr, 0, responseLen); 
-		return response.split(" ");
+		
+		// Build a string from the byte array we read from the socket,
+		// and separate the distributor's ip address from the port:
+		String[] distributorIPAndPortStrings = new String(distributorIPAndPortArr, 0, responseLen).split("[\\s]");
+		if (distributorIPAndPortStrings.length != 2)
+			throw new IOException("IP and port returned from distributor demon at " + 
+								  machineName + ":" + distribDemonPort + 
+								  " has an unexpected format: " + 
+								  new String(distributorIPAndPortArr));
+		
+		// Allow time for the distributor process to start up:
+		try {
+			Thread.sleep(Constants.TIME_TO_WAIT_FOR_DISTRIBUTOR_TO_START);
+		} catch (InterruptedException e) {}
+		
+		// Open distributor itself:
+		Socket distributorSocket = openDistributorSocket(distributorIPAndPortStrings[0], distributorIPAndPortStrings[1]);
+		in = new DataInputStream(distributorSocket.getInputStream());
+		out = new DataOutputStream(distributorSocket.getOutputStream());
+		out.writeInt(totalNumPages);
+		
+		// Read the one-char doc type of incoming info. It tells us whether
+		// the incoming stream is compressed:
+		
+		logger.info("From " +
+				    Constants.getHostInfo() +
+				    ": wait for document type byte from distributor... ");
+		
+		byte docType;
+		try {
+			// TODO: make sure we don't get stuck here.
+			docType = in.readByte();
+		} catch (IOException e1) {
+			throw new IOException("Could not read from distributor.");
+		}
+		logger.info("From " +
+				    Constants.getHostInfo() +
+				    ": received document type byte from distributor. Beginning download... ");
+		streamCompressed = (docType & COMPRESSED_MASK) == COMPRESSED_MASK;
+		fillBuffer();
 	}
 	
+
 	/*-----------------------------------------------------
 	| openDistributorSocket() 
 	------------------------*/
@@ -185,10 +146,6 @@ public class BufferedWebStreamIterator extends WebStream implements Iterator<WbR
 			throws IOException {
 		
 		Socket distributor = null;
-		int attempts     = Constants.NUM_DISTRIB_ATTEMPTS;
-		// Index into array of wait-between-attempts times (DISTRIB_ATTEMPT_PAUSES):
-		int timeoutIndex = 0;
-		
 		// Always the pessimist; prepare an error msg:
 		String errMsg = "From " +
 						Constants.getHostInfo() +
@@ -199,43 +156,24 @@ public class BufferedWebStreamIterator extends WebStream implements Iterator<WbR
 				    Constants.getHostInfo() +
 				    ": attempt to open socket to distributor at " +
 				    distributorIP + ":" + distributorPort);
-		while (attempts-- >= 0) {
-			try {
-				distributor = new Socket(getInetAddressFromAsciiIP(distributorIP), Integer.parseInt(distributorPort));
+		try {
+			// Allow for two attempts:
+			distributor = Common.getSocket(Common.getInetAddressFromAsciiIP(distributorIP), Integer.parseInt(distributorPort), 2, "Opening socket to distributor.");
 			} catch (UnknownHostException e) {
 				logger.error(errMsg + "Bad IP format: " + distributorIP);
 				throw new IOException(errMsg + "Bad IP format: " + distributorIP);
 			} catch (NumberFormatException e) {
 				logger.error(errMsg + "Bad distributor port: " + distributorPort);
 				throw new IOException(errMsg + "Bad distributor port: " + distributorPort);
-			} catch (IOException e) {
-				if (attempts > 0) {
-					try {
-						logger.warn("Failed attempt to contact distributor at " + distributorIP + ":" + distributorPort + ". Retrying...");
-						Thread.sleep(1000 * Constants.DISTRIB_ATTEMPT_PAUSES[timeoutIndex++]);
-					} catch (InterruptedException e1) {
-						// ignore
-					}
-					// Try again:
-					continue;
-				}
-			logger.error(errMsg + e.getMessage());
-			throw new IOException(errMsg + e.getMessage());
-			}
 		}
+		logger.info("From " +
+				    Constants.getHostInfo() +
+				    ": success opening socket to distributor at " +
+				    distributorIP + ":" + distributorPort);
+			
 		return distributor;
 	}
 	
-	private InetAddress getInetAddressFromAsciiIP(String ip) throws UnknownHostException {
-		String[] ipComponents = ip.split("\\.");
-		byte[] ipBytes = {(byte) Integer.parseInt(ipComponents[0]), 
-				          (byte) Integer.parseInt(ipComponents[1]),
-				          (byte) Integer.parseInt(ipComponents[2]),
-				          (byte) Integer.parseInt(ipComponents[3])
-				                                          
-				};
-		return InetAddress.getByAddress(ipBytes);
-	}
 	
 	/*-----------------------------------------------------
 	| hasNext() 

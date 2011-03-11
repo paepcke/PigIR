@@ -18,7 +18,7 @@ import org.apache.hadoop.mapreduce.RecordReader;
 import org.apache.hadoop.mapreduce.TaskAttemptContext;
 import org.apache.log4j.Logger;
 
-import pigir.MultiTypeProperties;
+import pigir.pigudf.MultiTypeProperties;
 
 /**
  * InputFormat for WebBase crawls. Mappers draw Web page streams
@@ -205,14 +205,15 @@ public class WbInputFormat extends InputFormat<WbInputSplit,Text> {
 			// whether this one was it:
 			if (!distributorContact.endSite.isEmpty() && siteName.equalsIgnoreCase(distributorContact.endSite))
 				break;
+			// If we already have the number of pages we need, quit:
+			if ((distributorContact.getNumPagesWanted() != Constants.ALL_PAGES_WANTED) && (distributorContact.getNumPagesWanted() <= totalNumPages)) {
+				break;
+			}
 		}
 		if (numOfMappers <= 0)
 			throw new IOException("Number of mappers must be at least 1. Specified instead: " + numOfMappers);
 		
-		if (distributorContact.numPagesWanted == Constants.ALL_PAGES_WANTED)
-			pagesPerMapper = distributorContact.numPagesWanted / numOfMappers;
-		else
-			pagesPerMapper = totalNumPages / numOfMappers;
+		pagesPerMapper = distributorContact.getNumPagesWanted() / numOfMappers;
 		return generateSplits(pagesPerMapper, numOfMappers, siteListEntries);
 	}
 	
@@ -237,8 +238,8 @@ public class WbInputFormat extends InputFormat<WbInputSplit,Text> {
 		int upto  = siteListEntries.size();
 		int pageLimit = pagesPerMapper;
 		int seamIndex;
-		int prevSeam = -1;
 		int[] splitSeamIndices = new int[numMappers];
+		int lastComputedSeamIndex = -1;
 		
 		// Find the indices into the site list that are seams
 		// of splits. We'll get an array like [10,45,72]. This array
@@ -252,30 +253,55 @@ public class WbInputFormat extends InputFormat<WbInputSplit,Text> {
 			// of this split to just below the optimal (pagesPerMapper):
 			seamIndex = indexIntoSiteEntryList(siteListEntries, first, upto, pageLimit);
 			splitSeamIndices[mapperNum] = seamIndex;
+			// Point to this last seam in the splitSeamIndices:
+			lastComputedSeamIndex++;
+			// If we are out of sites, then the sites we already have
+			// in our list cover the total number of pages that the user
+			// requested:
+			if (siteListEntries.size() <= seamIndex)
+				break;
 			pageLimit = siteListEntries.get(seamIndex).accumulatedPages + pagesPerMapper;
 			first = seamIndex + 1;
 		}
 		
 		// Now we have the list of split indices. Generate
-		// WbInputSplit objects for each split:
-		int lastIndex = splitSeamIndices[splitSeamIndices.length - 1];
-		SiteListEntry lowSite = null;
+		// WbInputSplit objects for each split. lastComputedSeamIndex
+		// has a pt into the splitSeamIndices array to the last computed
+		// seam. The remainder of that array is empty:
+
+		SiteListEntry lowSite = siteListEntries.get(0);
 		SiteListEntry highSite = null;
-		int numPagesPrevSplit = 0;
-		int numPagesCurrSplit = 0;
-		for (int currentSeam : splitSeamIndices) {
-			lowSite  = siteListEntries.get(prevSeam + 1);
-			highSite = siteListEntries.get(currentSeam < lastIndex ? currentSeam : siteListEntries.size() - 1);
-			numPagesCurrSplit = highSite.accumulatedPages - numPagesPrevSplit;
+		int accumulatedNumPagesPrevSplit = 0;
+		int numPagesCurrSplit = -1;
+		for (int i=0; i<=lastComputedSeamIndex-1; i++) {
+			if (i == lastComputedSeamIndex) {
+				// No matter how many pages we absorbed into the
+				// earlier splits, we must absorb all the rest into
+				// this last one: 
+				highSite = siteListEntries.get(siteListEntries.size() - 1);
+				numPagesCurrSplit = highSite.accumulatedPages - accumulatedNumPagesPrevSplit;
+			} else {
+				highSite = siteListEntries.get(splitSeamIndices[i]);
+				numPagesCurrSplit = highSite.accumulatedPages - accumulatedNumPagesPrevSplit;	//
+			}
 			WbInputSplit oneSplit = new WbInputSplit(lowSite.site, 
 													 highSite.site,
 													 numPagesCurrSplit,
 													 distributorContact);
 			splits.add(oneSplit);
-			numPagesPrevSplit = numPagesCurrSplit;
-			prevSeam = currentSeam;
+			// The next site in the sitelist; the one after the current 
+			// highSite:
+			if (siteListEntries.size() > i + 1) {
+				lowSite =  siteListEntries.get(splitSeamIndices[i] + 1);
+				accumulatedNumPagesPrevSplit = highSite.accumulatedPages;
+			}
 		}
 		
+		String logMsg = "Computed the following splits:";
+		for (InputSplit oneSplit : splits) {
+			logMsg += "\n     " + (WbInputSplit) oneSplit;
+		}
+		logger.info(logMsg);		
 		return splits;
 	}
 	

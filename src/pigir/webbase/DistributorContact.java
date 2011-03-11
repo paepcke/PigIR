@@ -18,8 +18,8 @@ import org.apache.commons.io.FileUtils;
 import org.apache.hadoop.io.Writable;
 import org.apache.log4j.Logger;
 
-import pigir.AsciiStringInputStream;
-import pigir.AsciiStringOutputStream;
+import pigir.pigudf.AsciiStringInputStream;
+import pigir.pigudf.AsciiStringOutputStream;
 
 /**
  * Obtains and stores the contact information for one crawl's
@@ -35,7 +35,7 @@ public class DistributorContact implements Writable, Serializable {
 	
 	private static final long serialVersionUID = 8535254665314974009L;
 
-	private static Logger logger = null;
+	private static Logger logger = Logger.getLogger(WebBaseLoader.class);
 	
 	String distributorMachineName = null;
 	int distributorPort = -1;
@@ -224,9 +224,10 @@ public class DistributorContact implements Writable, Serializable {
 	 */
 	public static DistributorContact getCrawlDistributorContact(String crawlName, int numPagesWanted, String startSite, String endSite) 
 	throws IOException {
-		
+
 		File directoryListFile;
-		
+
+
 		directoryListFile = new File(Constants.LOCAL_CRAWL_DIRECTORY_FILE_NAME);
 		if (!directoryListFile.exists() || isOld(directoryListFile))
 			refreshDirectoryListFile();
@@ -247,50 +248,47 @@ public class DistributorContact implements Writable, Serializable {
 		String crawlMimeType = wbMimeTypes.get(mimeTypeCode);
 		if (crawlMimeType == null)
 			crawlMimeType = "text";
-		
-		try {
-			FileInputStream fstream = new FileInputStream(Constants.LOCAL_CRAWL_DIRECTORY_FILE_NAME);
-			BufferedReader buf = new BufferedReader(new InputStreamReader(fstream));
-			String line;
-			while((line = buf.readLine()) != null) {
-				
-				line = line.trim(); //trim any leading/trailing whitespace in the line
-				
-				if(line.indexOf(crawlName) != -1) {
-					String[] crawlWords = line.split(",");
-					String machine = crawlWords[Constants.CRAWL_DIR_DISTRIB_DEMON_MACHINE_NAME];
-					String port = crawlWords[Constants.CRAWL_DIR_DISTRIB_DEMON_MACHINE_PORT];
-					String numPagesStr = crawlWords[Constants.CRAWL_DIR_NUM_PAGES];
-					int numPages;
-					try {
-						numPages = Integer.parseInt(numPagesStr);
-					} catch (NumberFormatException e) {
-						String errMsg = "Badly formatted number-of-pages spec found in crawl list directory:" +
-								"\n'" + numPagesStr +
-								"'. In entry '" +
-								line +  "'.";
-						logger.error(errMsg);
-						throw new IOException(errMsg);
-					}
-					String siteListPath = crawlWords[Constants.CRAWL_DIR_SITELIST_FILENAME];
-					return new DistributorContact(machine + Constants.WB_DOMAIN, // the .stanford.edu
-												  port,
-												  numPages,
-												  numPagesWanted,
-												  startSite,
-												  endSite,
-												  crawlName,
-												  crawlMimeType,
-												  siteListPath);
+
+		FileInputStream fstream = new FileInputStream(Constants.LOCAL_CRAWL_DIRECTORY_FILE_NAME);
+		BufferedReader buf = new BufferedReader(new InputStreamReader(fstream));
+		String line;
+		while((line = buf.readLine()) != null) {
+
+			line = line.trim(); //trim any leading/trailing whitespace in the line
+
+			if(line.indexOf(crawlName) != -1) {
+				String[] crawlWords = line.split(",");
+				String machine = crawlWords[Constants.CRAWL_DIR_DISTRIB_DEMON_MACHINE_NAME];
+				// Machine name will be WB0 if the crawl is not currently mounted:
+				if (machine.equals(Constants.CRAWL_UNAVAILABLE_MACHINE_NAME))
+					throw new IOException("Crawl '" + crawlName + ":" + crawlMimeType + " is not currently mounted, or may be mis-spelled.");
+				String port = crawlWords[Constants.CRAWL_DIR_DISTRIB_DEMON_MACHINE_PORT];
+				String numPagesStr = crawlWords[Constants.CRAWL_DIR_NUM_PAGES];
+				int numPages;
+				try {
+					numPages = Integer.parseInt(numPagesStr);
+				} catch (NumberFormatException e) {
+					String errMsg = "Badly formatted number-of-pages spec found in crawl list directory:" +
+					"\n'" + numPagesStr +
+					"'. In entry '" +
+					line +  "'.";
+					logger.error(errMsg);
+					throw new IOException(errMsg);
 				}
+				String siteListPath = crawlWords[Constants.CRAWL_DIR_SITELIST_FILENAME];
+				return new DistributorContact(machine + Constants.WB_DOMAIN, // the .stanford.edu
+						port,
+						numPages,
+						numPagesWanted,
+						startSite,
+						endSite,
+						crawlName,
+						crawlMimeType,
+						siteListPath);
 			}
-			logger.debug("No distributor address found for " + crawlName);
-			return null;
 		}
-		catch(IOException e) {
-			logger.error("IO error encountered: " + e.getMessage());
-			return null;
-		}
+		logger.debug("No distributor address found for " + crawlName);
+		return null;
 	}
 	
 	

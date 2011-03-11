@@ -55,7 +55,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.io.Text;
 
-import pigir.LineAndChunkReader;
+import pigir.pigudf.LineAndChunkReader;
 
 public class WarcRecord extends Text implements WarcRecordMap {
 

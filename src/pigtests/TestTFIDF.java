@@ -12,7 +12,7 @@ import org.apache.pig.PigServer;
 import org.apache.pig.backend.executionengine.ExecException;
 
 import pigir.Common;
-import pigir.RegexpTokenize;
+import pigir.pigudf.RegexpTokenize;
 
 public class TestTFIDF{
 	

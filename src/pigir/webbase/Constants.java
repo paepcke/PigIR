@@ -17,12 +17,24 @@ public final class Constants {
 	// 24 is the number of hours.
 	public static final long CRAWL_DIR_LIST_TTL = 24 * 3600 * 1000;
 	//****public static final int DEFAULT_NUM_OF_SPLITS = 2; // 40;
-	public static final int DEFAULT_NUM_OF_SPLITS = 2;
+	public static final int DEFAULT_NUM_OF_SPLITS = 1;
 	
 	// Number of times to try contacting a distributor demon:
 	public static final int NUM_DISTRIB_DEMON_ATTEMPTS = 4;
 	// Distrib demon repeat attempts wait times in seconds:
-	public static final int[] DISTRIB_DEMON_ATTEMPT_PAUSES = {4,6,8};
+	public static final int[] SOCKET_OPEN_ATTEMPT_PAUSES = {4,6,8};
+	
+
+	public static final int TIME_TO_WAIT_FOR_DISTRIBUTOR_TO_START = 6 * 1000;
+	
+	/*    We are using the default DataInputStream read timeout.
+	 *    If we are unhappy with that default, we can fall back on
+	 *    these commented-out times:
+	// Total time to wait for response from distrib demon after having
+	// made a successful connection (in seconds):
+	public static final int DISTRIB_DEMON_READ_WAIT = 20;
+	*/
+	
 	
 	// Number of times to try contacting a distributor:
 	public static final int NUM_DISTRIB_ATTEMPTS = 4;
@@ -30,6 +42,9 @@ public final class Constants {
 	// will always be honored to give the distributor time to fire up
 	// after the distributor demon spawned it:
 	public static final int[] DISTRIB_ATTEMPT_PAUSES = {6,6,10,10};
+	
+	// Machine name entry used in site lists for crawls that are not mounted:
+	public static final String CRAWL_UNAVAILABLE_MACHINE_NAME = "WB0";
 	
 	
 	
@@ -57,6 +72,8 @@ public final class Constants {
 	public static final int CRAWL_DIR_NUM_PAGES = CRAWL_DIR_DISTRIB_DEMON_MACHINE_PORT + 1;
 	public static final int CRAWL_DIR_SITELIST_FILENAME = CRAWL_DIR_NUM_PAGES + 1;
 
+	// Used to identify application when asking for WebBase distributors:
+	public static final String APPLICATION_ID = "ArcSpread"; 
 	
 	//-------------------------------- Job Configuration Properties Keys --------------------------
 	
@@ -69,6 +86,9 @@ public final class Constants {
 	
 	public static final int WB_CONNECTING_TIMEOUT = 7000;     // Connecting to a Webbase port
 	public static final int WB_INTERNET_READ_TIMEOUTE = 7000; // Reading from a Webbase port
+	
+	
+	// -------------------------------- Misc --------------------------
 	
 	
 	//-------------------------------- Constant-Returning Static Methods --------------------------	

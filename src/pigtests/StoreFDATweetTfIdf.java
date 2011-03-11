@@ -7,7 +7,7 @@ import org.apache.pig.ExecType;
 import org.apache.pig.PigServer;
 import org.apache.pig.backend.executionengine.ExecException;
 
-import pigir.RegexpTokenize;
+import pigir.pigudf.RegexpTokenize;
 
 /* TfIDF of morTweetsSmall.csv final entry (all Andreas fuzz, Menlo Park, 7/26/10 3:58) should be:
    (c72f171d-5a11-47e4-af56-dae50ef99fb7,fuzz,0.2329900014453396)

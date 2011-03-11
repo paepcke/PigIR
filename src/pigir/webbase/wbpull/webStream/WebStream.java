@@ -30,6 +30,7 @@ import java.net.Socket;
 import java.net.UnknownHostException;
 import java.util.Vector;
 
+import pigir.Common;
 import pigir.webbase.Metadata;
 import pigir.webbase.WbRecord;
 import pigir.webbase.WbRecordFactory;
@@ -115,7 +116,7 @@ public abstract class WebStream
 		
 		try {
 			//set up socket and input/output streams
-			distributor = new Socket(machineName, port);
+			distributor = Common.getSocket(machineName, port);
 			in	= new DataInputStream(distributor.getInputStream());
 			out	= new DataOutputStream(distributor.getOutputStream());
 			

@@ -24,7 +24,7 @@ import org.apache.pig.impl.logicalLayer.FrontendException;
 import org.apache.pig.impl.util.ObjectSerializer;
 import org.apache.pig.impl.util.UDFContext;
 
-import pigir.MultiTypeProperties;
+import pigir.pigudf.MultiTypeProperties;
 import pigir.warc.WarcRecord;
 
 public class WebBaseLoader extends LoadFunc implements LoadPushDown {
@@ -247,17 +247,14 @@ public class WebBaseLoader extends LoadFunc implements LoadPushDown {
 		theJob.setInputFormatClass(WbInputFormat.class);
 		
     	distributorContact = DistributorContact.getCrawlDistributorContact(loadCommand.crawlName, loadCommand.numPagesWanted, loadCommand.startSite, loadCommand.endSite);
-    	if (distributorContact == null) {
-    		String errMsg = "No distributor found for crawl named '" + loadCommand.crawlName + "'. Double check the name and spelling.";
-    		logger.error(errMsg);
-    		throw new IOException(errMsg);
-    	}
-		int numReducers = theJob.getNumReduceTasks();
-		logger.info("Number of reduce tasks from Job object is " + numReducers);
-		if (numReducers <= 0)
+		//int numReducers = theJob.getNumReduceTasks();
+		int numMappers = theJob.getConfiguration().getInt("mapred.map.tasks", Constants.DEFAULT_NUM_OF_SPLITS);
+		logger.info("Number of map tasks from Job object is " + numMappers);
+		if (numMappers <= 0)
 			wbJobProperties.setInt(Constants.NUM_OF_CPUS_PROP_NAME, Constants.DEFAULT_NUM_OF_SPLITS);
 		else
-			wbJobProperties.setInt(Constants.NUM_OF_CPUS_PROP_NAME, theJob.getNumReduceTasks());
+			//*******wbJobProperties.setInt(Constants.NUM_OF_CPUS_PROP_NAME, numMappers);
+			wbJobProperties.setInt(Constants.NUM_OF_CPUS_PROP_NAME, 3);
 
 		logger.info("Setting number of slices to " + wbJobProperties.getInt(Constants.NUM_OF_CPUS_PROP_NAME, -1));
 		// Make the distributor demon contact available 
