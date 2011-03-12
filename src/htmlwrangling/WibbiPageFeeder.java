@@ -20,26 +20,26 @@ import java.util.Set;
  * @author paepcke
  *
  */
-public class WibbiPageFeeder implements Iterator<String> {
+public class WibbiPageFeeder implements Iterator<WibbiPageFeeder.WebBasePage> {
 	
-	public static boolean FLUSH_REST_OF_PAGE = true; 
-	public static boolean PRESERVE_PAGE_POSITION = false; 
+	public static final boolean FLUSH_REST_OF_PAGE = true; 
+	public static final boolean PRESERVE_PAGE_POSITION = false; 
 	
-	private static final String JUNGOO_SEPARATOR = "==P=>>>>=i===<<<<=T===>=A===<=!Junghoo!==>";
+	private static final String PAGE_SEPARATOR = "==P=>>>>=i===<<<<=T===>=A===<=!Junghoo!==>";
 	// Buffer read-ahead limit when page size is unknown. This 
 	// condition is true for the very start of the stream:
 	private static final int READ_AHEAD_DEFAULT_LIMIT = 4096;
 	
-	BufferedReader junghooSource = null;
+	BufferedReader webBaseFileSource = null;
 	int currDocLen = -1;
-	WebBasePageInfo currPageInfo = null;
+	WebBasePage currPage = null;
 
 	public WibbiPageFeeder(BufferedReader theReader) {
-		junghooSource = theReader;
+		webBaseFileSource = theReader;
 	}
 	
 	public WibbiPageFeeder(Reader theReader) {
-		junghooSource = new BufferedReader(theReader);
+		webBaseFileSource = new BufferedReader(theReader);
 	}
 	
 	public WibbiPageFeeder(File theFile) throws FileNotFoundException {
@@ -65,10 +65,10 @@ public class WibbiPageFeeder implements Iterator<String> {
 		// the current stream position, and check for page
 		// separator in the stream ahead.
 		try {
-			junghooSource.mark(currDocLen < 0 ? READ_AHEAD_DEFAULT_LIMIT : currDocLen);
+			webBaseFileSource.mark(currDocLen < 0 ? READ_AHEAD_DEFAULT_LIMIT : currDocLen);
 			boolean pageDelimiterAhead = pastNextPageSeparator();
 			if (pageCursorPreservation == PRESERVE_PAGE_POSITION)
-				junghooSource.reset();
+				webBaseFileSource.reset();
 			return pageDelimiterAhead;
 		} catch (IOException e) {
 			// Should not happen with a BufferedReader
@@ -82,45 +82,59 @@ public class WibbiPageFeeder implements Iterator<String> {
 		return hasNext(PRESERVE_PAGE_POSITION);
 	}
 
+	/* (non-Javadoc)
+	 * @see java.util.Iterator#next()
+	 * Return next Web page, or null if any problems arise in the parsing.
+	 * A null return does not mean that the next page won't work either.
+	 * Only hasNext() answers that question. Null returns happen, for instance
+	 * if no Content-Length field is found in the HTTP header.
+	 */
 	@Override
-	public String next() {
+	public WibbiPageFeeder.WebBasePage next() {
 		String line;
-		String[] urlKeyVal;
+		String url = null;
+		int colonPos = -1;
 		try {
 			// First line should be the first line of the WebBase header:
 			// URL: http://www....:
-			line = junghooSource.readLine();
+			line = webBaseFileSource.readLine();
 			if (!line.startsWith("URL: ")) {
 				if (!pastNextPageSeparator())
-					return null;
-				line = junghooSource.readLine();
+					// return an empty WebBasePage object:
+					return new WebBasePage();
+				line = webBaseFileSource.readLine();
 				if (!line.startsWith("URL: "))
-					return null;
+					// return an empty WebBasePage object:
+					return new WebBasePage();
 			}
 			// We know we are at the start of the WebBase header. Grab info
 			// from WebBase header, then from the HTTP header:
-			urlKeyVal = line.split(":");
-			if (urlKeyVal.length != 2)
-				return null;
-			// Advance cursor to start of HTTP header:
-			for (int i=0;i<4;i++)
-				junghooSource.readLine();
-			// Grap HTTP header:
-			currPageInfo = new WebBasePageInfo(urlKeyVal[1]);
-			try {
-				currDocLen = Integer.parseInt(currPageInfo.get("Content-Length"));
-			} catch (NumberFormatException e) {
-				throw new RuntimeException("Content length in HTTP header is not an integer: " + currPageInfo);
+			if ((colonPos = line.indexOf(':')) == -1) {
+				// Ill-formed page:
+				// return an empty WebBasePage object:
+				return new WebBasePage();
 			}
+			url = line.substring(colonPos + 1).trim();
+			
+			// Advance cursor past the WebBase header to start of HTTP header:
+			for (int i=0;i<4;i++)
+				webBaseFileSource.readLine();
+			// Grab HTTP header:
+			currPage = new WebBasePage(url, webBaseFileSource);
+			currDocLen = currPage.contentLength;
+			if (currDocLen == -1)
+				return currPage;
 			
 			// Cursor points past the HTTP header terminating 
 			// empty line to the first byte of the page. Read the
 			// page:
 			char[] page = new char[currDocLen];
-			junghooSource.read(page, 0, currDocLen);
-			return(new String(page));
+			webBaseFileSource.read(page, 0, currDocLen);
+			currPage.put(Constants.CONTENT_KEY, new String(page));
+			return currPage;
 		} catch (IOException e) {
-			return null;
+			// return an empty WebBasePage object:
+			return new WebBasePage();
 		}
 	}
 
@@ -137,9 +151,8 @@ public class WibbiPageFeeder implements Iterator<String> {
 	private boolean pastNextPageSeparator() {
 		try {
 			String line;
-			while ((line = junghooSource.readLine()) != null) {
-				line = junghooSource.readLine();
-				if (line.equals(JUNGOO_SEPARATOR))
+			while ((line = webBaseFileSource.readLine()) != null) {
+				if (line.equals(PAGE_SEPARATOR))
 					return true;
 			}
 		} catch (IOException e) {}
@@ -152,37 +165,55 @@ public class WibbiPageFeeder implements Iterator<String> {
 	/**
 	 * Class to hold some of the WebBase header, and all of the HTTP header
 	 * of one Web page in the page source. Instances implement the Map interface.
+	 * Instances of the class behave like a Map. The HTTP header fields can be
+	 * retrieved via <anInstance>.get("<HTTP-header-field-lower-cased>");
+	 * The page content is held under the key htmlwrangling.Constants.CONTENT_KEY
 	 * 
 	 * @author paepcke
 	 *
 	 */
-	class WebBasePageInfo implements Map<String,String>{
-		
-		private final byte CR = '\r';
+	public class WebBasePage implements Map<String,String>{
 		
 		String url = "";
-		int contentLength = 0;
+		int contentLength = -1;
 		HashMap<String,String> httpHeader = new HashMap<String,String>();
 		
-		public WebBasePageInfo(String theUrl) {
+		public WebBasePage(String theUrl, BufferedReader source) {
 			url = theUrl;
+			initHTTPHeaderInfo(source);
 		} 
+		
+		public WebBasePage() {
+			// this constructor is used to return an empty 
+			// result from the next() method above.
+		}
 		
 		public void initHTTPHeaderInfo(BufferedReader source) {
 			String line;
-			String[] httpHeaderFields;
-			byte[] lineBytes;
+			int colonPos = -1;
 			try {
 				while (true) {
 					line = source.readLine();
-					lineBytes = line.getBytes();
-					if (lineBytes[0] == CR)
+					if (line.isEmpty()) {
 						// Header done:
+						try {
+							contentLength = Integer.parseInt(httpHeader.get("content-length"));
+						} catch (NumberFormatException e) {
+							contentLength = -1;
+						}
 						return;
-					httpHeaderFields = line.split(":");
-					if (httpHeaderFields.length != 2)
+					}
+					// Separate filed name from field value:
+					if ((colonPos = line.indexOf(':')) == -1)
 						continue;
-					httpHeader.put(httpHeaderFields[0].trim(), httpHeaderFields[1].trim());
+					// Don't get derailed by a weirdly formed header field (e.g. no value):
+					try {
+						// Lower-case all HTTP header field names:
+						httpHeader.put(line.substring(0, colonPos).trim().toLowerCase(), 
+									   line.substring(colonPos + 1).trim());
+					} catch (Exception e) {
+						continue;
+					}
 				}
 			} catch (IOException e) {
 				return;
@@ -277,48 +308,53 @@ public class WibbiPageFeeder implements Iterator<String> {
 			vals.add(get("url"));
 			return vals;
 		}
+		
+		public String toString() {
+			return "<WBPage len=" + contentLength + "; " +
+					"url=" + (url.isEmpty() ? "NA" : url) + 
+					">";
+		}
 	}
 	
 	// ------------------------------------  Testing -----------------------------------
 	
 	public static void main(String[] args) {
 	
-		String singlePage = "==P=>>>>=i===<<<<=T===>=A===<=!Junghoo!==>" + 
-		"URL: http://www.state.gov/robots.txt" + 
-		"Date: " + 
-		"Position: 0" + 
-		"DocId: 0" + 
-		"" + 
-		"HTTP/1.0 200 OK" + 
-		"Server: Apache" + 
-		"ETag: 'ed2c2598845076d83690ba59b058e231:1292500314'" + 
-		"Last-Modified: Thu, 16 Dec 2010 11:51:54 GMT" + 
-		"Accept-Ranges: bytes" + 
-		"Content-Length: 159" + 
-		"Content-Type: text/plain" + 
-		"Expires: Thu, 16 Dec 2010 22:21:06 GMT" + 
-		"Cache-Control: max-age=0, no-cache, no-store" + 
-		"Pragma: no-cache" + 
-		"Date: Thu, 16 Dec 2010 22:21:06 GMT" + 
-		"Connection: close" + 
-		"" + 
-		"# tell scanning search robots not to index the older archive pages" + 
-		"#" + 
-		"User-agent: *" + 
-		"Disallow: /www/" + 
-		"Disallow: /waterfall/" + 
-		"Disallow: /menu/" + 
-		"Disallow: /navitest/" + 
-		"" + 
-		"==P=>>>>=i===<<<<=T===>=A===<=!Junghoo!==>" + 
+		String singlePage = "==P=>>>>=i===<<<<=T===>=A===<=!Junghoo!==>\n" + 
+		"URL: http://www.state.gov/robots.txt\n" + 
+		"Date: \n" + 
+		"Position: 0\n" + 
+		"DocId: 0\n" + 
+		"\n" + 
+		"HTTP/1.0 200 OK\n" + 
+		"Server: Apache\n" + 
+		"ETag: 'ed2c2598845076d83690ba59b058e231:1292500314'\n" + 
+		"Last-Modified: Thu, 16 Dec 2010 11:51:54 GMT\n" + 
+		"Accept-Ranges: bytes\n" + 
+		"Content-Length: 159\n" + 
+		"Content-Type: text/plain\n" + 
+		"Expires: Thu, 16 Dec 2010 22:21:06 GMT\n" + 
+		"Cache-Control: max-age=0, no-cache, no-store\n" + 
+		"Pragma: no-cache\n" + 
+		"Date: Thu, 16 Dec 2010 22:21:06 GMT\n" + 
+		"Connection: close\n" + 
+		"\n" + 
+		"# tell scanning search robots not to index the older archive pages\n" + 
+		"#\n" + 
+		"User-agent: *\n" + 
+		"Disallow: /www/\n" + 
+		"Disallow: /waterfall/\n" + 
+		"Disallow: /menu/\n" + 
+		"Disallow: /navitest/\n" + 
+		"\n" + 
+		"==P=>>>>=i===<<<<=T===>=A===<=!Junghoo!==>\n" + 
 		"0";
 
 		StringReader pageReader = new StringReader(singlePage);
 		WibbiPageFeeder feeder = new WibbiPageFeeder(pageReader);
 		while (feeder.hasNext(WibbiPageFeeder.FLUSH_REST_OF_PAGE)) {
-			String page = feeder.next();
-			System.out.println(page);
+			WibbiPageFeeder.WebBasePage page = feeder.next();
+			System.out.println(page.get(Constants.CONTENT_KEY));
 		}
-			
 	}
 }
