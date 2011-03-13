@@ -1,0 +1,18 @@
+#! /bin/sh
+
+# Runs pig with the given pig file. Prints the
+# elapsed clock time at the end.
+
+if [ $# -lt 1 ]
+then
+  echo "Usage: pigrun pig-file [args]"
+  exit
+fi
+
+# -v: see the Java backtraces on the console, not just in the log file.
+# -l <dir>: log file directory
+# -f: the Pig script file to execute
+# -p: properties file to use:
+/usr/bin/time --format="Runtime (m:ss.millisec): %E" \
+   pig -Dpig.usenewlogicalplan=false -v -logfile Logs -f $@
+#pig -v -logfile Logs -propertyFile ${HOME}/Software/Hadoop/Pig-0.8.0/trunk/conf/pig.properties -f $@

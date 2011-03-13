@@ -1,0 +1,5 @@
+package pigtests;
+
+class QuickTests {
+	 
+ }
