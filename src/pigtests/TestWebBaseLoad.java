@@ -31,7 +31,7 @@ class TestWebBaseLoad {
 			URI piggybankPath = new File(env.get("PIG_HOME"),
 					"contrib/piggybank/java/piggybank.jar").toURI();
 			pserver.registerJar(piggybankPath.toString());
-			pserver.registerJar("contrib/PigIRWithSource.jar");
+			pserver.registerJar("contrib/PigIR.jar");
 			
 			pserver.registerQuery(
 					//"docs = LOAD '2003-06:1' " +
@@ -40,7 +40,8 @@ class TestWebBaseLoad {
 					//"docs = LOAD '2005-08:2' " +
 					//"docs = LOAD '2006-04:2' " +
 					//"docs = LOAD '2006-05:2' " +
-					"docs = LOAD '04-2009:50000' " +
+					// Get five pages:
+					"docs = LOAD '04-2009:5' " +
 					"		USING pigir.webbase.WebBaseLoader() " +
 					"       AS (url:chararray, date:chararray, pageSize:int, position:int, docidInCrawl:int, httpHeader:chararray, content:chararray);"
 			);

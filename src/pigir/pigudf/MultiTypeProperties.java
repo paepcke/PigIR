@@ -3,6 +3,14 @@ package pigir.pigudf;
 import java.io.Serializable;
 import java.util.Properties;
 
+/**
+ * A property list in the Java sense, except that values
+ * may be primitive types other than just strings. Double,
+ * Float, int, and String are allowed.
+ *  
+ * @author paepcke
+ *
+ */
 public class MultiTypeProperties extends Properties implements Serializable {
 	/**
 	 * 

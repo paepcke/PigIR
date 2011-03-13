@@ -4,8 +4,6 @@ import java.io.DataInputStream;
 import java.io.IOException;
 import java.util.zip.GZIPInputStream;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FileSystem;
@@ -16,6 +14,7 @@ import org.apache.hadoop.mapreduce.InputSplit;
 import org.apache.hadoop.mapreduce.RecordReader;
 import org.apache.hadoop.mapreduce.TaskAttemptContext;
 import org.apache.hadoop.mapreduce.lib.input.FileSplit;
+import org.apache.log4j.Logger;
 
 import pigir.pigudf.LineAndChunkReader;
 
@@ -26,8 +25,7 @@ public class WarcRecordReader extends RecordReader<LongWritable, Text> {
 	
   private static final boolean DO_READ_CONTENT = true;
   private static final int DEFAULT_BUFFER_SIZE = 64 * 1024;
-  private final Log hadoopLOG = LogFactory.getLog("org.apache.pig.backend.hadoop.executionengine.HJob");
-  private final Log rootLogger   = LogFactory.getLog("log4j.rootLogger");
+  private final Logger logger = Logger.getLogger(WarcLoader.class.getName());
   private long start;
   private long pos;
   private long end;
@@ -43,20 +41,6 @@ public class WarcRecordReader extends RecordReader<LongWritable, Text> {
     FileSplit split = (FileSplit) genericSplit;
     Configuration job = context.getConfiguration();
 
-    //************ 
-    
-    hadoopLOG.info("********* hadoopLog WarcRecordReader initialize called.");
-    rootLogger.info("******* Via log4j.rootLogger wbRecordReader initialize");
-    
-    hadoopLOG.info("********* WarcRecordReader initialize called. \n" +
-    		"split.getPath():" + 
-    		split.getPath() + "\n" +
-    		"split.getLength():" + "\n" +
-    		split.getLength() + "\n" +
-    		"split.getStart():" + 
-    		split.getStart() + "\n"
-    		);
-    //************
     start = split.getStart();
     end = start + split.getLength();
     final Path file = split.getPath();
@@ -75,7 +59,7 @@ public class WarcRecordReader extends RecordReader<LongWritable, Text> {
     		fileIn.seek(0);
     		warcInStream = new DataInputStream (fileIn);
     	} catch (Exception e1) {
-    		hadoopLOG.info("Could not open WARC split.");
+    		logger.info("Could not open WARC split.");
     		return;
     	}
     }
@@ -120,7 +104,7 @@ public class WarcRecordReader extends RecordReader<LongWritable, Text> {
     	return false;
     }
     
-    hadoopLOG.info("Pulled another WARC record.");
+    logger.info("Pulled another WARC record.");
     
     // Update position wbRecordReader the Data stream
     pos += valueWarcRecord.getTotalRecordLength();
@@ -141,10 +125,6 @@ public class WarcRecordReader extends RecordReader<LongWritable, Text> {
    * Get the progress within the split
    */
   public float getProgress() {
-	//*********
-	hadoopLOG.info("*********** getProgress pos=" + pos + ". start=" + start);
-	rootLogger.info("******* Via log4j.rootLogger wbRecordReader getProgress");
-	//*********
     if (start == end) {
       return 0.0f;
     } else {

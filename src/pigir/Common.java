@@ -11,6 +11,7 @@ import org.apache.log4j.Logger;
 import org.apache.pig.PigServer;
 import org.apache.pig.backend.executionengine.ExecException;
 import org.apache.pig.data.Tuple;
+import org.apache.pig.impl.logicalLayer.schema.Schema;
 
 import pigir.webbase.Constants;
 import pigir.webbase.WbRecordReader;
@@ -19,6 +20,10 @@ public final class Common {
 	
 	public static final String PIG_TRUE = "1";
 	public static final String PIG_FALSE = "null";
+	
+	/*-----------------------------------------------------
+	| print()
+	------------------------*/
 	
 	public static void print(PigServer pserver, String token) {
 		Iterator<Tuple> res;
@@ -32,9 +37,6 @@ public final class Common {
 		}
 	}
 	
-	/*-----------------------------------------------------
-	| print()
-	------------------------*/
 	/**
 	 * Print all elements of a tuple
 	 * @param pserver Pig server
@@ -60,6 +62,23 @@ public final class Common {
 				e.printStackTrace();
 			}
 		}
+	}
+
+	/*-----------------------------------------------------
+	| getTupleSchema()
+	------------------------*/
+	
+	public static Schema getTupleSchema(Tuple theTuple) {
+		Schema resSchema = new Schema();
+		for (int i=0; i<theTuple.size(); i++) {
+			try {
+				resSchema.add(new Schema.FieldSchema("field" + i, theTuple.getType(i)));
+			} catch (ExecException e) {
+				// This error is thrown for out-of-bound index. 
+				// We watch for that above:
+			}
+		}
+		return resSchema;
 	}
 	
 	/*-----------------------------------------------------

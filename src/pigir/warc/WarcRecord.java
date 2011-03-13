@@ -51,8 +51,6 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.io.Text;
 
 import pigir.pigudf.LineAndChunkReader;
@@ -351,11 +349,6 @@ public class WarcRecord extends Text implements WarcRecordMap {
 			return null; 
 		}
 
-		//*****************
-    	Log loggerSomething = LogFactory.getLog("log4j.rootLogger");
-    	loggerSomething.info("******* Via log4j.rootLogger");
-		//*****************
-    	
 		WarcRecord retRecord=new WarcRecord();
 		retRecord.headerMap = (HashMap<String, String>) tmpHeaderMap.clone();
 		retRecord.grandTotalBytesRead = tmpGrandTotalBytesRead;

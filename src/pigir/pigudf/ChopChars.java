@@ -8,6 +8,13 @@ import org.apache.pig.EvalFunc;
 import org.apache.pig.data.Tuple;
 import org.apache.pig.data.TupleFactory;
 
+/**
+ * Remove debris from either, or both sides of a given
+ * string. The definition of 'debris' is a regular expression.
+ * This method is thus a generalized trim().
+ * @author paepcke
+ *
+ */
 public class ChopChars extends EvalFunc<String> {
 	
 	public static enum WHICH_SIDE {
