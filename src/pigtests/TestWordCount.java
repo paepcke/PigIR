@@ -11,12 +11,11 @@ import org.apache.pig.backend.executionengine.ExecException;
 
 import pigir.Common;
 
-class TestStripHTML {
-
+public class TestWordCount {
 	PigServer pserver;
 	Properties props = new Properties();
 
-	public TestStripHTML() {
+	public TestWordCount() {
 		try {
 			props.setProperty("pig.usenewlogicalplan", "false");
 			pserver = new PigServer(ExecType.MAPREDUCE, props);
@@ -41,14 +40,35 @@ class TestStripHTML {
 			);
 			pserver.registerQuery(
 					"strippedDocs = FOREACH docs GENERATE pigir.pigudf.StripHTML(content);");
-			// Cut down to 3 tuples for output:
-			pserver.registerQuery("docsCulled = LIMIT strippedDocs 3;");
-
-			Common.print(pserver, "docsCulled");
 			
-			pserver.dumpSchema("docs");
-			pserver.dumpSchema("strippedDocs");
-			//pserver.dumpSchema("docsCulled");
+			// Tokenize, using default regexp for splitting (the null), eliminiating
+			// stopwords (first 1 in parameter list), and preserving URLs (second 1 in parms):
+			pserver.registerQuery(
+					"strippedWords = FOREACH strippedDocs GENERATE " +
+					                    "FLATTEN(pigir.pigudf.RegexpTokenize(content, null, 1, 1));"
+			);
+
+			pserver.registerQuery(
+					"strippedGroupedWords = GROUP strippedWords BY $0;"
+			);
+			
+			pserver.registerQuery(
+					"wordCounts = FOREACH strippedGroupedWords GENERATE " +
+					"$0,COUNT($1);"
+			);
+			// Cut down to 3 tuples for output:
+			//pserver.registerQuery("docsCulled = LIMIT strippedGrouped 3;");
+
+			//Common.print(pserver, "docsCulled");
+			//Common.print(pserver, "strippedWords");
+			//Common.print(pserver, "strippedGroupedWords");
+			Common.print(pserver, "wordCounts");
+			
+			//pserver.dumpSchema("docs");
+			//pserver.dumpSchema("strippedWords");
+			//pserver.dumpSchema("strippedGrouped");
+			pserver.dumpSchema("wordCounts");
+
 			
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -56,6 +76,6 @@ class TestStripHTML {
 	}
 
 	public static void main(String[] args) {
-		new TestStripHTML().doTests();
+		new TestWordCount().doTests();
 	}
 }

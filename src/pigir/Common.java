@@ -10,6 +10,7 @@ import java.util.Iterator;
 import org.apache.log4j.Logger;
 import org.apache.pig.PigServer;
 import org.apache.pig.backend.executionengine.ExecException;
+import org.apache.pig.data.DataBag;
 import org.apache.pig.data.Tuple;
 import org.apache.pig.impl.logicalLayer.schema.Schema;
 
@@ -61,6 +62,13 @@ public final class Common {
 			} catch (ExecException e) {
 				e.printStackTrace();
 			}
+		}
+	}
+	
+	public static void print(PigServer pserver, DataBag bag) {
+		Iterator<Tuple> bagIterator = bag.iterator();
+		while (bagIterator.hasNext()) {
+			System.out.println(bagIterator.next());
 		}
 	}
 

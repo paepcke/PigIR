@@ -104,7 +104,7 @@ public class WarcRecordReader extends RecordReader<LongWritable, Text> {
     	return false;
     }
     
-    logger.info("Pulled another WARC record.");
+    logger.debug("Pulled another WARC record.");
     
     // Update position wbRecordReader the Data stream
     pos += valueWarcRecord.getTotalRecordLength();

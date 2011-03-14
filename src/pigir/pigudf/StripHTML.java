@@ -14,7 +14,6 @@ import org.apache.pig.data.Tuple;
 import org.apache.pig.data.TupleFactory;
 import org.apache.pig.impl.logicalLayer.FrontendException;
 import org.apache.pig.impl.logicalLayer.schema.Schema;
-import org.apache.pig.impl.logicalLayer.schema.Schema.FieldSchema;
 import org.jsoup.Jsoup;
 
 import pigir.Common;
@@ -38,50 +37,32 @@ import pigir.Common;
  * @author paepcke
  *
  */
-public class StripHTML extends EvalFunc<Tuple> {
+public class StripHTML extends EvalFunc<String> {
 	
 	final int COL_PT_ARG_INDEX = 0;
 	final int HTML_CONTENT_ARG_INDEX = 1;
     	
-    public Tuple exec(Tuple input) throws IOException {
+    public String exec(Tuple input) throws IOException {
     	
-    	Tuple tupleWithHTML = null;
     	String htmlString = null;
-    	int columnIndex = -1;
-
+    	
     	try {
-    		// Ensure presence of two parameters, and of the 
-    		// first parameter being an integer >= 0:
+    		// Ensure presence of one parameter (the string):
     		if (input == null || 
-    			input.size() < 2 ||
-    			(columnIndex = (Integer) input.get(COL_PT_ARG_INDEX)) < 0) {
-    			
-    			getLogger().warn("StripHTML() encountered mal-formed input. Fewer than 2 arguments, " +
-    							 "or negative column index. " +
-    							 "Expecting ((int) columnIndex, (Tuple) webPageTuple)): " + input);
+    			input.size() < 1) {
+    			getLogger().warn("StripHTML() encountered mal-formed input. Fewer than 2 arguments. " +
+    							 "Expecting HTML string, but called with: " + input);
     			return null;
     		}
     		
-    		tupleWithHTML = (Tuple) input.get(HTML_CONTENT_ARG_INDEX);
-    		if (tupleWithHTML.size() <= columnIndex) {
-    			// Column index points beyond the size of the tuple:
-    			getLogger().warn("StripHTML(): " +
-    							 columnIndex + 
-    							 " is too large a column index for tuple: " +
-    							 tupleWithHTML + ".");
-    			return null;
-    		}
-    		// Get a copy of the HTML string:
-    		htmlString = (String) tupleWithHTML.get(columnIndex);
+    		htmlString = (String) input.get(0);
 
     	} catch (ClassCastException e) {
-    		getLogger().warn("StripHTML() encountered mal-formed input; expecting ((int) columnIndex, (Tuple) webPageTuple)): " + input);
+    		getLogger().warn("StripHTML() encountered mal-formed input; expecting a string, but called with: " + 
+    					input);
     		return null;
     	}
-    
-    	String strippedStr = extractText(htmlString);
-    	tupleWithHTML.append(strippedStr);
-    	return tupleWithHTML;
+    	return extractText(htmlString);
     }
     
 	/* (non-Javadoc)
@@ -95,49 +76,21 @@ public class StripHTML extends EvalFunc<Tuple> {
 	 *       But that is just defined as Tuple. It would be like this:
 	 *       resSchema.add(inputSchema.getField(HTML_CONTENT_ARG_INDEX));
 	 */
+    
 	public Schema outputSchema(Schema inputSchema) {
-        try{
-        	//****************
-        	System.out.println("stripHTML input schema:" + inputSchema);
-        	Schema resSchema = new Schema();
-        	resSchema.add(inputSchema.getField(1));
-        	return resSchema;
-        	//****************
-        	/* *****************
-        	Schema resSchema = new Schema();
-        	// We don't have a definitive name (alias) for this result tuple,
-        	// therefore the first null:
-        	resSchema.add(new Schema.FieldSchema("secondInputArgPlusStrippedTextField", DataType.TUPLE));
-            return resSchema;
-            ***************** */
-        }catch (Exception e){
-                return null;
-        }
+		// We return a string, just as we were given:
+		return inputSchema;
     }    
-
-	/* *************
-    @Override
-    public List<FuncSpec> getArgToFuncMapping() throws FrontendException {
-        List<FieldSchema> fields = new ArrayList<FieldSchema>(2);
-        fields.add(new FieldSchema("columnNumber", DataType.INTEGER));
-        fields.add(new FieldSchema("webTuple", DataType.TUPLE));
-        FuncSpec funcSpec = new FuncSpec(this.getClass().getName(), new Schema(fields));
-        List<FuncSpec> funcSpecs = new ArrayList<FuncSpec>(1);
-        funcSpecs.add(funcSpec);
-        return funcSpecs;
-    }	
-    **************/
+	
     @Override
     public List<FuncSpec> getArgToFuncMapping() throws FrontendException {
     	List<FuncSpec> funcList = new ArrayList<FuncSpec> ();
     	// Schema portion for first argument (that being an integer):
-    	Schema.FieldSchema columnIndexFld = new Schema.FieldSchema(null, DataType.INTEGER);
-    	Schema.FieldSchema webPageTupleFld = new Schema.FieldSchema(null, DataType.TUPLE);
-    	// Pack these into a schema:
-    	Schema colSpecIsInteger = new Schema();
-    	colSpecIsInteger.add(columnIndexFld);
-    	colSpecIsInteger.add(webPageTupleFld);
-    	funcList.add(new FuncSpec(this.getClass().getName(), colSpecIsInteger));
+    	Schema.FieldSchema webPageTupleFld = new Schema.FieldSchema(null, DataType.CHARARRAY);
+    	// Pack this parameter into a schema:
+    	Schema inputSchema = new Schema();
+    	inputSchema.add(webPageTupleFld);
+    	funcList.add(new FuncSpec(this.getClass().getName(), inputSchema));
     	return funcList; 
     }	
     
@@ -160,14 +113,12 @@ public class StripHTML extends EvalFunc<Tuple> {
     private boolean doTests() {
     	
     	String htmlStr = "<head><html>This is <b>bold</b> and a <a href='http://test.com'>link anchor</a></html></head>";
-    	Tuple webPage = TupleFactory.getInstance().newTuple(htmlStr);
-    	int colIndexToHTMLContent = 0;
-    	Tuple input = TupleFactory.getInstance().newTuple(2);
-    	Tuple res;
+    	//Tuple webPage = TupleFactory.getInstance().newTuple(htmlStr);
+    	//Tuple input = TupleFactory.getInstance().newTuple(1);
+    	Tuple input = TupleFactory.getInstance().newTuple(htmlStr);
+    	String res;
 
     	try {
-    		input.set(0, colIndexToHTMLContent);
-    		input.set(1, webPage);
     		res = exec(input);
     		System.out.println(res);
     		System.out.println(outputSchema(Common.getTupleSchema(input)));

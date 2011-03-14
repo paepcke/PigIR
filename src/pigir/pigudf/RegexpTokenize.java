@@ -1,26 +1,5 @@
 package pigir.pigudf;
 
-/*
- * Like the built-wbRecordReader TOKENIZE, takes a string and 
- * outputs a bag of tuples with each of the constituent 
- * tokens wbRecordReader a tuple of its own.
- * 
- * However, this function adds regular expression flexibility
- * and optional stopword elimination.
- * 
- * Parameters:
- *    First: the string to tokenize
- *    Second (optional): a string with token separator regular expression.
- *    					 If not present, or present and null, use default.
- *    					 (Default: see defaultSepRegexp below. Mostly 
- *    							   whitespace and punctuation)
- *    Third (optional): Non-null if stopword elimination is wanted. Else null or
- *    				    non-existent. Stopword elimination is as per IsStopword()
- *    Fourth (optional): Non-null if URLs should be preserved. Else null or
- *    					non-existent. Checking for URLs is a bit slower, of course.
- */
-
-
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.regex.Matcher;
@@ -37,6 +16,23 @@ import org.apache.pig.impl.logicalLayer.schema.Schema;
 
 import pigir.Common;
 
+/**
+ * Extension of standard tokenizer. This UDF adds the ability to
+ * provide a regular expression that is to be used for splitting
+ * strings into tokens. The UDF also provides the option to eliminate
+ * stopwords, and to preserve URLs through the tokenization process.
+ * 
+ * The list of stopwords is encapsulated in the IsStopword() UDF.
+ * 
+ * Arguments:
+ * arg1: String to be tokenized
+ * arg2 <optional>: if present, null, or a regular expression acceptable to Java split();
+ * arg3 <optional>: if present, null, or 1 controls whether stopwords are to be eliminated.
+ * arg4 <optional>: if present, null, or 1 controls whether URLs are to preserved. 
+ * 
+ * @author paepcke
+ *
+ */
 public class RegexpTokenize extends EvalFunc<DataBag> {
 
 	public static final String USE_DEFAULT_SPLIT_REGEXP = Common.PIG_FALSE;
@@ -49,8 +45,9 @@ public class RegexpTokenize extends EvalFunc<DataBag> {
     TupleFactory mTupleFactory = TupleFactory.getInstance();
     BagFactory mBagFactory = BagFactory.getInstance();
     
-    //private static final String defaultSepRegexp = "[:'\\s\",()*\\[\\].?!]";
-    private static final String defaultSepRegexp = "[\\s!\"#$%&/'()*+,-.:;<=>?@\\[\\]^_`{|}]";
+    // The \u00a0 is the Unicode non-breaking space. It is sometimes used
+    // by Web designers to space words. 
+    private static final String defaultSepRegexp = "[\\s!\"#$%&/'()*+,-.:;<=>?@\\[\\]^_`{|}\u00a0]";
     
     private static final String urlSlurpRegexp   = "([:/\\p{Alnum}.\\-*_+%?&=~]*).*";
     
@@ -191,7 +188,6 @@ public class RegexpTokenize extends EvalFunc<DataBag> {
     	return null;
     }
     
-    /*
 	public static void main(String[] args) {
 		
 		RegexpTokenize func = new RegexpTokenize();
@@ -306,5 +302,4 @@ public class RegexpTokenize extends EvalFunc<DataBag> {
 			e.printStackTrace();
 		}
 	}
-	*/
 }
