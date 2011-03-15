@@ -1,0 +1,20 @@
+#!/bin/bash
+
+usage="Usage: warcWordCount WARCDataSetFilePath [destFile] (Default output is stdout.)"
+
+if [ $# -lt 1 ] || [ $# -gt 2 ]
+then 
+  echo ${usage}
+  exit
+else
+  srcFile=$1
+fi
+
+if [ $# -gt 1 ] 
+then
+  target=$2
+else
+  target=stdout
+fi
+
+./pigrun srcFile=$srcFile target=$target warcWordCount.pig

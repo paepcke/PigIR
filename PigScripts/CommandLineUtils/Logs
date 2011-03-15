@@ -1,0 +1,104 @@
+Error before Pig is launched
+----------------------------
+ERROR 2999: Unexpected internal error. Undefined parameter : srcFile
+
+java.lang.RuntimeException: Undefined parameter : srcFile
+	at org.apache.pig.tools.parameters.PreprocessorContext.substitute(PreprocessorContext.java:232)
+	at org.apache.pig.tools.parameters.PigFileParser.input(PigFileParser.java:60)
+	at org.apache.pig.tools.parameters.PigFileParser.Parse(PigFileParser.java:42)
+	at org.apache.pig.tools.parameters.ParameterSubstitutionPreprocessor.parsePigFile(ParameterSubstitutionPreprocessor.java:105)
+	at org.apache.pig.tools.parameters.ParameterSubstitutionPreprocessor.genSubstitutedFile(ParameterSubstitutionPreprocessor.java:98)
+	at org.apache.pig.Main.runParamPreprocessor(Main.java:645)
+	at org.apache.pig.Main.run(Main.java:378)
+	at org.apache.pig.Main.main(Main.java:107)
+================================================================================
+Error before Pig is launched
+----------------------------
+ERROR 101: Could not copy E:/Users/paepcke/tmp/trash1.pig to local destination C:\Users\paepcke\AppData\Local\Temp\pig8601891712539403841tmp\trash1.pig
+
+org.apache.pig.backend.executionengine.ExecException: ERROR 101: Could not copy E:/Users/paepcke/tmp/trash1.pig to local destination C:\Users\paepcke\AppData\Local\Temp\pig8601891712539403841tmp\trash1.pig
+	at org.apache.pig.impl.io.FileLocalizer.fetchFile(FileLocalizer.java:765)
+	at org.apache.pig.Main.run(Main.java:370)
+	at org.apache.pig.Main.main(Main.java:107)
+Caused by: java.io.IOException: No FileSystem for scheme: E
+	at org.apache.hadoop.fs.FileSystem.createFileSystem(FileSystem.java:1375)
+	at org.apache.hadoop.fs.FileSystem.access$200(FileSystem.java:66)
+	at org.apache.hadoop.fs.FileSystem$Cache.get(FileSystem.java:1390)
+	at org.apache.hadoop.fs.FileSystem.get(FileSystem.java:196)
+	at org.apache.pig.impl.io.FileLocalizer.fetchFile(FileLocalizer.java:762)
+	... 2 more
+================================================================================
+Pig Stack Trace
+---------------
+ERROR 101: Local file '/usr/local/pig-0.8.0-SNAPSHOT/contrib/piggybank/java/piggybank.jar' does not exist.
+
+org.apache.pig.backend.executionengine.ExecException: ERROR 101: Local file '/usr/local/pig-0.8.0-SNAPSHOT/contrib/piggybank/java/piggybank.jar' does not exist.
+	at org.apache.pig.impl.io.FileLocalizer.fetchFile(FileLocalizer.java:750)
+	at org.apache.pig.PigServer.registerJar(PigServer.java:472)
+	at org.apache.pig.tools.grunt.GruntParser.processRegister(GruntParser.java:378)
+	at org.apache.pig.tools.pigscript.parser.PigScriptParser.parse(PigScriptParser.java:421)
+	at org.apache.pig.tools.grunt.GruntParser.parseStopOnError(GruntParser.java:165)
+	at org.apache.pig.tools.grunt.GruntParser.parseStopOnError(GruntParser.java:141)
+	at org.apache.pig.tools.grunt.Grunt.exec(Grunt.java:90)
+	at org.apache.pig.Main.run(Main.java:510)
+	at org.apache.pig.Main.main(Main.java:107)
+================================================================================
+Pig Stack Trace
+---------------
+ERROR 101: Local file '/cygdrive/e/Users/Paepcke/Software/Hadoop/pig-0.8.0/contrib/piggybank/java/piggybank.jar' does not exist.
+
+org.apache.pig.backend.executionengine.ExecException: ERROR 101: Local file '/cygdrive/e/Users/Paepcke/Software/Hadoop/pig-0.8.0/contrib/piggybank/java/piggybank.jar' does not exist.
+	at org.apache.pig.impl.io.FileLocalizer.fetchFile(FileLocalizer.java:750)
+	at org.apache.pig.PigServer.registerJar(PigServer.java:472)
+	at org.apache.pig.tools.grunt.GruntParser.processRegister(GruntParser.java:378)
+	at org.apache.pig.tools.pigscript.parser.PigScriptParser.parse(PigScriptParser.java:421)
+	at org.apache.pig.tools.grunt.GruntParser.parseStopOnError(GruntParser.java:165)
+	at org.apache.pig.tools.grunt.GruntParser.parseStopOnError(GruntParser.java:141)
+	at org.apache.pig.tools.grunt.Grunt.exec(Grunt.java:90)
+	at org.apache.pig.Main.run(Main.java:510)
+	at org.apache.pig.Main.main(Main.java:107)
+================================================================================
+Pig Stack Trace
+---------------
+ERROR 101: Could not copy E:/Users/Paepcke/Software/Hadoop/pig-0.8.0/contrib/piggybank/java/piggybank.jar to local destination C:\Users\paepcke\AppData\Local\Temp\pig5220737252586058552tmp\piggybank.jar
+
+org.apache.pig.backend.executionengine.ExecException: ERROR 101: Could not copy E:/Users/Paepcke/Software/Hadoop/pig-0.8.0/contrib/piggybank/java/piggybank.jar to local destination C:\Users\paepcke\AppData\Local\Temp\pig5220737252586058552tmp\piggybank.jar
+	at org.apache.pig.impl.io.FileLocalizer.fetchFile(FileLocalizer.java:765)
+	at org.apache.pig.PigServer.registerJar(PigServer.java:472)
+	at org.apache.pig.tools.grunt.GruntParser.processRegister(GruntParser.java:378)
+	at org.apache.pig.tools.pigscript.parser.PigScriptParser.parse(PigScriptParser.java:421)
+	at org.apache.pig.tools.grunt.GruntParser.parseStopOnError(GruntParser.java:165)
+	at org.apache.pig.tools.grunt.GruntParser.parseStopOnError(GruntParser.java:141)
+	at org.apache.pig.tools.grunt.Grunt.exec(Grunt.java:90)
+	at org.apache.pig.Main.run(Main.java:510)
+	at org.apache.pig.Main.main(Main.java:107)
+Caused by: java.io.IOException: No FileSystem for scheme: E
+	at org.apache.hadoop.fs.FileSystem.createFileSystem(FileSystem.java:1375)
+	at org.apache.hadoop.fs.FileSystem.access$200(FileSystem.java:66)
+	at org.apache.hadoop.fs.FileSystem$Cache.get(FileSystem.java:1390)
+	at org.apache.hadoop.fs.FileSystem.get(FileSystem.java:196)
+	at org.apache.pig.impl.io.FileLocalizer.fetchFile(FileLocalizer.java:762)
+	... 8 more
+================================================================================
+Pig Stack Trace
+---------------
+ERROR 101: Could not copy E:/Users/Paepcke/Software/Hadoop/pig-0.8.0/contrib/piggybank/java/piggybank.jar to local destination C:\Users\paepcke\AppData\Local\Temp\pig1168173576422931480tmp\piggybank.jar
+
+org.apache.pig.backend.executionengine.ExecException: ERROR 101: Could not copy E:/Users/Paepcke/Software/Hadoop/pig-0.8.0/contrib/piggybank/java/piggybank.jar to local destination C:\Users\paepcke\AppData\Local\Temp\pig1168173576422931480tmp\piggybank.jar
+	at org.apache.pig.impl.io.FileLocalizer.fetchFile(FileLocalizer.java:765)
+	at org.apache.pig.PigServer.registerJar(PigServer.java:472)
+	at org.apache.pig.tools.grunt.GruntParser.processRegister(GruntParser.java:378)
+	at org.apache.pig.tools.pigscript.parser.PigScriptParser.parse(PigScriptParser.java:421)
+	at org.apache.pig.tools.grunt.GruntParser.parseStopOnError(GruntParser.java:165)
+	at org.apache.pig.tools.grunt.GruntParser.parseStopOnError(GruntParser.java:141)
+	at org.apache.pig.tools.grunt.Grunt.exec(Grunt.java:90)
+	at org.apache.pig.Main.run(Main.java:510)
+	at org.apache.pig.Main.main(Main.java:107)
+Caused by: java.io.IOException: No FileSystem for scheme: E
+	at org.apache.hadoop.fs.FileSystem.createFileSystem(FileSystem.java:1375)
+	at org.apache.hadoop.fs.FileSystem.access$200(FileSystem.java:66)
+	at org.apache.hadoop.fs.FileSystem$Cache.get(FileSystem.java:1390)
+	at org.apache.hadoop.fs.FileSystem.get(FileSystem.java:196)
+	at org.apache.pig.impl.io.FileLocalizer.fetchFile(FileLocalizer.java:762)
+	... 8 more
+================================================================================
