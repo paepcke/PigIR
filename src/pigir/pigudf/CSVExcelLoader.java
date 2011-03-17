@@ -106,10 +106,16 @@ public class CSVExcelLoader extends FileInputLoadFunc implements LoadPushDown {
         		Text value = null;
         		if (sawEmbeddedRecordDelimiter) {
         			
-        			int prevLineLen = recordLen;
+        			// Save the length of the record so far, plus one byte for the 
+        			// record delimiter (usually newline) that's embedded in field 
+        			// we were working on before falling into this branch:
+        			int prevLineLen = recordLen + 1;
         			
-        			// Save previous line (the one with the field that has the newline) in a new array:
+        			// Save previous line (the one with the field that has the newline) in a new array.
+        			// The last byte will be random; we'll fill in the embedded
+        			// record delimiter (usually newline) below:
         			byte[] prevLineSaved = Arrays.copyOf(buf, prevLineLen);
+        			prevLineSaved[prevLineLen - 1] = RECORD_DEL;
         			
         			//*******************
         			System.out.println("P1: buf.length:" + buf.length);
@@ -165,6 +171,7 @@ public class CSVExcelLoader extends FileInputLoadFunc implements LoadPushDown {
         			evenQuotesSeen = true;
         			sawEmbeddedRecordDelimiter = false;
         			fieldID = 0;
+        			recordLen = prevLineAndContinuation.length;
         			
         		} else {
         			// Previous record finished cleanly: start with the next record,
@@ -344,27 +351,27 @@ public class CSVExcelLoader extends FileInputLoadFunc implements LoadPushDown {
 			
 			//Map<String, String> env = System.getenv();
 			// URI piggybankPath = new File(env.get("PIG_HOME"),
-			URI piggybankPath = new File("E:/Users/Paepcke/Software/Hadoop/pig-0.8.0/contrib/piggybank/java/piggybank.jar").toURI();
+			URI piggybankPath = new File("C:/Users/Paepcke/Software/Hadoop/pig-0.8.0/contrib/piggybank/java/piggybank.jar").toURI();
 			pserver.registerJar(piggybankPath.toString());
 			pserver.registerJar("contrib/PigIR.jar");
-			
+/*			
 			// Matrix of integers: 1,2,3
 			//                     4,5,6
-			pserver.registerQuery("A = LOAD 'E:/Users/Paepcke/dldev/TestData/integers.csv' " +
+			pserver.registerQuery("A = LOAD 'C:/Users/Paepcke/dldev/TestData/integers.csv' " +
 								   "USING org.apache.pig.piggybank.storage.CSVLoader;");
 			Common.print(pserver, "A");
 			pserver.registerQuery("STORE A INTO 'E:/Users/Paepcke/dldev/TestData/integersBackOut.csv' USING pigir.pigudf.CSVExcelWriter();");
-			
+*/			
 			// Matrix of hairy stuff:
   			//        Andreas, Paepcke, 10
 			//		  Inez,Griesbaum,20
 			//		  Johnny "the knive", Conley, 40
 			//		  Conrad, "blue, gray man", 50
 			
-			pserver.registerQuery("B = LOAD 'E:/Users/Paepcke/dldev/TestData/strings.csv' " +
+			pserver.registerQuery("B = LOAD 'C:/Users/Paepcke/dldev/TestData/strings.csv' " +
 								   "USING pigir.pigudf.CSVExcelLoader;");
 			Common.print(pserver, "B");
-			pserver.registerQuery("STORE B INTO 'E:/Users/Paepcke/dldev/TestData/stringsBackOut.csv' USING pigir.pigudf.CSVExcelWriter();");
+			pserver.registerQuery("STORE B INTO 'C:/Users/Paepcke/dldev/TestData/stringsBackOut.csv' USING pigir.pigudf.CSVExcelWriter();");
 			
 		} catch (Exception e) {
 			System.out.println("Exception: " + e.getMessage());

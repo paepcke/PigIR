@@ -67,7 +67,8 @@ wordCounts = FOREACH strippedGroupedWords GENERATE $0,COUNT($1);
 
 -- docsCulled = LIMIT strippedGrouped 3;
 
-dump wordCounts;
+--dump wordCounts;
+STORE wordCounts INTO '/user/paepcke/Datasets/stateDep03_2007.csv' USING pigir.pigudf.CSVExcelStorage();
 
 --($target == "stdout" ? dump wordCounts : store $target)
 
