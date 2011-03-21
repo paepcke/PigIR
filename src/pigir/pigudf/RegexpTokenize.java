@@ -33,6 +33,8 @@ import pigir.Common;
  * @author paepcke
  *
  */
+/* TODO: convert test sequence in commented Main to auto test. */
+
 public class RegexpTokenize extends EvalFunc<DataBag> {
 
 	public static final String USE_DEFAULT_SPLIT_REGEXP = Common.PIG_FALSE;
@@ -57,6 +59,7 @@ public class RegexpTokenize extends EvalFunc<DataBag> {
 			put("http", true);
 			put("https", true);
 			put("ftp", true);
+			put("ftps", true);
 			put("file", true);
 			put("mailto", true);
 			put("rtsp", true);
@@ -110,6 +113,9 @@ public class RegexpTokenize extends EvalFunc<DataBag> {
                 throw new IOException("Expected input to be chararray, but  got " + str.getClass().getName());
             }
             String[] resArray = ((String)str).split(splitRegexp);
+            urlIndex = 0;
+            tokensToSkip = 0;
+            
             for (String token : resArray) {
             	// If we are skipping over a URL:
             	if (tokensToSkip > 0) {
@@ -139,14 +145,15 @@ public class RegexpTokenize extends EvalFunc<DataBag> {
             		// erroneously split it, and thereby find the number of 
             		// tokens to skip:
             		String [] urlFrags = token.split(splitRegexp);
-            		tokensToSkip = urlFrags.length;
+            		tokensToSkip = urlFrags.length - 1;
+            		// Point past the URL, so that 
+            		// we'll start searching for URLs *after* this one that
+            		// we just found next time we find a URL:
+            		urlIndex += token.length();
             	}
             	output.add(mTupleFactory.newTuple(token)); 
             	// If we are to preserve URLs, we need to keep track
             	// of where we are wbRecordReader the original string:
-            	if (preserveURLs) {
-            		urlIndex = ((String)str).indexOf(token, urlIndex) + token.length();
-            	}
             }
         } catch (ExecException ee) {
             throw new IOException("Regexp tokenizing failed.", ee);
@@ -168,7 +175,7 @@ public class RegexpTokenize extends EvalFunc<DataBag> {
         }
     }
     
-    public String findURL(String str, int startIndex) {
+    public static String findURL(String str, int startIndex) {
     	
     	final Pattern urlPattern = Pattern.compile(urlSlurpRegexp);
     	Matcher urlMatcher = urlPattern.matcher(str.substring(startIndex));
@@ -178,7 +185,7 @@ public class RegexpTokenize extends EvalFunc<DataBag> {
     	} else return null;
     }
     
-    public String findURL(String str) {
+    public static String findURL(String str) {
     	
     	int startIndex = -1;
     	for (String webProto : webProtocols.keySet()) {
@@ -188,6 +195,13 @@ public class RegexpTokenize extends EvalFunc<DataBag> {
     	return null;
     }
     
+    public static String getDefaultRegexp() {
+    	return defaultSepRegexp;
+    }
+
+    // ------------------------------------  Testing -------------------------
+
+/*
 	public static void main(String[] args) {
 		
 		RegexpTokenize func = new RegexpTokenize();
@@ -302,4 +316,5 @@ public class RegexpTokenize extends EvalFunc<DataBag> {
 			e.printStackTrace();
 		}
 	}
+*/
 }

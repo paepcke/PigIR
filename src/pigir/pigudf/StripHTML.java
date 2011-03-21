@@ -19,17 +19,14 @@ import org.jsoup.Jsoup;
 import pigir.Common;
 
  /**
-  *	 Given tuple and an index to a column that contains
+  *	 Given tuple whose first element contains
   *  a string, return a new tuple, which is a copy of the
   *  input, with an appended new field 'noTagContent'. This
-  *  new field that contains a copy the indicated column's
-  *  content with any HTML tags, and JavaScript removed.
+  *  new field contains a copy the first column's content,
+  *  with any HTML tags, and JavaScript removed.
   *   
   *  Input:
-  *     columnNumber: an integer that identifies the column
-  *     	 		  whose content is to be stripped of HTML.
-  *     			  The integer is zero-based. 
-  *     webTuple:     a tuple that contains the column to be
+  *     webTuple:     a tuple that contains the html text to be
   *     	          processed. Other parts of the tuple are
   *     			  ignored.
   *  Output: new tuple with added field 'noTagContent'
