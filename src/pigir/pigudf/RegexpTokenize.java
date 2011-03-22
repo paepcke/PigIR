@@ -26,14 +26,13 @@ import pigir.Common;
  * 
  * Arguments:
  * arg1: String to be tokenized
- * arg2 <optional>: if present, null, or a regular expression acceptable to Java split();
- * arg3 <optional>: if present, null, or 1 controls whether stopwords are to be eliminated.
- * arg4 <optional>: if present, null, or 1 controls whether URLs are to preserved. 
+ * arg2 <optional>: null to use default, or a regular expression acceptable to Java split();
+ * arg3 <optional>: null to use default; 1 to eliminate stopwords, 0 for no stopword elimination. (default is 1)
+ * arg4 <optional>: null to use default; 1 to treat URLs as one token, 0 to split URLs into multiple tokens. (default is 1)
  * 
  * @author paepcke
  *
  */
-/* TODO: convert test sequence in commented Main to auto test. */
 
 public class RegexpTokenize extends EvalFunc<DataBag> {
 
@@ -76,8 +75,10 @@ public class RegexpTokenize extends EvalFunc<DataBag> {
     public DataBag exec(Tuple input) throws IOException {
     	DataBag output = null;
     	String splitRegexp = defaultSepRegexp;
-    	Boolean doStopwordEliminiation = false;
-    	Boolean preserveURLs = false;
+    	Boolean doStopwordEliminiation = true;
+    	Boolean preserveURLs = true;
+    	Integer stopWordParm = null;
+    	Integer urlPreserveParm = null;
     	
     	Object str = null;
     	
@@ -89,22 +90,27 @@ public class RegexpTokenize extends EvalFunc<DataBag> {
         try {
 			// If a second arg is given, it's a regexp for how to split:
 			if (input.size() > 1) {
-				if ((splitRegexp = (String) input.get(1)) == null) {
+				if ((splitRegexp = (String) input.get(1)) == null)
 					splitRegexp = defaultSepRegexp;
-				}
 			}
 			// If a third arg is given, it's null or 1 to indicate
 			// whether stopword elimination is wanted:
 			if (input.size() > 2)
-				if (input.get(2) != null) {
-					doStopwordEliminiation = true;
+				if ((stopWordParm = (Integer) input.get(2)) != null) {
+					if (stopWordParm == 0)
+						doStopwordEliminiation = false;
+					else
+						doStopwordEliminiation = true;
 				}
 			
 			// If a fourth arg is given, it's null or 1 to indicate
 			// whether we should preserve URLs:
 			if (input.size() > 3)
-				if (input.get(3) != null) {
-					preserveURLs = true;
+				if ((urlPreserveParm = (Integer) input.get(3)) != null) {
+					if (urlPreserveParm == 0)
+						preserveURLs = false;
+					else
+						preserveURLs = true;
 				}
 			
 			// Prepare output bag:
@@ -154,7 +160,7 @@ public class RegexpTokenize extends EvalFunc<DataBag> {
             	output.add(mTupleFactory.newTuple(token)); 
             	// If we are to preserve URLs, we need to keep track
             	// of where we are wbRecordReader the original string:
-            }
+            } // end for
         } catch (ExecException ee) {
             throw new IOException("Regexp tokenizing failed.", ee);
         }
@@ -198,123 +204,4 @@ public class RegexpTokenize extends EvalFunc<DataBag> {
     public static String getDefaultRegexp() {
     	return defaultSepRegexp;
     }
-
-    // ------------------------------------  Testing -------------------------
-
-/*
-	public static void main(String[] args) {
-		
-		RegexpTokenize func = new RegexpTokenize();
-		TupleFactory tupleFac = TupleFactory.getInstance();
-		Tuple parms = tupleFac.newTuple(1);
-		Tuple parmsTwo = tupleFac.newTuple(2);
-		Tuple parmsThree = tupleFac.newTuple(3);
-		Tuple parmsFour = tupleFac.newTuple(4);
-		
-		try {
-			System.out.println("*****With default regexp:");
-			
-			parms.set(0, "On a sunny day");
-			System.out.println("'On a sunny day': " + func.exec(parms));
-			
-			parms.set(0, "Testing it!");
-			System.out.println("'Testing it!': " + func.exec(parms));
-			
-			parms.set(0, "FDA");
-			System.out.println("'FDA': " + func.exec(parms));
-			
-			//-------------
-			System.out.println("*****Now with whitespace as regexp:");
-			parmsTwo.set(1, "[\\s]");
-
-			parmsTwo.set(0, "On a sunny day");
-			System.out.println("'On a sunny day': " + func.exec(parmsTwo));
-			
-			parmsTwo.set(0, "Testing it!");
-			System.out.println("'Testing it!': " + func.exec(parmsTwo));
-			
-			parmsTwo.set(0, "FDA");
-			System.out.println("'FDA': " + func.exec(parmsTwo));
-
-			//-------------
-			System.out.println("*****Test stopword elimination:");
-			parmsThree.set(1, null);
-			parmsThree.set(2, 1);
-			
-			parmsThree.set(0, "foo");
-			System.out.println("'foo': " + func.exec(parmsThree));
-			
-			parmsThree.set(0, "This is a stopword test.");
-			System.out.println("'This is a stopword test.': " + func.exec(parmsThree));
-			//-------------
-			System.out.println("*****Test url preservation :");
-			parmsFour.set(1, null); // use standard regexp
-			parmsFour.set(2, null); // no stopword elimination
-			parmsFour.set(3, 1);    // want URL preservation 
-			
-			parmsFour.set(0, "foo");
-			System.out.println("'foo': " + func.exec(parmsFour));
-			
-			parmsFour.set(0, "http://infolab.stanford.edu");
-			System.out.println("'http://infolab.stanford.edu': " + func.exec(parmsFour));
-
-			parmsFour.set(0, "And now url (embedded http://infolab.stanford.edu) wbRecordReader text");
-			System.out.println("'And now url (embedded http://infolab.stanford.edu) wbRecordReader text': " + func.exec(parmsFour));
-			
-			parmsFour.set(0, "The word http wbRecordReader text.");
-			System.out.println("'The word http wbRecordReader text.': " + func.exec(parmsFour));
-			
-			parmsFour.set(0, "Finally, (file://C:/Users/kennedy/.baschrc) two URLs. ftp://blue.mountain.com/?parm1=foo&parm2=bar");
-			System.out.println("'Finally, (file://C:/Users/kennedy/.baschrc) two URLs. ftp://blue.mountain.com/?parm1=foo&parm2=bar': " + func.exec(parmsFour));
-			
-			
-			//-------------
-			System.out.println("*****Now with 'fo.*o' as regexp:");
-			parmsTwo.set(1, "fo.*o");
-			
-			parmsTwo.set(0, "foo");
-			System.out.println("'foo': " + func.exec(parmsTwo));
-			
-			parmsTwo.set(0, "fobaro");
-			System.out.println("'fobaro': " + func.exec(parmsTwo));
-			
-			parmsTwo.set(0, "fobarotree");
-			System.out.println("'fobarotree': " + func.exec(parmsTwo));
-			
-			parmsTwo.set(0, "fo is your papa barotree");
-			System.out.println("'fo is your papa barotree': " + func.exec(parmsTwo));
-			
-			parmsTwo.set(0, "fo is your papa barotree and with you.");
-			System.out.println("'fo is your papa barotree and with you.': " + func.exec(parmsTwo));
-
-			//-------------
-			System.out.println("*****Pulling out URLs:");
-			
-			System.out.println("'This is http://foo.bar.com/blue.html': '" + 
-						func.findURL("This is http://foo.bar.com/blue.html", 8) +
-						"'");
-			
-			System.out.println("'file://me.you.her/blue.html': '" + 
-						func.findURL("file://me.you.her/blue.html", 0) +
-						"'");
-			
-			System.out.println("'URL is ftp://me.you.her/blue.html, and embedded.': '" + 
-						func.findURL("URL is ftp://me.you.her/blue.html, and embedded.", 7) +
-						"'");
-			
-			System.out.println("'No index given ftp://me.you.her/blue.html, and embedded.': '" + 
-						func.findURL("No index given ftp://me.you.her/blue.html, and embedded.") +
-						"'");
-			
-			System.out.println("'file://me.you.her/blue.html without index': '" + 
-						func.findURL("file://me.you.her/blue.html without index") +
-						"'");
-
-			
-		} catch (IOException e) {
-
-			e.printStackTrace();
-		}
-	}
-*/
 }

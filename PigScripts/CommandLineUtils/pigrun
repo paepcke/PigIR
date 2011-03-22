@@ -72,4 +72,4 @@ PIG_COMMAND="${PIG_COMMAND} ${PIG_SCRIPT_NAME}"
 # -p: properties file to use:
 
 /usr/bin/time --format="Runtime (m:ss.millisec): %E" \
-   pig -Dpig.usenewlogicalplan=false -v -logfile Logs ${PIG_COMMAND}
+   $PIG_HOME/bin/pig -Dpig.usenewlogicalplan=false -v -logfile Logs ${PIG_COMMAND}

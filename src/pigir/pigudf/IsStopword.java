@@ -35,6 +35,8 @@ public class IsStopword extends FilterFunc {
 			put("In", true);
 			put("is", true);
 			put("Is", true);
+			put("it", true);
+			put("It", true);
 			put("of", true);
 			put("Of", true);
 			put("on", true);
