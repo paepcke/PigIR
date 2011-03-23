@@ -157,15 +157,23 @@ public class BufferedWebStreamIterator extends WebStream implements Iterator<WbR
 				    ": attempt to open socket to distributor at " +
 				    distributorIP + ":" + distributorPort);
 		try {
-			// Allow for two attempts:
-			distributor = Common.getSocket(Common.getInetAddressFromAsciiIP(distributorIP), Integer.parseInt(distributorPort), 2, "Opening socket to distributor.");
+			// Allow the distributor demon to start up:
+			Thread.sleep(Constants.TIME_TO_WAIT_FOR_DISTRIBUTOR_TO_START);
+			// Allow for NUM_DISTRIB_DEMON_ATTEMPTS attempts:
+			distributor = Common.getSocket(Common.getInetAddressFromAsciiIP(distributorIP), 
+										   Integer.parseInt(distributorPort), 
+										   Constants.NUM_DISTRIB_DEMON_ATTEMPTS, 
+										   "Opening socket to distributor.");
 			} catch (UnknownHostException e) {
 				logger.error(errMsg + "Bad IP format: " + distributorIP);
 				throw new IOException(errMsg + "Bad IP format: " + distributorIP);
 			} catch (NumberFormatException e) {
 				logger.error(errMsg + "Bad distributor port: " + distributorPort);
 				throw new IOException(errMsg + "Bad distributor port: " + distributorPort);
-		}
+		} catch (InterruptedException e) {
+				logger.error(errMsg + "Interrupted during wait to give time for distributor process to start. " + e.getMessage());
+				throw new IOException(errMsg + "Interrupted during wait to give time for distributor process to start." + e.getMessage());
+			}
 		logger.info("From " +
 				    Constants.getHostInfo() +
 				    ": success opening socket to distributor at " +
@@ -319,7 +327,7 @@ public class BufferedWebStreamIterator extends WebStream implements Iterator<WbR
 			} catch(EOFException e) {
 				break;
 			} catch(IOException e) {
-				throw new IOException("Could not read from distributor: " + e.getMessage());
+				throw new IOException("Could not read from distributor (note that distributors time out if not read from in a timely fashion): " + e.getMessage());
 			} catch (InterruptedException e) {
 				throw new IOException("Could not add new page to buffer. Interrupted.");
 			}

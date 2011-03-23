@@ -35,8 +35,8 @@ public class WebBaseLoader extends LoadFunc implements LoadPushDown {
 	
 	private MultiTypeProperties wbJobProperties = 
 		new MultiTypeProperties(UDFContext.getUDFContext().getUDFProperties(getClass()));
-	private final int NUM_OUTPUT_COLUMNS = 5;
-	private final int CONTENT_COL_INDEX = 5;
+	private final int NUM_OUTPUT_COLUMNS = 7;
+	private final int CONTENT_COL_INDEX = 6;
 	
     // Vector with true wbRecordReader each position that corresponds to a
     // field that this loader is to include wbRecordReader its return tuples: 
@@ -130,7 +130,9 @@ public class WebBaseLoader extends LoadFunc implements LoadPushDown {
             for (String headerKey : wbRec.mandatoryKeysHeader()) {
             	// Check whether this WebBase header field is wanted
             	// in the result tuple (or is being projected out):
-            	if ((mRequiredColumns != null) && (++resFieldIndex < numColsToReturn) && mRequiredColumns[resFieldIndex]) {
+            	if ((mRequiredColumns != null) && 
+            		(++resFieldIndex < numColsToReturn) && 
+            		mRequiredColumns[resFieldIndex]) {
             		@SuppressWarnings("rawtypes")
 					Constructor fldConstructor = wbRec.mandatoryWbHeaderFldTypes.get(headerKey);
             		String headerVal = wbRec.get(headerKey);
@@ -144,13 +146,17 @@ public class WebBaseLoader extends LoadFunc implements LoadPushDown {
             }
             
             // Now the bag of HTTP header fields:
-            if ((mRequiredColumns != null) && (++resFieldIndex < numColsToReturn)  && mRequiredColumns[resFieldIndex]) { 
+            if ((mRequiredColumns != null) && 
+            	(++resFieldIndex < numColsToReturn) && 
+            	mRequiredColumns[resFieldIndex]) { 
             	mProtoTuple.add(wbRec.get(WbRecord.HTTP_HEADER_MAP));
             }
             // Check whether the WebBase record content is wanted wbRecordReader the 
             // result tuple (or is being projected out):
-            if ((mRequiredColumns != null) && (++resFieldIndex < numColsToReturn)  && mRequiredColumns[resFieldIndex]) { 
-            	mProtoTuple.add(wbRec.get(WbRecord.CONTENT));
+            if ((mRequiredColumns != null) && 
+            	(++resFieldIndex < numColsToReturn) && 
+            	mRequiredColumns[resFieldIndex]) { 
+            	mProtoTuple.add(wbRec.getContent());
             }
             Tuple t =  mTupleFactory.newTupleNoCopy(mProtoTuple);
             return t;
@@ -247,6 +253,11 @@ public class WebBaseLoader extends LoadFunc implements LoadPushDown {
 		theJob.setInputFormatClass(WbInputFormat.class);
 		
     	distributorContact = DistributorContact.getCrawlDistributorContact(loadCommand.crawlName, loadCommand.numPagesWanted, loadCommand.startSite, loadCommand.endSite);
+    	if (distributorContact == null) {
+    		String errMsg = "Crawl " + loadCommand.crawlName + " does not exist, or is not currently available."; 
+    		logger.error(errMsg);
+    		throw new IOException(errMsg);
+    	}
 		//int numReducers = theJob.getNumReduceTasks();
 		int numMappers = theJob.getConfiguration().getInt("mapred.map.tasks", Constants.DEFAULT_NUM_OF_SPLITS);
 		logger.info("Number of map tasks from Job object is " + numMappers);

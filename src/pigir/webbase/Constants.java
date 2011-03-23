@@ -20,7 +20,7 @@ public final class Constants {
 	public static final int DEFAULT_NUM_OF_SPLITS = 1;
 	
 	// Number of times to try contacting a distributor demon:
-	public static final int NUM_DISTRIB_DEMON_ATTEMPTS = 4;
+	public static final int NUM_DISTRIB_DEMON_ATTEMPTS = 2;
 	// Distrib demon repeat attempts wait times in seconds:
 	public static final int[] SOCKET_OPEN_ATTEMPT_PAUSES = {4,6,8};
 	

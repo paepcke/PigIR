@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
+import org.apache.log4j.Logger;
 import org.apache.pig.EvalFunc;
 import org.apache.pig.FuncSpec;
 import org.apache.pig.data.BagFactory;
@@ -15,6 +16,7 @@ import org.apache.pig.data.TupleFactory;
 import org.apache.pig.impl.logicalLayer.FrontendException;
 import org.apache.pig.impl.logicalLayer.schema.Schema;
 import org.apache.pig.impl.logicalLayer.schema.Schema.FieldSchema;
+import org.apache.pig.tools.pigstats.PigStatusReporter;
 
 
 /**
@@ -46,10 +48,14 @@ import org.apache.pig.impl.logicalLayer.schema.Schema.FieldSchema;
 
 public class IndexOneDoc extends EvalFunc<DataBag> {
 	
+	private final int TOKENS_BETWEEN_REPORTING = 1000;
+	
     TupleFactory mTupleFactory = TupleFactory.getInstance();
     BagFactory mBagFactory = BagFactory.getInstance();
     String docID = null;
     String docContent = null;
+	public final Logger logger = Logger.getLogger(getClass().getName());
+	PigStatusReporter reporter = PigStatusReporter.getInstance();
     
 	// Index of start of the most recently found URL wbRecordReader str.
 	private int urlIndex = 0;
@@ -139,7 +145,15 @@ public class IndexOneDoc extends EvalFunc<DataBag> {
         tokensToSkip = 0;
         numSkippedTokens = 0;
         
+        int nextReporting = TOKENS_BETWEEN_REPORTING;
+        
         for (int tokenPos=0; tokenPos<resArray.length; tokenPos++) {
+        	
+        	if (tokenPos > nextReporting) {
+        		reporter.setStatus("Indexer processed " + tokenPos + " words.");
+        		reporter.progress();
+        		nextReporting += TOKENS_BETWEEN_REPORTING;
+        	}
       	
         	// If we are skipping over a URL:
         	if (tokensToSkip > 0) {
@@ -152,8 +166,10 @@ public class IndexOneDoc extends EvalFunc<DataBag> {
         	
         	// Substrings that are themselves separators show up as
         	// empty strings. Don't make an empty tuple for those:
-        	if (token.isEmpty())
+        	if (token.isEmpty()) {
+        		numSkippedTokens++;
         		continue;
+        	}
         	if (doStopwordEliminiation)
         		if (IsStopword.isStopword(token))
         			continue;
@@ -167,6 +183,10 @@ public class IndexOneDoc extends EvalFunc<DataBag> {
         		// to advance the str pointer:
         		urlIndex = ((String)docContent).indexOf(token, urlIndex);
         		token = RegexpTokenize.findURL((String)docContent, urlIndex);
+        		if (token == null) {
+        			logger.warn("Token was unexpectedly null: '" + token + "'");
+        			continue;
+        		}
         		// We'll need to skip over the next few tokens. They
         		// were fragmented before we realized that we were
         		// looking at a URL. Split the URL the way we
@@ -182,7 +202,6 @@ public class IndexOneDoc extends EvalFunc<DataBag> {
         	onePosting = mTupleFactory.newTuple();
         	onePosting.append(token);
         	onePosting.append(docID);
-        	
         	onePosting.append(tokenPos - numSkippedTokens);
         	output.add(onePosting);
         }
@@ -207,12 +226,54 @@ public class IndexOneDoc extends EvalFunc<DataBag> {
 	
     @Override
     public List<FuncSpec> getArgToFuncMapping() throws FrontendException {
-    	// Just one exec function handles all parameter combinations: 
+        List<FuncSpec> funcSpecs = new ArrayList<FuncSpec>();
+        
+        // Call with two parms: docID and content:
+        List<FieldSchema> fieldsTwoParms = new ArrayList<FieldSchema>(2);
+        fieldsTwoParms.add(new FieldSchema(null, DataType.CHARARRAY));  // docID
+        fieldsTwoParms.add(new FieldSchema(null, DataType.CHARARRAY));  // content
+        FuncSpec funcSpecTwoParms = new FuncSpec(this.getClass().getName(), new Schema(fieldsTwoParms));
+        funcSpecs.add(funcSpecTwoParms);
+        
+        // Call with three parms: docID, content, and stopword control:
+        List<FieldSchema> fieldsThreeParms = new ArrayList<FieldSchema>(3);
+        fieldsThreeParms.add(new FieldSchema(null, DataType.CHARARRAY));  // docID
+        fieldsThreeParms.add(new FieldSchema(null, DataType.CHARARRAY));  // content
+        fieldsThreeParms.add(new FieldSchema(null, DataType.INTEGER));    // stopwords
+        FuncSpec funcSpecThreeParms = new FuncSpec(this.getClass().getName(), new Schema(fieldsThreeParms));
+        funcSpecs.add(funcSpecThreeParms);
+        
+        // Call with four parms: docID, content, stopword control, urlpreservation:
+        List<FieldSchema> fieldsFourParms = new ArrayList<FieldSchema>(4);
+        fieldsFourParms.add(new FieldSchema(null, DataType.CHARARRAY));  // docID
+        fieldsFourParms.add(new FieldSchema(null, DataType.CHARARRAY));  // content
+        fieldsFourParms.add(new FieldSchema(null, DataType.INTEGER));    // stopwords
+        fieldsFourParms.add(new FieldSchema(null, DataType.INTEGER));    // urlpreservation        
+        FuncSpec funcSpecFourParms = new FuncSpec(this.getClass().getName(), new Schema(fieldsFourParms));
+        funcSpecs.add(funcSpecFourParms);
+        
+        // Call with five parms: docID, content, stopword control, urlpreservation, regexp for splits:
+        List<FieldSchema> fieldsFiveParms = new ArrayList<FieldSchema>(4);
+        fieldsFiveParms.add(new FieldSchema(null, DataType.CHARARRAY));  // docID
+        fieldsFiveParms.add(new FieldSchema(null, DataType.CHARARRAY));  // content
+        fieldsFiveParms.add(new FieldSchema(null, DataType.INTEGER));    // stopwords
+        fieldsFiveParms.add(new FieldSchema(null, DataType.INTEGER));    // urlpreservation
+        fieldsFiveParms.add(new FieldSchema(null, DataType.CHARARRAY));  // regexp 
+        FuncSpec funcSpecFiveParms = new FuncSpec(this.getClass().getName(), new Schema(fieldsFiveParms));
+        funcSpecs.add(funcSpecFiveParms);
+        
+        return funcSpecs;
+    }
+    
+/*	
+    @Override
+    public List<FuncSpec> getArgToFuncMapping() throws FrontendException {
         List<FieldSchema> fields = new ArrayList<FieldSchema>(1);
         fields.add(new FieldSchema(null, DataType.BAG));
         FuncSpec funcSpec = new FuncSpec(this.getClass().getName(), new Schema(fields));
         List<FuncSpec> funcSpecs = new ArrayList<FuncSpec>(1);
         funcSpecs.add(funcSpec);
         return funcSpecs;
-    }	
+    }
+*/	
 }

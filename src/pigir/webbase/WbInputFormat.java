@@ -173,9 +173,9 @@ public class WbInputFormat extends InputFormat<WbInputSplit,Text> {
 			// Get a [<siteName>, <numPages>]:
 			siteNumPagePairs = siteAndNumPages.split("[\\s]");
 			if (siteNumPagePairs.length != 2) {
-				// Is this the (usually) final line in the site list file that
-				// summarizes how many pages there are?
-				// (E.g. "70918411 pages in repository, 31777 sites of 36181 were found for mimetype text'."
+				// This is (usually) the final line in the site list file that
+				// summarizes how many pages there are:
+				// E.g. "70918411 pages in repository, 31777 sites of 36181 were found for mimetype text'."
 				if (SITE_LIST_SUMMARY_LINE_Pattern.matcher(siteAndNumPages).matches())
 					continue;
 				logger.warn("Bad site list entry (more or fewer than two tokens): '" + siteAndNumPages + "'.");
@@ -200,13 +200,17 @@ public class WbInputFormat extends InputFormat<WbInputSplit,Text> {
 					continue;
 			}
 			totalNumPages += numPagesThisSite;
-			siteListEntries.add(new SiteListEntry(siteName, numPagesThisSite, totalNumPages, ++crawlPos));
+			// Some sites in the site list have zero pages. Don't 
+			// create a sitelist entry:
+			if (numPagesThisSite > 0)
+				siteListEntries.add(new SiteListEntry(siteName, numPagesThisSite, totalNumPages, ++crawlPos));
 			// If user's LOAD command specified an end site, check
 			// whether this one was it:
 			if (!distributorContact.endSite.isEmpty() && siteName.equalsIgnoreCase(distributorContact.endSite))
 				break;
 			// If we already have the number of pages we need, quit:
-			if ((distributorContact.getNumPagesWanted() != Constants.ALL_PAGES_WANTED) && (distributorContact.getNumPagesWanted() <= totalNumPages)) {
+			if ((distributorContact.getNumPagesWanted() != Constants.ALL_PAGES_WANTED) && 
+				(distributorContact.getNumPagesWanted() <= totalNumPages)) {
 				break;
 			}
 		}

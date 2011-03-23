@@ -83,7 +83,7 @@ public class WbRecordFactory {
 	private static WebContentType getContentType(Vector<String> httpHeader) {
 		for(String s : httpHeader) {
 			String[] line = s.split(":", 2);
-			if(line[0].equals("Content-Type")) {
+			if(line[0].trim().equalsIgnoreCase("Content-Type")) {
 				String[] type = line[1].trim().split("/");
 				try {
 					return WebContentType.valueOf(type[0].toUpperCase());

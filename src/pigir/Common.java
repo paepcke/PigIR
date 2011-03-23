@@ -133,19 +133,28 @@ public final class Common {
 		Logger logger = WbRecordReader.getLogger();;
 		// Index into array of wait-between-attempts times (DISTRIB_DEMON_ATTEMPT_PAUSES):
 		int timeoutIndex = 0;
+		String hostname = "<unknown>";
+		try {
+			InetAddress addr = InetAddress.getLocalHost();
+			// Get hostname
+			hostname = addr.getHostName();
+		} catch (UnknownHostException e) {
+		}
+		
+		String errMsgBoilerPlate = infoOnError + " Host trying to connect: " + hostname + ". Connecting to: "; 
 		
 		while ((--attempts >= 0) && (resSock == null) || !resSock.isConnected()) {
 			// Set up socket and input/output streams
 			try {
 				resSock = new Socket(machineName, port);
 			} catch (UnknownHostException e) {
-				String errMsg = infoOnError + "(" + machineName + ":" + port + "). Unknown host.";
+				String errMsg = errMsgBoilerPlate + machineName + ":" + port + "). Unknown host.";
 				logger.error(errMsg);
 				throw new IOException(errMsg);
 			} catch (IOException e) {
 				if (attempts > 0) {
 					try {
-						logger.warn("Socket open failed: " + infoOnError + "(" + machineName + ":" + port + "). Retrying...");
+						logger.warn("Socket open failed: " + errMsgBoilerPlate + machineName + ":" + port + ". Retrying...");
 						Thread.sleep(1000 * Constants.SOCKET_OPEN_ATTEMPT_PAUSES[timeoutIndex++]);
 					} catch (InterruptedException e1) {
 						// ignore
@@ -153,7 +162,7 @@ public final class Common {
 					// Try again:
 					continue;
 				}
-				String errMsg = "Failed to open socket. " + infoOnError + "(" + machineName + ":" + port + "). " + e.getMessage();
+				String errMsg = "Failed to open socket. " + errMsgBoilerPlate + machineName + ":" + port + ". " + e.getMessage();
 				logger.error(errMsg);
 				throw new IOException(errMsg);
 			}
