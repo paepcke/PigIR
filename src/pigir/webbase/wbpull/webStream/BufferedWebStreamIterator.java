@@ -49,9 +49,6 @@ public class BufferedWebStreamIterator extends WebStream implements Iterator<WbR
 
 		logger = WbRecordReader.getLogger();
 
-		//************
-		//distribDemonPort = 7785;
-		//************
 		Socket distributorDemonSocket = Common.getSocket(machineName, 
 														 distribDemonPort, 
 														 Constants.NUM_DISTRIB_DEMON_ATTEMPTS, 

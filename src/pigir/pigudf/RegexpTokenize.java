@@ -184,9 +184,10 @@ public class RegexpTokenize extends EvalFunc<DataBag> {
     public static String findURL(String str, int startIndex) {
     	
     	final Pattern urlPattern = Pattern.compile(urlSlurpRegexp);
-    	Matcher urlMatcher = urlPattern.matcher(str.substring(startIndex));
+    	final Matcher urlMatcher = urlPattern.matcher("");
+    	urlMatcher.reset(str);
     	
-    	if (urlMatcher.matches()) {
+    	if (urlMatcher.find(startIndex)) {
     		return urlMatcher.group(1);
     	} else return null;
     }

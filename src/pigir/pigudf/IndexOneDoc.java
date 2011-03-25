@@ -211,7 +211,7 @@ public class IndexOneDoc extends EvalFunc<DataBag> {
 	public Schema outputSchema(Schema input) {
         try{
             Schema postingsSchema = new Schema();
-        	postingsSchema.add(new Schema.FieldSchema("word", DataType.CHARARRAY));
+        	postingsSchema.add(new Schema.FieldSchema("token", DataType.CHARARRAY));
         	postingsSchema.add(new Schema.FieldSchema("docID", DataType.CHARARRAY));
         	postingsSchema.add(new Schema.FieldSchema("tokenPos", DataType.INTEGER));
         	

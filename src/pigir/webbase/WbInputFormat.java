@@ -300,10 +300,11 @@ public class WbInputFormat extends InputFormat<WbInputSplit,Text> {
 				// earlier splits, we must absorb all the rest into
 				// this last one: 
 				highSite = siteListEntries.get(siteListEntries.size() - 1);
-				numPagesCurrSplit = highSite.accumulatedPages - accumulatedNumPagesPrevSplit;
+				int pagesStillToGet = distributorContact.getNumPagesWanted() - accumulatedNumPagesPrevSplit;
+				numPagesCurrSplit = Math.min(highSite.accumulatedPages - accumulatedNumPagesPrevSplit, pagesStillToGet);
 			} else {
 				highSite = siteListEntries.get(splitSeamIndices[i]);
-				numPagesCurrSplit = highSite.accumulatedPages - accumulatedNumPagesPrevSplit;	//
+				numPagesCurrSplit = highSite.accumulatedPages - accumulatedNumPagesPrevSplit;
 			}
 			WbInputSplit oneSplit = new WbInputSplit(lowSite.site, 
 													 highSite.site,
