@@ -44,6 +44,14 @@ for PIG_SCRIPT_NAME; do true; done
 PIG_COMMAND="-param USER_CONTRIB=$PIG_USER_JAR_DIR"
 PIG_COMMAND="${PIG_COMMAND} -param PIG_HOME=$PIG_HOME"
 
+# Did user include a excecution environment command? 
+#    ==> first two args are -x local or -x mapreduce:
+if [ $1 == "-x" ]
+then
+	PIG_COMMAND="-x $2 ${PIG_COMMAND}"
+	shift 2
+fi	
+
 # For each argument, other than the script name,
 # we pre-pend '-param', which is how Pig expects
 # paramters to be passed in. Example:
@@ -71,5 +79,7 @@ PIG_COMMAND="${PIG_COMMAND} ${PIG_SCRIPT_NAME}"
 # -f: the Pig script file to execute
 # -p: properties file to use:
 
+#echo "$PIG_HOME/bin/pig -Dpig.usenewlogicalplan=false -v -logfile Logs ${PIG_COMMAND}"
+
 /usr/bin/time --format="Runtime (m:ss.millisec): %E" \
-   $PIG_HOME/bin/pig -Dpig.usenewlogicalplan=false -v -logfile Logs ${PIG_COMMAND}
+	$PIG_HOME/bin/pig -Dpig.usenewlogicalplan=false -v -logfile Logs ${PIG_COMMAND}   

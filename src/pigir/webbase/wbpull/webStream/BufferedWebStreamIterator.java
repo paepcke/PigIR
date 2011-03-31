@@ -12,7 +12,9 @@ import java.util.Iterator;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.zip.InflaterInputStream;
 
+import org.apache.hadoop.mapreduce.Counter;
 import org.apache.log4j.Logger;
+import org.apache.pig.tools.pigstats.PigStatusReporter;
 
 import pigir.Common;
 import pigir.webbase.Constants;
@@ -34,6 +36,13 @@ public class BufferedWebStreamIterator extends WebStream implements Iterator<WbR
 	private int nextReporting = Constants.WB_PAGE_LOAD_REPORT_GRANULARITY;
 	
 	private Logger logger = null;
+	
+	protected static enum RecordCounters {
+		PAGES_LOADED
+	};
+	protected PigStatusReporter reporter = null;
+	protected Counter recordCounter = null;
+
 	private boolean streamCompressed = false;
 	
 	/*-----------------------------------------------------
@@ -48,6 +57,13 @@ public class BufferedWebStreamIterator extends WebStream implements Iterator<WbR
 		super(machineName, distribDemonPort, totalNumPages);
 
 		logger = WbRecordReader.getLogger();
+		reporter = PigStatusReporter.getInstance();
+		if (reporter != null) {
+			recordCounter = reporter.getCounter(RecordCounters.PAGES_LOADED);
+		}
+		else {
+			logger.warn("Could not obtain a Web page counter.");
+		}
 
 		Socket distributorDemonSocket = Common.getSocket(machineName, 
 														 distribDemonPort, 
@@ -330,9 +346,18 @@ public class BufferedWebStreamIterator extends WebStream implements Iterator<WbR
 			}
 		}
 		if (totalNumPagesRetrieved > nextReporting) {
-			logger.info("Total of " + totalNumPagesRetrieved + "Web pages retrieved from " + machineName);
+			String progressMsg = "Total of " + totalNumPagesRetrieved + "Web pages retrieved from " + machineName; 
+			logger.info(progressMsg);
+			if (reporter != null) {
+				reporter.setStatus(progressMsg);
+			}
 			nextReporting = totalNumPagesRetrieved + Constants.WB_PAGE_LOAD_REPORT_GRANULARITY;
 		}
+		
+		if (recordCounter != null) {
+			recordCounter.increment(numPagesThisRound);
+		}	
+		
 		return numPagesThisRound;
 	}
 	

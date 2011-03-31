@@ -36,7 +36,9 @@ import org.apache.pig.tools.pigstats.PigStatusReporter;
  * </ul>
 
  * <b>Output:</b><br>  
- * Bag of tuples structured like this: {@code (word,docid,wordPosition)}
+ * Bag of tuples structured like this: {@code (docID), (token1,docid,tokenPosition1), (token2,docid,tokenPosition2), ... }
+ * The docID is the same in all the result member tuples. The initial tuple with the docID is
+ * convenient for some callers.
  *
  * Usage scenario: indexing a Web site in a Map/Reduce context. 
  * This method is a mapper.
@@ -147,6 +149,9 @@ public class IndexOneDoc extends EvalFunc<DataBag> {
         
         int nextReporting = TOKENS_BETWEEN_REPORTING;
         
+        // The leading copy of the docID:
+        output.add(mTupleFactory.newTuple(docID));
+        
         for (int tokenPos=0; tokenPos<resArray.length; tokenPos++) {
         	
         	if (tokenPos > nextReporting) {
@@ -215,8 +220,14 @@ public class IndexOneDoc extends EvalFunc<DataBag> {
         	postingsSchema.add(new Schema.FieldSchema("docID", DataType.CHARARRAY));
         	postingsSchema.add(new Schema.FieldSchema("tokenPos", DataType.INTEGER));
         	
+        	Schema postingsTupleSchema = new Schema(new Schema.FieldSchema("postings", postingsSchema, DataType.TUPLE));
+        	
+        	Schema bagDocIDSchema = new Schema();
+        	bagDocIDSchema.add(new Schema.FieldSchema("theBagDocID", DataType.CHARARRAY));
+        	
         	Schema bagOfPostingsSchema = new Schema();
-        	bagOfPostingsSchema.add(new Schema.FieldSchema("postingsInDoc", postingsSchema, DataType.BAG));
+        	bagOfPostingsSchema.add(new Schema.FieldSchema("bagDocID", bagDocIDSchema, DataType.TUPLE));
+        	bagOfPostingsSchema.add(new Schema.FieldSchema("postingsInDocBag", postingsTupleSchema, DataType.BAG));
         	
             return bagOfPostingsSchema;
         }catch (Exception e){
@@ -264,16 +275,4 @@ public class IndexOneDoc extends EvalFunc<DataBag> {
         
         return funcSpecs;
     }
-    
-/*	
-    @Override
-    public List<FuncSpec> getArgToFuncMapping() throws FrontendException {
-        List<FieldSchema> fields = new ArrayList<FieldSchema>(1);
-        fields.add(new FieldSchema(null, DataType.BAG));
-        FuncSpec funcSpec = new FuncSpec(this.getClass().getName(), new Schema(fields));
-        List<FuncSpec> funcSpecs = new ArrayList<FuncSpec>(1);
-        funcSpecs.add(funcSpec);
-        return funcSpecs;
-    }
-*/	
 }

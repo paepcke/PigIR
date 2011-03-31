@@ -1,4 +1,4 @@
-package pigir.pigudf.unittests;
+ package pigir.pigudf.unittests;
 
 import static org.junit.Assert.assertTrue;
 
@@ -25,21 +25,37 @@ public class TestIndexOneDoc {
 			pos = thePos;
 		}
 	}
+	
+	
+	/**
+	 * For each result from IndexOneDoc, verify that every tuple is correct.
+	 * 
+	 * @param result is a bag: {(docID), (token1,docID,token1Pos), (token2,docID,token2Pos), ...}. All docID are identical. 
+	 * @param groundTruth an array of Truth objects. Each object contains one token and its position. The objects are ordered as in the expected result.
+	 * @return true/false.
+	 */
 	private static boolean matchOutput(DataBag result, ArrayList<Truth> groundTruth) {
 
 		Iterator<Tuple> resultIt = result.iterator();
 		Iterator<Truth> truthIt  = groundTruth.iterator();
 		Tuple nextRes = null;
 		Truth nextTruth = null;
+		String bagDocID = null;
 
 		try {
 
+			if (result.size() == 0 && groundTruth.size() == 0)
+				return true;
+			
+			// Get the bag docid:
+			bagDocID = (String) resultIt.next().get(0);
+			
 			while (resultIt.hasNext()) {
 				if (! truthIt.hasNext())
 					return false;
 				nextRes   = resultIt.next();
 				nextTruth = truthIt.next();
-				if (!nextRes.get(0).equals(nextTruth.word) || !nextRes.get(2).equals(nextTruth.pos))
+				if (!nextRes.get(0).equals(nextTruth.word) || !nextRes.get(1).equals(bagDocID) || !nextRes.get(2).equals(nextTruth.pos))
 					return false;
 			}
 			if (truthIt.hasNext())
@@ -132,6 +148,7 @@ public class TestIndexOneDoc {
 				};
 			}));
 			
+			System.out.println("Output schema: " + func.outputSchema(null));
 			System.out.println("All tests passed.");
 		} catch (IOException e) {
 			e.printStackTrace();

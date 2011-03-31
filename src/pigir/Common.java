@@ -1,18 +1,23 @@
 package pigir;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.net.InetAddress;
 import java.net.Socket;
 import java.net.UnknownHostException;
 import java.util.Iterator;
 
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.mapreduce.TaskAttemptID;
 import org.apache.log4j.Logger;
 import org.apache.pig.PigServer;
 import org.apache.pig.backend.executionengine.ExecException;
 import org.apache.pig.data.DataBag;
 import org.apache.pig.data.Tuple;
 import org.apache.pig.impl.logicalLayer.schema.Schema;
+import org.apache.pig.impl.util.UDFContext;
 
 import pigir.webbase.Constants;
 import pigir.webbase.WbRecordReader;
@@ -246,5 +251,123 @@ public final class Common {
 				};
 		return InetAddress.getByAddress(ipBytes);
 	}
+
+	/*-----------------------------------------------------
+	| getTaskID
+	------------------------*/
+	
+	public static String getTaskID() {
+			Configuration conf = UDFContext.getUDFContext().getJobConf();
+			return conf.get("mapred.task.id");
+	}
+	
+	/*-----------------------------------------------------
+	| getTaskAttemptID
+	------------------------*/
+	
+	public static TaskAttemptID getTaskAttemptID() {
+		return TaskAttemptID.forName(getTaskID());
+	}
+	
+	/*-----------------------------------------------------
+	| getJobNum
+	------------------------*/
+	
+	public static int getJobNumber() {
+		TaskAttemptID id = TaskAttemptID.forName(getTaskID());
+		return id.getJobID().getId();
+	}
+
+	/*-----------------------------------------------------
+	| getTaskNum
+	------------------------*/
+	
+	public static int getTaskNumber() {
+		TaskAttemptID id = TaskAttemptID.forName(getTaskID());
+		return id.getTaskID().getId();
+	}
+	
+	/*-----------------------------------------------------
+	| getTaskAttemptNum
+	------------------------*/
+	
+	public static int getTaskAttemptNumber() {
+		TaskAttemptID id = TaskAttemptID.forName(getTaskID());
+		return id.getId();
+	}
+	
+	/*-----------------------------------------------------
+	| printUnixCommand
+	------------------------*/
+	
+	public static void printUnixCommand(String cmd) {
+        String s = null;
+
+        try {
+            
+            Process p = Runtime.getRuntime().exec(cmd);
+            
+            BufferedReader stdInput = new BufferedReader(new 
+                 InputStreamReader(p.getInputStream()));
+
+            BufferedReader stdError = new BufferedReader(new 
+                 InputStreamReader(p.getErrorStream()));
+
+            // read the output from the command
+            System.out.println("Here is the standard output of the command:\n");
+            while ((s = stdInput.readLine()) != null) {
+                System.out.println(s);
+            }
+            
+            // read any errors from the attempted command
+            System.out.println("Here is the standard error of the command (if any):\n");
+            while ((s = stdError.readLine()) != null) {
+                System.out.println(s);
+            }
+            
+            System.exit(0);
+        }
+        catch (IOException e) {
+            System.out.println("Exception happened - here's what I know: ");
+            e.printStackTrace();
+            System.exit(-1);
+        }
+    }
+	
+	/*-----------------------------------------------------
+	| runUnixCommand
+	------------------------*/
+	
+	public static String runUnixCommand(String cmd) {
+        String s = null;
+        String stdout = "";
+        String stderr = "";
+        
+        try {
+            
+            Process p = Runtime.getRuntime().exec(cmd);
+            
+            BufferedReader stdInput = new BufferedReader(new 
+                 InputStreamReader(p.getInputStream()));
+
+            BufferedReader stdError = new BufferedReader(new 
+                 InputStreamReader(p.getErrorStream()));
+
+            // read the output from the command
+            while ((s = stdInput.readLine()) != null) {
+                stdout += s;
+            }
+            
+            // read any errors from the attempted command
+            while ((s = stdError.readLine()) != null) {
+                stderr += s;
+            }
+        }
+        catch (IOException e) {
+            System.out.println("Exception happened - here's what I know: " + e.getMessage());
+            e.printStackTrace();
+        }
+        return stdout;
+    }
 	
 }

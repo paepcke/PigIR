@@ -8,3 +8,4 @@ Logs
 tmp
 pigrunwin
 *.log
+PigScripts/CommandLineUtils/Logs

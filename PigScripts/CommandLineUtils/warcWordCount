@@ -1,6 +1,6 @@
 #!/bin/bash
 
-usage="Usage: warcWordCount WARCDataSetFilePath [destFile] (Default output is stdout.)"
+usage="Usage: warcWordCount WARCDataSetFilePathOnHDFS [destFileOnHDFS] (Default output is stdout.)"
 
 if [ $# -lt 1 ] || [ $# -gt 2 ]
 then 
@@ -12,9 +12,10 @@ fi
 
 if [ $# -gt 1 ] 
 then
-  target=$2
+  OUTPUT_COMMAND="STORE wordCounts INTO '$2' USING org.apache.pig.piggybank.storage.CSVExcelStorage()"
 else
-  target=stdout
+  OUTPUT_COMMAND="DUMP wordCounts";
 fi
 
-./pigrun srcFile=$srcFile target=$target warcWordCount.pig
+pigrun srcFile=$srcFile $HOME/PigScripts/CommandLineUtils/warcWordCount.pig
+

@@ -18,7 +18,8 @@ class QuickTests {
 	public QuickTests() {
 		try {
 			props.setProperty("pig.usenewlogicalplan", "false");
-			pserver = new PigServer(ExecType.MAPREDUCE, props);
+			//pserver = new PigServer(ExecType.MAPREDUCE, props);
+			pserver = new PigServer(ExecType.LOCAL, props);
 		} catch (ExecException e) {
 			e.printStackTrace();
 		}
@@ -57,37 +58,49 @@ class QuickTests {
 			pserver.registerJar("contrib/PigIR.jar");
 
 			pserver.registerQuery(
-					"docs = LOAD 'gov-03-2008:11' " +
+					//"docs = LOAD 'gov-03-2008:11' " +               // Led to strange errors in fillBuffer: unknown compression
+					"docs = LOAD 'gov-03-2009:11' " +
 					"USING pigir.webbase.WebBaseLoader() " +
+
 					"AS (url:chararray, " +
 					"	 date:chararray, " +
 					"	 pageSize:int, " +
 					"	 position:int, " +
 					"	 docidInCrawl:int, " +
-					"	 httpHeader:chararray, " +
+					"	 httpHeader, " +
 					"	 content:chararray);"
+ 
+//					";"
 			);
+
  			pserver.registerQuery(
 					"rawIndex = FOREACH docs GENERATE " + 
 					"pigir.pigudf.IndexOneDoc(pigir.pigudf.GetLUID(), content);"
 			);
+ 			
+ 			pserver.registerQuery(
+ 					//"B = FOREACH rawIndex GENERATE pigir.pigudf.Peek(*);"
+ 					"B = FOREACH docs GENERATE pigir.pigudf.Peek(*);"
+ 			);
 
 			pserver.registerQuery(
 					"flatRawIndex = FOREACH rawIndex GENERATE flatten($0);"
 			);
 			
-			pserver.dumpSchema("rawIndex");
-			pserver.dumpSchema("flatRawIndex");
-			
+			//pserver.dumpSchema("rawIndex");
+			//pserver.dumpSchema("flatRawIndex");
+
 			pserver.registerQuery(
 					//"index = ORDER flatRawIndex BY token ASC, docID ASC PARALLEL 5;" 
 					//"index = ORDER flatRawIndex BY token ASC, docID ASC;" 
 					//"index = ORDER flatRawIndex BY postingsInDoc::token;"
 					"index = ORDER flatRawIndex BY $0;"
 			);
-
-			Common.print(pserver, "docs");
-			//Common.print(pserver, "index");
+			
+			//Common.print(pserver, "docs");
+			Common.print(pserver, "B");
+			Common.print(pserver, "index");
+			//Common.print(pserver, "flatRawIndex");
 			/*
 			pserver.registerQuery(
 					//"STORE index INTO 'tmp/fivePages.csv' " +
@@ -110,16 +123,20 @@ class QuickTests {
 			pserver.registerJar("contrib/PigIR.jar");
 			
 			pserver.registerQuery(
-					"A = LOAD 'tmp/fivePages.csv' " +
+					//"A = LOAD 'tmp/fivePages.csv' " +
+					"A = LOAD '/user/paepcke/Datasets/triplets.csv' " +
 					"		USING PigStorage(',') " +
 					"       AS (token:chararray, docID:chararray, tokenPos:int);"
 			);
-			
+
 			pserver.registerQuery(
 					"B = ORDER A BY $0;"
 			);
 			
+			pserver.dumpSchema("A");
+			
 			Common.print(pserver, "B");
+			//Common.print(pserver, "A");
 			
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -149,8 +166,12 @@ class QuickTests {
 	
 	public static void main(String[] args) {
 		//new QuickTests().doTests();
-		new QuickTests().doTests1();
+		//new QuickTests().doTests1();
 		//new QuickTests().doTests2();
 		//new QuickTests().doTests3();
+		String location = "wb://gov-03-2006";
+		System.out.println("Before:" + location);
+		location = location.substring("wb://".length());
+		System.out.println("After:" + location);
 	}
  }

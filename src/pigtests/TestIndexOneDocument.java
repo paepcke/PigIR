@@ -36,7 +36,7 @@ public class TestIndexOneDocument {
 			pserver.registerJar("contrib/PigIR.jar");
 
 			pserver.registerQuery(
-					"docs = LOAD '2006-08:2' " +    // Gary test
+					"docs = LOAD 'gov-03-2008' " +    // Gary test
 					"USING pigir.webbase.WebBaseLoader() " +
 					"AS (url:chararray, " +
 					"	 date:chararray, " +
@@ -57,6 +57,7 @@ public class TestIndexOneDocument {
 		try {
 			props.setProperty("pig.usenewlogicalplan", "false");
 			pserver = new PigServer(ExecType.MAPREDUCE, props);
+			//pserver = new PigServer(ExecType.LOCAL, props);
 
 			Map<String, String> env = System.getenv();
 			URI piggybankPath = new File(env.get("PIG_HOME"),
@@ -66,7 +67,7 @@ public class TestIndexOneDocument {
 
 			pserver.registerQuery(
 					//"docs = LOAD '2006-08:2' " +    // Gary test
-					"docs = LOAD 'gov-03-2011:30000' " +
+					"docs = LOAD 'gov-03-2008:2' " +
 					"USING pigir.webbase.WebBaseLoader() " +
 					"AS (url:chararray, " +
 					"	 date:chararray, " +
@@ -78,10 +79,16 @@ public class TestIndexOneDocument {
 			);
 			//Common.print(pserver, "docs");
 			pserver.registerQuery(
-					"rawIndex = FOREACH docs GENERATE" +
+					"wordIndexTuple = FOREACH docs GENERATE" +
 					"           pigir.pigudf.IndexOneDoc(pigir.pigudf.GetLUID(), content);"
 			);
 
+			pserver.registerQuery(
+					"flatWordIndexTuple = FOREACH wordIndexTuple GENERATE flatten(wordIndexTuple.$0);"
+			);
+			Common.print(pserver, "flatWordIndexTuple");
+
+/*			
 			pserver.registerQuery(
 					"flatRawIndex = FOREACH rawIndex GENERATE flatten($0) AS (token:chararray, docID:chararray, tokenPos:int);"
 			);
@@ -96,7 +103,7 @@ public class TestIndexOneDocument {
 					//"STORE flatRawIndex INTO 'Datasets/gov-03-2011-wwwStateGov-30000Pages-index.csv' " +
                         "USING PigStorage(',');"
 			);	
-			
+*/			
 		} catch (Exception e) {
 			e.printStackTrace();
 		}

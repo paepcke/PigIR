@@ -30,7 +30,6 @@ import pigir.warc.WarcRecord;
 public class WebBaseLoader extends LoadFunc implements LoadPushDown {
 
 	public final Logger logger = Logger.getLogger(getClass().getName());
-	
 	private final String usage = "LOAD crawlName[colon-separated numPages, startSite, endSite]. Ex: LOAD 'foo:10' or LOAD 'foo:10:www.adobe.com' or LOAD 'foo:::zookeeper.com'";
 	
 	private MultiTypeProperties wbJobProperties = 
@@ -71,19 +70,20 @@ public class WebBaseLoader extends LoadFunc implements LoadPushDown {
      *    LOAD 'foo' USING...
      * We expect location to be a colon-separated pair <crawlName>:<crawlType>.
      * 
-     * Pig insists that what is returned looks like an absolute path, even
-     * though we are not dealing with files in this loader. Whatever we return
-     * will later be passed to setLocation(); Here we just split the crawl name
-     * from the crawl type and remember those values.
+     * Pig insists that what is returned either looks like legal path in the
+     * HDFS, or in the local file system. Or we can indicate that this is
+     * a special file system. That's what we do: wb://<crawlSpec>
+     * Whatever we return will later be passed to setLocation(); 
      *  
-     * @param crawlNameType Example: LOAD 'crawled_hosts.gov-12-2009.tx:text' ...;
+     * @param location is the string the user passed to the Pig LOAD command.
+     * @param current directory as far as Hadoop is concerned. 
      */
     
     @Override
     public String relativeToAbsolutePath(String location, Path curDir) 
     throws IOException {      
 
-    	return "/" + location;
+    	return "wb://" + location;
     }   
  
 	/*-----------------------------------------------------
@@ -242,10 +242,11 @@ public class WebBaseLoader extends LoadFunc implements LoadPushDown {
 	@Override
 	public void setLocation(String location, Job theJob) throws IOException {
 		
-		// Get rid of the '/'
-		location = location.substring(1);
+		// Get rid of the 'wb://'
+		location = location.substring("wb://".length());
     	
 		loadCommand = new CommandLineSpec(location);
+		
 		// Set the job configuration to know that the proper
 		// InputFormat subclass to use is our WbInputFormat.class.
 		// Else the default PigInputFormat is used, which assumes
@@ -337,12 +338,18 @@ public class WebBaseLoader extends LoadFunc implements LoadPushDown {
 	 * Given the argument to the Pig LOAD command, tease out the
 	 * components, and initialize the relevant instance variables.
 	 * Examples: LOAD '2003-06:2:www.hp.com:www.ssa.gov' AS ...
+	 * The method relativeToAbsolutePath() prepended 'wb://', so
+	 * we need to ignore that 
 	 * 
-	 * @param loadCommandArg <crawlName>[:<numPages>[:<startSite>[:<endSite]]].
+	 * @param loadCommandArg wb://<crawlName>[:<numPages>[:<startSite>[:<endSite]]].
 	 * Default when <numPages> is absent: all.
 	 * @throws IOException
 	 */
 	private void parseCrawlSpec(String loadCommandArg) throws IOException {
+		
+		
+		if (loadCommandArg.startsWith("wb://"))
+			loadCommandArg = loadCommandArg.substring("wb://".length());
 		
 		String[] loadCommandPieces = loadCommandArg.split(":");
 		

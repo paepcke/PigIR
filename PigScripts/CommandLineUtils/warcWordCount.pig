@@ -12,7 +12,9 @@
    
       warcWordCount <srcFile> [<target>]
    
-   where <target> defaults to stdout.
+   where <target> defaults to stdout, but may be an HDFS target file. 
+   SrcFile is also on HDFS.
+
    Examples:
    
       warcWordCount /user/me/foo.warc
@@ -38,7 +40,8 @@
       
 */       
 
-%default TARGET 'stdout';
+%declare OUTPUT_COMMAND `echo ${OUTPUT_COMMAND}`;
+%default OUTPUT_COMMAND 'DUMP wordCounts';
 
 /* $PIG_HOME and $USER_CONTRIB are assumed to be passed in
    via -param command line parameters. Using pigrun to 
@@ -65,10 +68,5 @@ strippedGroupedWords = GROUP strippedWords BY $0;
 
 wordCounts = FOREACH strippedGroupedWords GENERATE $0,COUNT($1);
 
--- docsCulled = LIMIT strippedGrouped 3;
-
---dump wordCounts;
-STORE wordCounts INTO '/user/paepcke/Datasets/stateDep03_2007.csv' USING pigir.pigudf.CSVExcelStorage();
-
---($target == "stdout" ? dump wordCounts : store $target)
+$OUTPUT_COMMAND;
 

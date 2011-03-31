@@ -102,3 +102,40 @@ Caused by: java.io.IOException: No FileSystem for scheme: E
 	at org.apache.pig.impl.io.FileLocalizer.fetchFile(FileLocalizer.java:762)
 	... 8 more
 ================================================================================
+Error before Pig is launched
+----------------------------
+ERROR 101: Local file '/warcWordCount.pig' does not exist.
+
+org.apache.pig.backend.executionengine.ExecException: ERROR 101: Local file '/warcWordCount.pig' does not exist.
+	at org.apache.pig.impl.io.FileLocalizer.fetchFile(FileLocalizer.java:750)
+	at org.apache.pig.Main.run(Main.java:474)
+	at org.apache.pig.Main.main(Main.java:107)
+================================================================================
+Error before Pig is launched
+----------------------------
+ERROR 2998: Unhandled internal error. Lexical error at line 1, column 21.  Encountered: <EOF> after : "\'DUMP"
+
+org.apache.pig.tools.parameters.TokenMgrError: Lexical error at line 1, column 21.  Encountered: <EOF> after : "\'DUMP"
+	at org.apache.pig.tools.parameters.ParamLoaderTokenManager.getNextToken(ParamLoaderTokenManager.java:444)
+	at org.apache.pig.tools.parameters.ParamLoader.jj_ntk(ParamLoader.java:207)
+	at org.apache.pig.tools.parameters.ParamLoader.Parse(ParamLoader.java:37)
+	at org.apache.pig.tools.parameters.ParameterSubstitutionPreprocessor.loadParamsFromCmdline(ParameterSubstitutionPreprocessor.java:144)
+	at org.apache.pig.tools.parameters.ParameterSubstitutionPreprocessor.genSubstitutedFile(ParameterSubstitutionPreprocessor.java:80)
+	at org.apache.pig.Main.runParamPreprocessor(Main.java:645)
+	at org.apache.pig.Main.run(Main.java:482)
+	at org.apache.pig.Main.main(Main.java:107)
+================================================================================
+Error before Pig is launched
+----------------------------
+ERROR 2998: Unhandled internal error. Lexical error at line 1, column 21.  Encountered: <EOF> after : "\"DUMP"
+
+org.apache.pig.tools.parameters.TokenMgrError: Lexical error at line 1, column 21.  Encountered: <EOF> after : "\"DUMP"
+	at org.apache.pig.tools.parameters.ParamLoaderTokenManager.getNextToken(ParamLoaderTokenManager.java:444)
+	at org.apache.pig.tools.parameters.ParamLoader.jj_ntk(ParamLoader.java:207)
+	at org.apache.pig.tools.parameters.ParamLoader.Parse(ParamLoader.java:37)
+	at org.apache.pig.tools.parameters.ParameterSubstitutionPreprocessor.loadParamsFromCmdline(ParameterSubstitutionPreprocessor.java:144)
+	at org.apache.pig.tools.parameters.ParameterSubstitutionPreprocessor.genSubstitutedFile(ParameterSubstitutionPreprocessor.java:80)
+	at org.apache.pig.Main.runParamPreprocessor(Main.java:645)
+	at org.apache.pig.Main.run(Main.java:482)
+	at org.apache.pig.Main.main(Main.java:107)
+================================================================================
