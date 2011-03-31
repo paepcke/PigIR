@@ -1,0 +1,21 @@
+#!/bin/bash
+
+usage="Usage: buildWebBaseIndex [-x {local | mapreduce}] <crawlName>[:numPages[:startSite[:endSite]]]"
+
+if [ $# -lt 1 ] || [ $# -gt 3 ]
+then 
+  echo ${usage}
+  exit
+else
+  # Hack to find last command line argument
+  # without shifting, and to assign it to CRAWL_SOURCE:
+  for CRAWL_SOURCE; do true; done
+fi
+
+# Let the following default in the buildWebBaseIndex.pig script:
+#    TARGET_DIR '/user/paepcke/webbase/Index';
+#    WORD_INDEX_FILE '${CRAWL_SOURCE}WordIndex';
+#    URL_INDEX_FILE '${CRAWL_SOURCE}URL';
+
+pigrun CRAWL_SOURCE=$CRAWL_SOURCE $HOME/PigScripts/CommandLineUtils/buildWebBaseIndex.pig
+
