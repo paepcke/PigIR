@@ -45,17 +45,15 @@
    the following env vars must be set:
    
        $CRAWL_SOURCE=crawl source, page numbers, start/stop sites as per examples above
-   	   $TARGET_DIR=directory to hold the two index files. Defaults to
-   	                   /user/paepcke/webbase/Index
-   	   $WORD_INDEX_FILE=file name for index of words->doc/position. Defaults to
-   	                   ${CRAWL_SOURCE}WordIndex
-       $URL_INDEX_FILE=file name for index of docID->URL. Defaults to
-       				   ${CRAWL_SOURCE}URLIndex
+	   $URL_MAP_STORE_COMMAND Pig STORE command for storing the docID-->URL index.
+	   		This is a hack, because Pig's concatenation of variables to strings isn't
+	   		working yet (at least up to Pig 0.9.0)
+	   		Example: STORE URLMap INTO '/home/doe/gov-03-2007_urlMap.idx' USING PigStorage;
+	   $INDEX_STORE_COMMAND: Pig STORE command for storing the index. Again,
+	   		this is a hack, because Pig's concatenation of variables to strings isn't
+	   		working yet (at least up to Pig 0.9.0)
+	   		Example: Example: STORE sortedPostings INTO '/home/doe/gov-03-2007_index.idx' USING PigStorage;
 */   
-
-%default TARGET_DIR '/user/paepcke/webbase/Index';
-%default WORD_INDEX_FILE '${CRAWL_SOURCE}WordIndex';
-%default URL_INDEX_FILE '${CRAWL_SOURCE}URL';
 
 REGISTER $PIG_HOME/contrib/piggybank/java/piggybank.jar;
 REGISTER $USER_CONTRIB/PigIR.jar;
@@ -114,12 +112,11 @@ URLMap = FOREACH URLMapPrep GENERATE
 
 -- We now have schema URLMap: {docID: chararray, url: chararray}
 -- Example for two documents:
---    (38700_0,6,http://access.usgs.gov/robots.txt)
---    (38700_1,777,http://access.usgs.gov/)
+--    (38700_0,http://access.usgs.gov/robots.txt)
+--    (38700_1,http://access.usgs.gov/)
 
-STORE URLMap INTO '$TARGET_DIR/$URL_INDEX_FILE'
-			 USING PigStorage; 
---			 USING org.apache.pig.piggybank.storage.CSVExcelStorage;
+-- Store the docID-->URL index: 
+$URL_MAP_STORE_COMMAND
 
 -- Now prepare the index itself:
 flatPostings = FOREACH indexPackages GENERATE flatten(postingsPackage);
@@ -150,6 +147,4 @@ oneColumnPostingsOnly = FILTER oneColumnPostings BY docID neq 'na';
 
 sortedPostings = ORDER oneColumnPostingsOnly BY token PARALLEL 5;
 
-STORE sortedPostings INTO '$TARGET_DIR/$WORD_INDEX_FILE'
-					 USING PigStorage; 
---					 USING org.apache.pig.piggybank.storage.CSVExcelStorage;
+$INDEX_STORE_COMMAND

@@ -1,15 +1,94 @@
 #!/bin/bash
 
-usage="Usage: buildWebBaseIndex [-x {local | mapreduce}] <crawlName>[:numPages[:startSite[:endSite]]]"
+# Script that runs the PigScript buildWebBaseIndex.pig with
+# command line paramters.
 
-if [ $# -lt 1 ] || [ $# -gt 3 ]
-then 
-  echo ${usage}
-  exit
+USAGE="Usage: buildWebBaseIndex [{-h | --help}] \n
+                         \t\t\t [{-v | --version}] \n
+                         \t\t\t [{-x | --execmode] {local | mapreduce}] \n
+                         \t\t\t [{-d | --destdir} <destinationDirectory>] \n
+                         \t\t\t [{-n | --numpages} <numberOfPages>] \n
+                         \t\t\t [{-s | --startsite} <startSite>] \n
+                         \t\t\t [{-e | --endsite} <endSite>] \n
+                         \t\t\t <crawlName> \n
+    \tExample: buildWebBaseIndex -d /user/doe/myindex --startsite www.emus.com gov-04-2007 \n
+    \tExample: buildWebBaseIndex --numpages 2 gov-04-2007"
+
+
+PROGVERSION=1.0
+EXEC_MODE=mapreduce
+DEST_DIR=`pwd`
+NUM_PAGES=""
+START_SITE=""
+END_SITE=""
+
+SHORTOPTS="hvx:d:n:s:e:"
+LONGOPTS="help,version,execmode:,destdir:,numpages:,startsite:,endsite:"
+
+ARGS=`getopt -s bash --options=$SHORTOPTS  \
+  --longoptions=$LONGOPTS --name=$PROGNAME -- "$@"`
+
+eval set -- "$ARGS"
+
+while true; do
+   case $1 in
+      -h|--help)
+         echo -e $USAGE
+         exit 0
+         ;;
+      -v|--version)
+         echo "$PROGVERSION"
+	 exit 0
+         ;;
+      -x|--execmode)
+         shift
+         EXEC_MODE=$1
+         ;;
+      -d|--destdir)
+         shift
+         DEST_DIR=$1
+         ;;
+      -n|--numpages)
+         shift
+         NUM_PAGES=$1
+         ;;
+      -s|--startsite)
+         shift
+         START_SITE=$1
+         ;;
+      -e|--endsite)
+         shift
+         END_SITE=$1
+         ;;
+      --)
+         shift
+         break
+         ;;
+      *)
+         shift
+         break
+         ;;
+   esac
+   # Throw away the '--' that's added by getopt.
+   # The -- case above doesn't get hit when user
+   # forgets to put in any required args.
+   shift
+done
+
+# echo "execMode : '$EXEC_MODE'"
+# echo "destDir  : '$DEST_DIR'"
+# echo "numPages : '$NUM_PAGES'"
+# echo "startSite: '$START_SITE'"
+# echo "endSite  : '$END_SITE'"
+# echo "crawl: '$1'"
+
+if [ $# == 0 ] 
+then
+    echo "Missing crawl name."
+    echo -e $USAGE
+    exit -1
 else
-  # Hack to find last command line argument
-  # without shifting, and to assign it to CRAWL_SOURCE:
-  for CRAWL_SOURCE; do true; done
+    CRAWL_NAME=$1
 fi
 
 # If we are running in cygwin, we have to convert the 
@@ -21,15 +100,20 @@ then
   export SCRIPT_DIR=`cygpath --mixed ${SCRIPT_DIR}`
 fi
 
-# Let the following default in the buildWebBaseIndex.pig script:
-#    TARGET_DIR '/user/paepcke/webbase/Index';
-#    WORD_INDEX_FILE '${CRAWL_SOURCE}WordIndex';
-#    URL_INDEX_FILE '${CRAWL_SOURCE}URL';
-
+# Build the Pig STORE commands for storing the docID-->URL
+# mapping, and the index itself:
 URL_MAP_STORE_COMMAND="STORE URLMap INTO '${DEST_DIR}/${CRAWL_NAME}_urlMap.idx' USING PigStorage;"
-INDEX_STORE_COMMAND="
-STORE URLMap INTO '${DEST_DIR}/${CRAWL_NAME}_urlMap.idx' USING PigStorage;"
+INDEX_STORE_COMMAND="STORE sortedPostings INTO '${TARGET_DIR}/${CRAWL_NAME}_index.idx' USING PigStorage;"
 
+# The crawl source is expected in the form: crawlName:numPages:startSite:endSite,
+# though numPages, startSite, and endSite are all optional. Rather than 
+# doing lots of if statements, we just always include the three, even
+# if they are empty. If all three are empty that will be crawlName:::,
+# which is fine:
 
-pigrun CRAWL_SOURCE=$CRAWL_SOURCE ${SCRIPT_DIR}/buildWebBaseIndex.pig
+CRAWL_SOURCE=${CRAWL_NAME}:${NUM_PAGES}:${START_SITE}:${END_SITE}
 
+pigrun -x $EXEC_MODE URL_MAP_STORE_COMMAND=$URL_MAP_STORE_COMMAND \
+       INDEX_STORE_COMMAND=$INDEX_STORE_COMMAND \
+       CRAWL_SOURCE=$CRAWL_SOURCE \
+       ${SCRIPT_DIR}/buildWebBaseIndex.pig
