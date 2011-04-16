@@ -12,10 +12,24 @@ else
   for CRAWL_SOURCE; do true; done
 fi
 
+# If we are running in cygwin, we have to convert the 
+# path to the Pig script into a Windows path:
+
+export SCRIPT_DIR=`dirname $0`
+if [[ `uname` == *CYGWIN* ]]
+then 
+  export SCRIPT_DIR=`cygpath --mixed ${SCRIPT_DIR}`
+fi
+
 # Let the following default in the buildWebBaseIndex.pig script:
 #    TARGET_DIR '/user/paepcke/webbase/Index';
 #    WORD_INDEX_FILE '${CRAWL_SOURCE}WordIndex';
 #    URL_INDEX_FILE '${CRAWL_SOURCE}URL';
 
-pigrun CRAWL_SOURCE=$CRAWL_SOURCE $HOME/PigScripts/CommandLineUtils/buildWebBaseIndex.pig
+URL_MAP_STORE_COMMAND="STORE URLMap INTO '${DEST_DIR}/${CRAWL_NAME}_urlMap.idx' USING PigStorage;"
+INDEX_STORE_COMMAND="
+STORE URLMap INTO '${DEST_DIR}/${CRAWL_NAME}_urlMap.idx' USING PigStorage;"
+
+
+pigrun CRAWL_SOURCE=$CRAWL_SOURCE ${SCRIPT_DIR}/buildWebBaseIndex.pig
 

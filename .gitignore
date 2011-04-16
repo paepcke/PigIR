@@ -9,3 +9,9 @@ tmp
 pigrunwin
 *.log
 PigScripts/CommandLineUtils/Logs
+PigScripts/MiscScripts/QuickTests.pig
+PigScripts/orderError.pig
+PigScripts/orderError.pig~
+PigScripts/orderErrorLocal.pig
+PigScripts/orderErrorLocal.pig~
+ilc0

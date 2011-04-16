@@ -38,8 +38,6 @@
       * $PIG_HOME points to root of Pig installation
       * $USER_CONTRIB points to location of PigIR.jar
       * $USER_CONTRIB points to location of jsoup-1.5.2.jar
-      
-
 
    $PIG_HOME and $USER_CONTRIB are assumed to be passed in
    via -param command line parameters. The pigrun script that
@@ -53,7 +51,6 @@
    	                   ${CRAWL_SOURCE}WordIndex
        $URL_INDEX_FILE=file name for index of docID->URL. Defaults to
        				   ${CRAWL_SOURCE}URLIndex
-   	             
 */   
 
 %default TARGET_DIR '/user/paepcke/webbase/Index';
@@ -65,53 +62,94 @@ REGISTER $USER_CONTRIB/PigIR.jar;
 REGISTER $USER_CONTRIB/jsoup-1.5.2.jar
 
 docs = LOAD '$CRAWL_SOURCE'
-USING pigir.webbase.WebBaseLoader()
-AS (url:chararray,
-	 date:chararray,
-	 pageSize:int,
-	 position:int,
-	 docidInCrawl:int,
-	 httpHeader,
-	 content:chararray);
+	USING pigir.webbase.WebBaseLoader()
+	AS (url:chararray,
+	    date:chararray,
+	 	pageSize:int,
+	 	position:int,
+	 	docIDInCrawl:int,
+	 	httpHeader,
+	 	content:chararray);
 
-/*
-rawFusedIndices = FOREACH docs {
-  			         wordIndexTuple = pigir.pigudf.IndexOneDoc(pigir.pigudf.GetLUID(), content);
-					 --res = pigir.pigudf.First(wordIndexTuple);
-					 --GENERATE url, wordIndexTuple.postingsInDoc;
-					 --GENERATE url, wordIndexTuple.bagDocID.theBagDocID;
-					 DESCRIBE wordIndexTuple;
-					 GENERATE url;
-   		   	      };	
-*/
+indexPackages = FOREACH docs GENERATE 
+						url, 
+						date, 
+						pageSize, 
+						pigir.pigudf.IndexOneDoc(pigir.pigudf.GetLUID(), content) AS postingsPackage; 
 
-wordIndexTuple = FOREACH docs GENERATE pigir.pigudf.IndexOneDoc(pigir.pigudf.GetLUID(), content); 
-DESCRIBE wordIndexTuple;
---docIDs = FOREACH wordIndexTuple GENERATE flatten(wordIndexTuple);
---DUMP docIDs;
---flatWordIndexTuple = FOREACH wordIndexTuple GENERATE flatten($0.$1); --(20900_1)all single-tuple w/ docID
---flatWordIndexTuple = FOREACH wordIndexTuple GENERATE flatten($0);    --cannot cast bag-->tuple      
---flatWordIndexTuple = FOREACH wordIndexTuple GENERATE flatten($0.$0); --cannot cast bag-->tuple      
---flatWordIndexTuple = FOREACH wordIndexTuple GENERATE $0; --cannot cast bag-->tuple
---flatWordIndexTuple = flatten(wordIndexTuple);  -- illegal
---flatWordIndexTuple = FOREACH wordIndexTuple GENERATE bagDocID; -- invalid alias
---flatWordIndexTuple = FOREACH wordIndexTuple GENERATE flatten(wordIndexTuple); --scalars can only 
- 		     	     		    	     			        --be used with projection 
-flatWordIndexTuple = FOREACH wordIndexTuple GENERATE flatten(wordIndexTuple.$0);
-   --Caused by: java.lang.IllegalArgumentException: Pathname /gov-03-2008:2 from /gov-03-2008:2 
-   --is not a valid DFS filename.
-   --     at org.apache.hadoop.hdfs.DistributedFileSystem.getPathName(DistributedFileSystem.java:158)
-   --     at org.apache.hadoop.hdfs.DistributedFileSystem.getFileStatus(DistributedFileSystem.java:453)
-   --     at org.apache.hadoop.fs.FileSystem.exists(FileSystem.java:648)
+-- Now we have:
+--    indexPackages: {url:chararray,
+--					  date: chararray,
+--					  pageSize: int,
+--					  postingsPackage: (postings: (token: chararray,docID: chararray,tokenPos: int))} 
+--
+-- Two example data rows, each corresponding to one Web page:
+--    (http://access.usgs.gov/robots.txt,
+--	   Mon Mar  3 13:55:50 2008,
+--     239,
+--     ((38400_0,na,6),(User,38400_0,0),(agent,38400_0,1),...(...)))
+--    (http://access.usgs.gov/,
+--     Mon Mar  3 13:56:03 2008,
+--     5946,
+--     ((38400_1,na,777),(HTML,38400_1,0),...(...)))
+--
+-- The first tuple in each postingsPackage has 'na' for the docID slot. This tuple summarizes
+-- the rest of the token/docID/tokenPos triplets. Its content is docID/'na'/numTokens for
+-- this row's document.  
+--
+-- We now first build an table that maps each internally used docID
+-- to the document's URL:
 
-DUMP flatWordIndexTuple;
+URLMapPrep = FOREACH indexPackages GENERATE url, flatten(postingsPackage);
 
+-- We now have this schema for each row:
+-- URLMapPrep: {url: chararray,
+--  	   	    postingsPackage::postings: (token: chararray,docID: chararray,tokenPos: int)}
+-- Data example row:
+--  (http://access.usgs.gov/robots.txt,
+--  (38600_0,na,6),(User,38600_0,0),(agent,38600_0,1),(  ),...(  )))
+--
+URLMap = FOREACH URLMapPrep GENERATE 
+			postings.docID, url;  
 
---DUMP wordIndexTuple;
+-- We now have schema URLMap: {docID: chararray, url: chararray}
+-- Example for two documents:
+--    (38700_0,6,http://access.usgs.gov/robots.txt)
+--    (38700_1,777,http://access.usgs.gov/)
 
+STORE URLMap INTO '$TARGET_DIR/$URL_INDEX_FILE'
+			 USING PigStorage; 
+--			 USING org.apache.pig.piggybank.storage.CSVExcelStorage;
 
---flatRawIndex = FOREACH rawIndex GENERATE flatten($0);
-			
---index = ORDER flatRawIndex BY $0;
+-- Now prepare the index itself:
+flatPostings = FOREACH indexPackages GENERATE flatten(postingsPackage);
 
---DUMP rawFusedIndices;
+-- Here we have schema:
+--    flatPostings: {postingsPackage::postings: (token: chararray,docID: chararray,tokenPos: int)}
+-- Data examples: 
+--    ((39100_0,na,6),(User,39100_0,0),(agent,39100_0,1),(  ),...(  ))
+--    ((39100_1,na,777),(HTML,39100_1,0),(HEAD,39100_1,1),(  ),... (   ),))
+
+oneColumnNestedPostings = FOREACH flatPostings GENERATE FLATTEN(TOBAG(*));
+
+-- Now we have ((token,docID,tokenPos))  
+--             ((token,docID,tokenPos))
+
+oneColumnPostings = FOREACH oneColumnNestedPostings 
+					GENERATE FLATTEN($0) 
+					AS (token:chararray, docID:chararray, tokenPos:chararray);
+					
+-- Now finally: we have:(token,docID,tokenPos)  
+-- 		         	    (token,docID,tokenPos)
+
+-- Take out the summary tuples; the (docID,'na',numTokens) that
+-- were in each row:
+oneColumnPostingsOnly = FILTER oneColumnPostings BY docID neq 'na';
+
+-- Order and save:
+
+sortedPostings = ORDER oneColumnPostingsOnly BY token PARALLEL 5;
+
+STORE sortedPostings INTO '$TARGET_DIR/$WORD_INDEX_FILE'
+					 USING PigStorage; 
+--					 USING org.apache.pig.piggybank.storage.CSVExcelStorage;

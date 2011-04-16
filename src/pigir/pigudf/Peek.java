@@ -8,12 +8,13 @@ import org.apache.pig.data.Tuple;
 
 import pigir.Common;
 
-public class Peek extends EvalFunc<String> {
+public class Peek extends EvalFunc<Tuple> {
 	protected final Logger logger = Logger.getLogger(getClass());
 	
-	public String exec(Tuple input) throws IOException {
+	public Tuple exec(Tuple input) throws IOException {
 		
 		logger.info("Whoami: " + Common.runUnixCommand("whoami"));
-		return "foo";
+		logger.info("Input tuple: '" + input + "'");
+		return input;
 	}
 }

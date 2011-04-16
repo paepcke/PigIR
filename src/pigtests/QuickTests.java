@@ -4,6 +4,8 @@ import java.io.File;
 import java.net.URI;
 import java.util.Map;
 import java.util.Properties;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.apache.pig.ExecType;
 import org.apache.pig.PigServer;
@@ -164,14 +166,29 @@ class QuickTests {
 		System.out.println("Res: '" + res + "'");
 	}
 	
+	public void doTests4() {
+		String html = "<body>" +
+		"<a href=\"#first\">got to first</a>" +
+		"<span>something else</span>" +
+		"<a href=\"#second\">got to second</a>" +
+		"</body>";
+
+		Pattern pattern = Pattern.compile("<a href=\"#(\\w+)\">([\\w\\s]+)</a>");
+		Matcher matcher = pattern.matcher(html);
+		while(matcher.find()){
+			System.out.println(matcher.group(2));
+		}
+	}
+	
 	public static void main(String[] args) {
 		//new QuickTests().doTests();
 		//new QuickTests().doTests1();
 		//new QuickTests().doTests2();
 		//new QuickTests().doTests3();
-		String location = "wb://gov-03-2006";
-		System.out.println("Before:" + location);
-		location = location.substring("wb://".length());
-		System.out.println("After:" + location);
+		//String location = "wb://gov-03-2006";
+		//System.out.println("Before:" + location);
+		//location = location.substring("wb://".length());
+		//System.out.println("After:" + location);
+		new QuickTests().doTests4();
 	}
  }

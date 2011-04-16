@@ -9,7 +9,6 @@ import org.apache.log4j.Logger;
 import org.apache.pig.EvalFunc;
 import org.apache.pig.FuncSpec;
 import org.apache.pig.data.BagFactory;
-import org.apache.pig.data.DataBag;
 import org.apache.pig.data.DataType;
 import org.apache.pig.data.Tuple;
 import org.apache.pig.data.TupleFactory;
@@ -36,9 +35,9 @@ import org.apache.pig.tools.pigstats.PigStatusReporter;
  * </ul>
 
  * <b>Output:</b><br>  
- * Bag of tuples structured like this: {@code (docID), (token1,docid,tokenPosition1), (token2,docid,tokenPosition2), ... }
- * The docID is the same in all the result member tuples. The initial tuple with the docID is
- * convenient for some callers.
+ *  	 Bag of tuples structured like this: {@code (docID,postingsCount), (token1,docid,tokenPosition1), (token2,docid,tokenPosition2), ... }
+ *  	 The docID is the same in all the result member tuples. The initial tuple with the docID is
+ *  	 convenient for some callers, as is the count of postings.
  *
  * Usage scenario: indexing a Web site in a Map/Reduce context. 
  * This method is a mapper.
@@ -48,7 +47,7 @@ import org.apache.pig.tools.pigstats.PigStatusReporter;
  * @author paepcke
  */
 
-public class IndexOneDoc extends EvalFunc<DataBag> {
+public class IndexOneDoc extends EvalFunc<Tuple> {
 	
 	private final int TOKENS_BETWEEN_REPORTING = 1000;
 	
@@ -82,9 +81,9 @@ public class IndexOneDoc extends EvalFunc<DataBag> {
     final String usage = "Expecting IndexOneDoc(String docID, " +
     		"String content, [Integer stopwordElim [,Integer preserveURL [,String regexp]]])";
 
-    public DataBag exec(Tuple input) throws IOException {
+    public Tuple exec(Tuple input) throws IOException {
     	
-    	DataBag output = mBagFactory.newDefaultBag();
+    	Tuple output = mTupleFactory.newTuple(); 
     	Tuple onePosting = null;
     	String splitRegexp = RegexpTokenize.getDefaultRegexp();
     	Boolean doStopwordEliminiation = true;
@@ -139,18 +138,18 @@ public class IndexOneDoc extends EvalFunc<DataBag> {
     				usage + ". Called with " + input);
         }
         
-        // Prepare output bag:
-        output = mBagFactory.newDefaultBag();
+        // Prepare output tuple: first will be a tuple with the 
+        // docID and the number of tokens, which we do not know yet:
+        output.append(mTupleFactory.newTuple());
+
         String[] resArray = docContent.split(splitRegexp);
         String token;
         urlIndex = 0;
         tokensToSkip = 0;
         numSkippedTokens = 0;
+        int numOfTokens = 0;
         
         int nextReporting = TOKENS_BETWEEN_REPORTING;
-        
-        // The leading copy of the docID:
-        output.add(mTupleFactory.newTuple(docID));
         
         for (int tokenPos=0; tokenPos<resArray.length; tokenPos++) {
         	
@@ -206,13 +205,20 @@ public class IndexOneDoc extends EvalFunc<DataBag> {
         	}
         	onePosting = mTupleFactory.newTuple();
         	onePosting.append(token);
+        	//onePosting.append(new DataByteArray(token.getBytes()));
         	onePosting.append(docID);
         	onePosting.append(tokenPos - numSkippedTokens);
-        	output.add(onePosting);
+        	output.append(onePosting);
+        	numOfTokens++;
         }
+        // We now have: ((),(token1,docID,tokenPos1),(token2,docID,tokenPos2),...).
+        // put docID and number of postings into that first, currently empty tuple:
+        ((Tuple) output.get(0)).append(docID);
+        ((Tuple) output.get(0)).append("na");
+        ((Tuple) output.get(0)).append(numOfTokens);
         return output;
     }
-    
+
 	public Schema outputSchema(Schema input) {
         try{
             Schema postingsSchema = new Schema();
@@ -220,21 +226,50 @@ public class IndexOneDoc extends EvalFunc<DataBag> {
         	postingsSchema.add(new Schema.FieldSchema("docID", DataType.CHARARRAY));
         	postingsSchema.add(new Schema.FieldSchema("tokenPos", DataType.INTEGER));
         	
-        	Schema postingsTupleSchema = new Schema(new Schema.FieldSchema("postings", postingsSchema, DataType.TUPLE));
+        	// Wrap these into a tuple:
+        	Schema tupleSchema = new Schema();
+        	tupleSchema.add(new Schema.FieldSchema("postings", postingsSchema, DataType.TUPLE));
         	
-        	Schema bagDocIDSchema = new Schema();
-        	bagDocIDSchema.add(new Schema.FieldSchema("theBagDocID", DataType.CHARARRAY));
+        	// And the outer result tuple:
+        	Schema resultSchema = new Schema();
+        	resultSchema.add(new Schema.FieldSchema("allPostings", tupleSchema, DataType.TUPLE));
         	
-        	Schema bagOfPostingsSchema = new Schema();
-        	bagOfPostingsSchema.add(new Schema.FieldSchema("bagDocID", bagDocIDSchema, DataType.TUPLE));
-        	bagOfPostingsSchema.add(new Schema.FieldSchema("postingsInDocBag", postingsTupleSchema, DataType.BAG));
-        	
-            return bagOfPostingsSchema;
+            return resultSchema;
         }catch (Exception e){
                 return null;
         }
     }    
-	
+    
+    /*
+	public Schema outputSchema(Schema input) {
+        try{
+            Schema postingsSchema = new Schema();
+        	postingsSchema.add(new Schema.FieldSchema("token", DataType.CHARARRAY));
+        	postingsSchema.add(new Schema.FieldSchema("docID", DataType.CHARARRAY));
+        	postingsSchema.add(new Schema.FieldSchema("tokenPos", DataType.INTEGER));
+        	
+        	// Schema of one posting:
+        	Schema postingsTupleSchema = new Schema(new Schema.FieldSchema("docPostings", postingsSchema, DataType.TUPLE));
+        	
+        	// Schema of the first result tuple, which is the docID and number of postings:
+        	Schema docIDSchemaAndPostingsCountSchema = new Schema();
+        	docIDSchemaAndPostingsCountSchema.add(new Schema.FieldSchema("postingsDocID", DataType.CHARARRAY));
+        	docIDSchemaAndPostingsCountSchema.add(new Schema.FieldSchema("postingsCount", DataType.INTEGER));
+        	
+        	// Finally, the outer result tuple that combines the summary (i.e. the docID/postingsCount) 
+        	// and the postings into one result tuple:
+        	Schema resultSchema = new Schema();
+        	resultSchema.add(new Schema.FieldSchema("summary", docIDSchemaAndPostingsCountSchema, DataType.TUPLE));
+        	//****?? resultSchema.add(new Schema.FieldSchema("postings", postingsTupleSchema, DataType.TUPLE));
+        	resultSchema.add(new Schema.FieldSchema("postings", postingsSchema, DataType.TUPLE));
+        	
+            return resultSchema;
+        }catch (Exception e){
+                return null;
+        }
+    }    
+	*/
+    
     @Override
     public List<FuncSpec> getArgToFuncMapping() throws FrontendException {
         List<FuncSpec> funcSpecs = new ArrayList<FuncSpec>();
@@ -264,7 +299,7 @@ public class IndexOneDoc extends EvalFunc<DataBag> {
         funcSpecs.add(funcSpecFourParms);
         
         // Call with five parms: docID, content, stopword control, urlpreservation, regexp for splits:
-        List<FieldSchema> fieldsFiveParms = new ArrayList<FieldSchema>(4);
+        List<FieldSchema> fieldsFiveParms = new ArrayList<FieldSchema>(5);
         fieldsFiveParms.add(new FieldSchema(null, DataType.CHARARRAY));  // docID
         fieldsFiveParms.add(new FieldSchema(null, DataType.CHARARRAY));  // content
         fieldsFiveParms.add(new FieldSchema(null, DataType.INTEGER));    // stopwords

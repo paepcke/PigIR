@@ -8,6 +8,7 @@ import java.net.InetAddress;
 import java.net.Socket;
 import java.net.UnknownHostException;
 import java.util.Iterator;
+import java.util.NoSuchElementException;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.mapreduce.TaskAttemptID;
@@ -370,4 +371,52 @@ public final class Common {
         return stdout;
     }
 	
+	/*-----------------------------------------------------
+	| getTupleIterator() 
+	------------------------*/
+	
+	public static Iterator<Object> getTupleIterator(Tuple theTuple) {
+		return (new Common()).new TupleIterator(theTuple);
+	}
+	
+	// ---------------------------------   Support Classes ---------------------------
+	
+	public class TupleIterator implements Iterator<Object> {
+		
+		Tuple theTuple = null;
+		int numObjsLeft = -1;
+		int nextColumnIndex = 0;
+
+		public TupleIterator(Tuple theTupleToIterate) {
+			theTuple = theTupleToIterate;
+			numObjsLeft = theTupleToIterate.size();
+		}
+		
+		@Override
+		public boolean hasNext() {
+			return numObjsLeft > 0;
+		}
+
+		@Override
+		public Object next() {
+			try {
+				numObjsLeft--;
+				return theTuple.get(nextColumnIndex++);
+			} catch (Exception e) {
+				String errMsg = "Tuple iterator: ";
+				if (theTuple.size() < 10)
+					errMsg += "Tuple " + theTuple + " only has " + theTuple.size() + " elements."; 
+				else
+					errMsg += "Tuple only has " + theTuple.size() + " elements.";
+						
+				throw new NoSuchElementException(errMsg);
+			}
+		}
+
+		@Override
+		public void remove() {
+			throw new UnsupportedOperationException("The TupleIterator does not support the optional remove() method.");
+			
+		}
+	}
 }

@@ -56,8 +56,8 @@ public class TestIndexOneDocument {
 	public void doTest1() {
 		try {
 			props.setProperty("pig.usenewlogicalplan", "false");
-			pserver = new PigServer(ExecType.MAPREDUCE, props);
-			//pserver = new PigServer(ExecType.LOCAL, props);
+			//pserver = new PigServer(ExecType.MAPREDUCE, props);
+			pserver = new PigServer(ExecType.LOCAL, props);
 
 			Map<String, String> env = System.getenv();
 			URI piggybankPath = new File(env.get("PIG_HOME"),
@@ -83,10 +83,43 @@ public class TestIndexOneDocument {
 					"           pigir.pigudf.IndexOneDoc(pigir.pigudf.GetLUID(), content);"
 			);
 
+			//pserver.registerQuery(
+			//		"STORE wordIndexTuple INTO '/user/paepcke/tmp/index.csv' USING PigStorage(',');"
+			//);
+			
+			/*
 			pserver.registerQuery(
-					"flatWordIndexTuple = FOREACH wordIndexTuple GENERATE flatten(wordIndexTuple.$0);"
+					//"wordIndexTuple = LOAD '/user/paepcke/tmp/index.csv' USING PigStorage(',');"
+					"wordIndexTuple = LOAD 'c:/users/paepcke/dldev/EclipseWorkspaces/PigIR/Datasets/index.csv' USING PigStorage(',');"
 			);
+			//Common.print(pserver, "wordIndexTuple");
+			*/
+
+			pserver.registerQuery(
+					"flatWordIndexTuple = FOREACH wordIndexTuple GENERATE flatten($0);"
+					//"flatWordIndexTuple = FOREACH wordIndexTuple GENERATE flatten(wordIndexTuple.$0);" // Scalar has more than one row in the output
+					//"flatWordIndexTuple = FOREACH wordIndexTuple GENERATE flatten(wordIndexTuple);"    // Scalars can only be used for projection
+					//"flatWordIndexTuple = FOREACH wordIndexTuple GENERATE wordIndexTuple.$0;"            //Scalar has more than one row in the output
+					//"flatWordIndexTuple = FOREACH wordIndexTuple GENERATE pigir.pigudf.First(wordIndexTuple);" 
+					//"flatWordIndexTuple = FOREACH wordIndexTuple GENERATE " +                               // Scalars can only be used for projection
+					//"								pigir.pigudf.First(wordIndexTuple),pigir.pigudf.Rest(wordIndexTuple) ;"
+					//"flatWordIndexTuple = FOREACH wordIndexTuple GENERATE flatten($0);" // ({(1000_0))
+																					      // ({(1000_1))
+					//"flatWordIndexTuple = FOREACH wordIndexTuple GENERATE $0;"          // ({(1000_0))
+																						  // ({(1000_1))
+					//"flatWordIndexTuple = GROUP wordIndexTuple BY *;"                   // (({(1000_1),(HTML,1000_1,0),(HEAD,1000_1,1),
+					//"flatWordIndexTuple = FOREACH wordIndexTuple GENERATE COUNT($0);"     // DataByteArray cannot be cast to org.apache.pig.data.DataBag
+			);
+
+			pserver.registerQuery(
+					"summaries = FOREACH flatWordIndexTuple GENERATE summary;"
+			);
+			pserver.dumpSchema("wordIndexTuple");
+			Common.print(pserver, "wordIndexTuple");
+			//pserver.dumpSchema("wordIndexTuple");
 			Common.print(pserver, "flatWordIndexTuple");
+			Common.print(pserver, "summaries");
+			
 
 /*			
 			pserver.registerQuery(

@@ -7,14 +7,20 @@ import java.util.ArrayList;
 import java.util.Iterator;
 
 import org.apache.pig.backend.executionengine.ExecException;
-import org.apache.pig.data.DataBag;
 import org.apache.pig.data.Tuple;
 import org.apache.pig.data.TupleFactory;
 
+import pigir.Common;
 import pigir.pigudf.GetUUID;
 import pigir.pigudf.IndexOneDoc;
 
 public class TestIndexOneDoc {
+	
+	static String uuid = null;
+	
+	public TestIndexOneDoc(String theUUID) {
+		uuid = theUUID;
+	}
 	
 	class Truth {
 		public String word;
@@ -30,32 +36,37 @@ public class TestIndexOneDoc {
 	/**
 	 * For each result from IndexOneDoc, verify that every tuple is correct.
 	 * 
-	 * @param result is a bag: {(docID), (token1,docID,token1Pos), (token2,docID,token2Pos), ...}. All docID are identical. 
+	 * @param result is a tuple: ((docID,numPostings), (token1,docID,token1Pos), (token2,docID,token2Pos), ...). All docID are identical. 
 	 * @param groundTruth an array of Truth objects. Each object contains one token and its position. The objects are ordered as in the expected result.
 	 * @return true/false.
 	 */
-	private static boolean matchOutput(DataBag result, ArrayList<Truth> groundTruth) {
+	private static boolean matchOutput(Tuple result, ArrayList<Truth> groundTruth) {
 
-		Iterator<Tuple> resultIt = result.iterator();
+		Iterator<Object> resultIt = Common.getTupleIterator(result);
 		Iterator<Truth> truthIt  = groundTruth.iterator();
 		Tuple nextRes = null;
 		Truth nextTruth = null;
-		String bagDocID = null;
+		String summaryDocID = null;
+		Integer summaryNumPostings = -1;
 
 		try {
 
 			if (result.size() == 0 && groundTruth.size() == 0)
 				return true;
 			
-			// Get the bag docid:
-			bagDocID = (String) resultIt.next().get(0);
+			// Get the result summary: (docid,numPostings):
+			nextRes = (Tuple) resultIt.next();
+			summaryDocID = (String) nextRes.get(0);
+			summaryNumPostings = (Integer) nextRes.get(1);
+			if ((summaryDocID != uuid) || summaryNumPostings != groundTruth.size())
+				return false;
 			
 			while (resultIt.hasNext()) {
 				if (! truthIt.hasNext())
 					return false;
-				nextRes   = resultIt.next();
+				nextRes   = (Tuple) resultIt.next();
 				nextTruth = truthIt.next();
-				if (!nextRes.get(0).equals(nextTruth.word) || !nextRes.get(1).equals(bagDocID) || !nextRes.get(2).equals(nextTruth.pos))
+				if (!nextRes.get(0).equals(nextTruth.word) || !nextRes.get(1).equals(summaryDocID) || !nextRes.get(2).equals(nextTruth.pos))
 					return false;
 			}
 			if (truthIt.hasNext())
@@ -73,12 +84,13 @@ public class TestIndexOneDoc {
 	public static void main(String[] args) throws ExecException {
 		
 		IndexOneDoc func = new IndexOneDoc();
-		final TestIndexOneDoc tester = new TestIndexOneDoc();
 		final int contentIndex = 1;
 		
 		TupleFactory tupleFac = TupleFactory.getInstance();
 		Tuple parms = tupleFac.newTuple(2);
-		parms.set(0, GetUUID.newUUID());
+		String uuid  = GetUUID.newUUID();
+		parms.set(0, uuid);
+		final TestIndexOneDoc tester = new TestIndexOneDoc(uuid);
 		
 		try {
 			// System.out.println(func.outputSchema(new Schema()));
@@ -90,7 +102,7 @@ public class TestIndexOneDoc {
 					add(tester.new Truth("sunny", 2));
 					add(tester.new Truth("day", 3));
 				};
-			}));
+			})); 
 			
 			// Embedded URL:
 			parms.set(contentIndex, "On a http://infolab.stanford.edu/~user sunny day.");
@@ -116,11 +128,11 @@ public class TestIndexOneDoc {
 			assertTrue(matchOutput(func.exec(parms), new ArrayList<Truth>()));
 
 
-			// Don't ignore stopwords:
+			// Include stopwords:
 			Tuple input = tupleFac.newTuple();
-			input.append("docID");
+			input.append(uuid);
 			input.append("The sun is shining.");
-			input.append(0); // no stopwords
+			input.append(0); // no stopword elimination
 						
 			assertTrue(matchOutput(func.exec(input), new ArrayList<Truth>() {
 				{
@@ -133,7 +145,7 @@ public class TestIndexOneDoc {
 
 			// Don't ignore stopwords and use SPACE as token delimiter:
 			input = tupleFac.newTuple();
-			input.append("docID");
+			input.append(uuid);
 			input.append("The sun is shining.");
 			input.append(0); // no stopwords
 			input.append(null); // default URL preservation
