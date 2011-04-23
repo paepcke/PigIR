@@ -38,20 +38,28 @@
       * $USER_CONTRIB points to location of PigIR.jar
       * $USER_CONTRIB points to location of jsoup-1.5.2.jar
       
+   $PIG_HOME and $USER_CONTRIB are assumed to be passed in
+   via -param command line parameters. The pigrun script that
+   is used by warcWordCount takes care of this. Additionally,
+   the following env vars must be passed in via -param:
+   
+       $CRAWL_SOURCE=crawl source, page numbers, start/stop sites as per examples above
+          $WORD_COUNT_DEST  : Full destination path for the word count.
+	   		Example: /home/doe/gov-03-2007_wordCount.cnt
+
+   The warcWordCount script constructs these parameters from its
+   command line parameters.
+      
 */       
 
-%declare OUTPUT_COMMAND `echo ${OUTPUT_COMMAND}`;
-%default OUTPUT_COMMAND 'DUMP wordCounts';
+-- STORE command for the word count:
+%declare WORD_COUNT_STORE_COMMAND "STORE sorted INTO '$WORD_COUNT_DEST' USING PigStorage(',');";
 
-/* $PIG_HOME and $USER_CONTRIB are assumed to be passed in
-   via -param command line parameters. Using pigrun to 
-   start this script will do that automatically.
-*/   
 REGISTER $PIG_HOME/contrib/piggybank/java/piggybank.jar;
 REGISTER $USER_CONTRIB/PigIR.jar;
 REGISTER $USER_CONTRIB/jsoup-1.5.2.jar
 
-docs = LOAD '$srcFile'
+docs = LOAD '$WARC_FILE'
 		USING pigir.warc.WarcLoader
        AS (warcRecordId:chararray, contentLength:int, date:chararray, warc_type:chararray,
            optionalHeaderFlds:bytearray, content:chararray);
@@ -66,7 +74,8 @@ strippedWords = FOREACH strippedDocs GENERATE FLATTEN(pigir.pigudf.RegexpTokeniz
 
 strippedGroupedWords = GROUP strippedWords BY $0;
 
-wordCounts = FOREACH strippedGroupedWords GENERATE $0,COUNT($1);
+wordCounts = FOREACH strippedGroupedWords GENERATE $0 AS word:chararray ,COUNT($1) AS count:long;
+sorted     = ORDER wordCounts BY word PARALLEL 5;
 
-$OUTPUT_COMMAND;
+$WORD_COUNT_STORE_COMMAND;
 

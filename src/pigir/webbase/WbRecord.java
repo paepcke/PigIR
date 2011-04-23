@@ -12,6 +12,16 @@ import java.util.Vector;
 import org.apache.hadoop.io.Text;
 import org.apache.log4j.Logger;
 
+/**
+ * WbRecord implements the Java Map interface. So all fields
+ * are available via 'get("key")'. The WebBase header keys are
+ * defined in constants below. The HTTP header keys are as per
+ * the HTTP specification. E.g. 'Content-length', 'content-length',
+ * 'Content-type' etc. Case is ignored.
+ *   
+ * @author paepcke
+ *
+ */
 public abstract class WbRecord extends Text implements WbRecordMap<String, Object> {
 	
 	protected Logger logger;
@@ -30,6 +40,7 @@ public abstract class WbRecord extends Text implements WbRecordMap<String, Objec
 	
 	
 	protected Metadata md;
+
 	private HashMap<String,String> httpHeader = new HashMap<String,String>();
 	protected byte[] wbContent=null;
 	
@@ -97,7 +108,8 @@ public abstract class WbRecord extends Text implements WbRecordMap<String, Objec
 			colonIndx = headerLine.indexOf(':');
 			if (colonIndx < 0)
 				continue;
-			this.httpHeader.put(headerLine.substring(0, colonIndx).trim(), headerLine.substring(colonIndx + 1).trim());
+			this.httpHeader.put(headerLine.substring(0, colonIndx).trim(), 
+								headerLine.substring(colonIndx + 1).trim());
 		}
 	}
 	
@@ -198,6 +210,20 @@ public abstract class WbRecord extends Text implements WbRecordMap<String, Objec
 		return res;
 	}
 	
+	/*-----------------------------------------------------
+	| isDefaultRecord
+	------------------------*/
+	
+	/**
+	 * Subclasses whose contents are strings can leave this method stand. But subclasses
+	 * like those inheriting from WbBinaryRecord must override and return true;
+	 *  
+	 * @return true if this WbRecord is of subclass WbDefaultRecord. Else return false;
+	 */
+	public boolean isBinaryRecord() {
+		return false;
+	}
+	
 	//  -----------------------------------  MAP<String,String> Methods -----------------------
 
 	@Override
@@ -212,6 +238,10 @@ public abstract class WbRecord extends Text implements WbRecordMap<String, Objec
 		return (md == null) && (wbContent.length == 0); 
 	}
 
+	public boolean isContentEmpty() {
+		return (wbContent.length == 0);
+	}
+	
 	/* (non-Javadoc)
 	 * @see java.util.Map#containsKey(java.lang.Object)
 	 * Looks through keys in the metadata, like docID, numPages, etc.,

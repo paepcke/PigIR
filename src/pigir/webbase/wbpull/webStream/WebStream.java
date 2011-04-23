@@ -105,7 +105,8 @@ public abstract class WebStream
 		
 		//data received
 		@SuppressWarnings("unused") 
-		char	incomingDocType; //keep this here because we read it from the connection, even though we don't really use it 
+		char	incomingDocType; //keep this here because we read 
+								 //it from the connection, even though we don't really use it 
 		int		docID, pageSize, urlLen, tsLen;
 		long	offset;
 		//String page; //NOTE: page variable exists only for debugging purposes
@@ -138,7 +139,7 @@ public abstract class WebStream
 						
 					if(tsLen > TIMESTAMP_LENGTH || urlLen > MAX_URL_SIZE)
 					{
-						// aybe output an error message? just continue for now...
+						// Maybe output an error message? just continue for now...
 						continue;
 					}
 					
@@ -169,7 +170,11 @@ public abstract class WebStream
 					//page = new String(pageBytes, "ISO-8859-1");
 					//page = new String(pageBytes, "US-ASCII");
 					
-					pages.add(WbRecordFactory.getWbRecord(metadata, pageBytes));
+					WbRecord record = WbRecordFactory.getWbRecord(metadata, pageBytes);
+					// If the Web page is so defective that the factory
+					if (record == null)
+						continue;
+					pages.add(record);
 					this.totalNumPagesRetrieved++;
 				}catch(EOFException e) {
 					break;

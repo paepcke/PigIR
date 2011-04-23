@@ -24,6 +24,8 @@ package pigir.webbase;
 
 import java.util.Vector;
 
+import org.apache.pig.data.DataByteArray;
+
 @SuppressWarnings("unchecked")
 public abstract class WbBinaryRecord extends WbRecord {
 	
@@ -36,8 +38,8 @@ public abstract class WbBinaryRecord extends WbRecord {
 	}
 
 	@Override
-	public byte[] getContent() {
-		return this.wbContent;
+	public DataByteArray getContent() {
+		return new DataByteArray(this.wbContent);
 	}
 	
 	@Override
@@ -47,5 +49,16 @@ public abstract class WbBinaryRecord extends WbRecord {
 		String errMsg = "Cannot use 'containsValue()' on binary content.";
 		logger.error(errMsg);
 		return false;
+	}
+
+	/**
+	 * Subclasses whose contents are strings can leave this method stand. But subclasses
+	 * like those inheriting from WbBinaryRecord must override and return true;
+	 *  
+	 * @return true if this WbRecord is of subclass WbDefaultRecord. Else return false;
+	 */
+	@Override
+	public boolean isBinaryRecord() {
+		return true;
 	}
 }

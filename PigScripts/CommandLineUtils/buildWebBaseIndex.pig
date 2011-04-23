@@ -42,18 +42,29 @@
    $PIG_HOME and $USER_CONTRIB are assumed to be passed in
    via -param command line parameters. The pigrun script that
    is used by buildWebBaseIndex takes care of this. Additionally,
-   the following env vars must be set:
+   the following env vars must be passed in via -param:
    
        $CRAWL_SOURCE=crawl source, page numbers, start/stop sites as per examples above
-	   $URL_MAP_STORE_COMMAND Pig STORE command for storing the docID-->URL index.
-	   		This is a hack, because Pig's concatenation of variables to strings isn't
-	   		working yet (at least up to Pig 0.9.0)
-	   		Example: STORE URLMap INTO '/home/doe/gov-03-2007_urlMap.idx' USING PigStorage;
-	   $INDEX_STORE_COMMAND: Pig STORE command for storing the index. Again,
-	   		this is a hack, because Pig's concatenation of variables to strings isn't
-	   		working yet (at least up to Pig 0.9.0)
-	   		Example: Example: STORE sortedPostings INTO '/home/doe/gov-03-2007_index.idx' USING PigStorage;
+       $URL_MAP_DEST: Full destination path for storing the docID-->URL index.
+	   		Example: /home/doe/gov-03-2007_urlMap.idx
+       $INDEX_DEST  : Full destination path for the index.
+	   		Example: /home/doe/gov-03-2007_index.idx
+       $TMP_INDEX_DEST: Full path to a file into which the unsorted index is
+                        temporarily stored.
+
+   The buildWebBaseIndex script constructs these parameters from its
+   command line parameters.
 */   
+
+-- STORE commands for storing the URL->docID mapping:
+%declare URL_MAP_STORE_COMMAND "STORE URLMap INTO '$URL_MAP_DEST' USING PigStorage(',');";
+
+-- STORE and LOAD commands for the intermediate, temporary unsorted index:
+%declare TMP_INDEX_STORE_COMMAND "STORE oneColumnPostings INTO '$TMP_INDEX_DEST' USING BinStorage;";
+%declare TMP_INDEX_LOAD_COMMAND "LOAD '$TMP_INDEX_DEST' USING BinStorage AS (token:chararray,docID:chararray,tokenPos:int);";
+
+-- STORE command for the final index:
+%declare INDEX_STORE_COMMAND "STORE sortedIndex INTO '$INDEX_DEST' USING PigStorage(',');";
 
 REGISTER $PIG_HOME/contrib/piggybank/java/piggybank.jar;
 REGISTER $USER_CONTRIB/PigIR.jar;
@@ -70,16 +81,16 @@ docs = LOAD '$CRAWL_SOURCE'
 	 	content:chararray);
 
 indexPackages = FOREACH docs GENERATE 
-						url, 
-						date, 
-						pageSize, 
-						pigir.pigudf.IndexOneDoc(pigir.pigudf.GetLUID(), content) AS postingsPackage; 
+			url, 
+			date, 
+			pageSize, 
+			pigir.pigudf.IndexOneDoc(pigir.pigudf.GetLUID(), content) AS postingsPackage; 
 
 -- Now we have:
 --    indexPackages: {url:chararray,
---					  date: chararray,
---					  pageSize: int,
---					  postingsPackage: (postings: (token: chararray,docID: chararray,tokenPos: int))} 
+--		      date: chararray,
+--		      pageSize: int,
+--		      postingsPackage: (postings: (token: chararray,docID: chararray,tokenPos: int))} 
 --
 -- Two example data rows, each corresponding to one Web page:
 --    (http://access.usgs.gov/robots.txt,
@@ -132,19 +143,20 @@ oneColumnNestedPostings = FOREACH flatPostings GENERATE FLATTEN(TOBAG(*));
 -- Now we have ((token,docID,tokenPos))  
 --             ((token,docID,tokenPos))
 
-oneColumnPostings = FOREACH oneColumnNestedPostings 
-					GENERATE FLATTEN($0) 
-					AS (token:chararray, docID:chararray, tokenPos:chararray);
-					
--- Now finally: we have:(token,docID,tokenPos)  
--- 		         	    (token,docID,tokenPos)
+oneColumnPostings = FOREACH oneColumnNestedPostings GENERATE flatten($0);
 
--- Take out the summary tuples; the (docID,'na',numTokens) that
--- were in each row:
-oneColumnPostingsOnly = FILTER oneColumnPostings BY docID neq 'na';
+-- Now finally: we have:(token: chararray,docID: chararray,tokenPos: int)
+--                      (token: chararray,docID: chararray,tokenPos: int)
+--                                 ...
 
--- Order and save:
+-- The only way to get the index sorted is to write it out, and read
+-- it back in. Everything I tried for making it work without this 
+-- intermediate step failed with "Cannot cast String to DataTuple"...
 
-sortedPostings = ORDER oneColumnPostingsOnly BY token PARALLEL 5;
+$TMP_INDEX_STORE_COMMAND
+
+theIndex = $TMP_INDEX_LOAD_COMMAND
+
+sortedIndex = ORDER theIndex BY token PARALLEL 5;
 
 $INDEX_STORE_COMMAND
