@@ -17,5 +17,8 @@ else
   OUTPUT_COMMAND="DUMP wordCounts";
 fi
 
-pigrun srcFile=$srcFile $HOME/PigScripts/CommandLineUtils/warcWordCount.pig
-
+#**************
+#pigrun srcFile=$srcFile $HOME/PigIR/PigScripts/CommandLineUtils/warcWordCount.pig
+echo "OUTPUT_COMMAND is '$OUTPUT_COMMAND'."
+pigrun -x local srcFile=$srcFile $HOME/PigIR/PigScripts/CommandLineUtils/warcWordCount.pig
+#**************

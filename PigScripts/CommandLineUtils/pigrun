@@ -26,11 +26,13 @@
 # Environment assumptions:
 #     $PIG_HOME is set to point to the Pig installation
 
-PIG_USER_JAR_DIR=/home/paepcke/contrib
+
+# Changed from /home/paepcke/contrib:
+PIG_USER_JAR_DIR=$HOME/contrib
 
 if [ $# -lt 1 ]
 then
-  echo "Usage: pigrun [args] pig-file"
+  echo "Usage: pigrun [-x {local|mapreduce}][args] pig-file"
   exit
 fi
 
