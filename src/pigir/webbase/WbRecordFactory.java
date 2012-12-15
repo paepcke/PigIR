@@ -23,12 +23,34 @@
 package pigir.webbase;
 
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.StringReader;
 import java.util.Vector;
 
+/**
+ * Mint a new WbRecord subclass, depending on the content-type of
+ * the passed-in Web content. We explicitly recognize text, audio, 
+ * and images. If the content-type field is missing, or if its
+ * value is not recognized, we return a WbDefaultRecord. If the
+ * Web content does not even have a header, we return null from
+ * the constructor.
+ * 
+ * @author paepcke
+ *
+ */
 public class WbRecordFactory {
-	
+byte[] barray = new byte[1];
+
+	FileWriter foo;
+	BufferedWriter bar;
+	/**
+	 * @param md The WebBase metadata header before each page's HTTP header 
+	 * @param page The Web content
+	 * @return a WbRecord subclass as described in class comment, or null
+	 * if the Web content does not have an identifiable HTTP header.
+	 */
 	public static WbRecord getWbRecord(Metadata md, byte[] page) {
 		
 		// Get the page as a string to extract the http header
@@ -38,8 +60,13 @@ public class WbRecordFactory {
 		//determine the web content type from the http header
 		WebContentType type = getContentType(httpHeader);
 		
-		//get the content of the page without the http header
-		byte[] content = pageStr.substring(pageStr.indexOf("\r\n\r\n") + 4).getBytes();
+		// Get the content of the page without the http header
+		byte[] content = null;
+		int headerEnd = pageStr.indexOf("\r\n\r\n");
+		// No end-of-header found?
+		if (headerEnd < 0)
+			return null;
+		content = pageStr.substring(headerEnd + 4).getBytes();
 		
 		switch(type) {
 		case TEXT:

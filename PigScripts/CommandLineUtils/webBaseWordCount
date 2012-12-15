@@ -1,9 +1,9 @@
 #!/bin/bash
 
-# Script that runs the PigScript buildWebBaseIndex.pig with
+# Script that runs the PigScript webBaseWordCount.pig with
 # command line paramters.
 
-USAGE="Usage: buildWebBaseIndex [{-h | --help}] \n
+USAGE="Usage: webBaseWordCount [{-h | --help}] \n
                          \t\t\t [{-v | --version}] \n
                          \t\t\t [{-x | --execmode] {local | mapreduce}] \n
                          \t\t\t [{-d | --destdir} <destinationDirectory>] (default is pwd) \n
@@ -11,8 +11,8 @@ USAGE="Usage: buildWebBaseIndex [{-h | --help}] \n
                          \t\t\t [{-s | --startsite} <startSite>] (default is first site) \n
                          \t\t\t [{-e | --endsite} <endSite>] (default is last site) \n
                          \t\t\t <crawlName> \n
-    \tExample: buildWebBaseIndex -d /user/doe/myindex --startsite www.emus.com gov-04-2007 \n
-    \tExample: buildWebBaseIndex --numpages 2 gov-04-2007"
+    \tExample: webBaseWordCount -d /user/doe/mycounts --startsite www.emus.com gov-04-2007 \n
+    \tExample: webBaseWordCount --numpages 2 gov-04-2007"
 
 
 PROGVERSION=1.0
@@ -100,21 +100,14 @@ then
   export SCRIPT_DIR=`cygpath --mixed ${SCRIPT_DIR}`
 fi
 
-# Check whether either of the two index target files exists.
+# Check whether the word count target file exists.
 # If so, Pig would run for a long time, and then die. Make
 # this more fail-fast:
 
-EXISTENCE=`hadoop fs -stat ${DEST_DIR}/${CRAWL_NAME}_urlMap.idx 2> /dev/null` 
+EXISTENCE=`hadoop fs -stat ${DEST_DIR}/${CRAWL_NAME}_wordCount.cnt 2> /dev/null` 
 if [ -n "$EXISTENCE" ]
 then
-    echo "File ${DEST_DIR}/${CRAWL_NAME}_urlMap.idx already exists. Quitting."
-    exit -1
-fi
-
-EXISTENCE=`hadoop fs -stat ${DEST_DIR}/${CRAWL_NAME}_index.idx 2> /dev/null`
-if [ -n "$EXISTENCE" ]
-then
-    echo "File ${DEST_DIR}/${CRAWL_NAME}_index.idx already exists. Quitting."
+    echo "File ${DEST_DIR}/${CRAWL_NAME}_wordCount.cnt already exists. Quitting."
     exit -1
 fi
 
@@ -125,21 +118,10 @@ fi
 # which is fine:
 
 CRAWL_SOURCE=${CRAWL_NAME}:${NUM_PAGES}:${START_SITE}:${END_SITE}
-TMP_INDEX_PATH=${DEST_DIR}/${CRAWL_NAME}_index.idx_tmp
 
 pigrun -x $EXEC_MODE \
-        URL_MAP_DEST=${DEST_DIR}/${CRAWL_NAME}_urlMap.idx \
-        INDEX_DEST=${DEST_DIR}/${CRAWL_NAME}_index.idx \
-        TMP_INDEX_DEST=$TMP_INDEX_PATH \
+        WORD_COUNT_DEST=${DEST_DIR}/${CRAWL_NAME}_wordCount.cnt \
         CRAWL_SOURCE=$CRAWL_SOURCE \
-        ${SCRIPT_DIR}/buildWebBaseIndex.pig
-
-EXISTENCE=`hadoop fs -stat $TMP_INDEX_PATH 2> /dev/null`
-if [ -n "$EXISTENCE" ]
-then
-    echo "Removing temp file $TMP_INDEX_PATH."
-    `hadoop fs -rmr $TMP_INDEX_PATH &> /dev/null`
-    echo Done;
-fi
+        ${SCRIPT_DIR}/webBaseWordCount.pig
 
 exit 0

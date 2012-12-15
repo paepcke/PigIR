@@ -103,9 +103,11 @@ public class WbRecordReader extends RecordReader<WbInputSplit, Text>{
 	}
 	
 	public boolean nextKeyValue(boolean readContents) throws IOException, InterruptedException {
+		
 		if (distributorDemonContact.numPagesWanted != Constants.ALL_PAGES_WANTED &&
 				recordsRead >= distributorDemonContact.numPagesWanted)
 			return false;
+		
 		if (!webBaseStream.hasNext())
 			return false;
 		valueWbRecord = webBaseStream.next();

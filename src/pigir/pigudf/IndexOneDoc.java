@@ -213,8 +213,8 @@ public class IndexOneDoc extends EvalFunc<Tuple> {
         }
         // We now have: ((),(token1,docID,tokenPos1),(token2,docID,tokenPos2),...).
         // put docID and number of postings into that first, currently empty tuple:
-        ((Tuple) output.get(0)).append(docID);
         ((Tuple) output.get(0)).append("na");
+        ((Tuple) output.get(0)).append(docID);
         ((Tuple) output.get(0)).append(numOfTokens);
         return output;
     }

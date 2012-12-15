@@ -220,6 +220,8 @@ public class BufferedWebStreamIterator extends WebStream implements Iterator<WbR
 		if (wbRecordQueue.isEmpty())
 			try {
 				fillBuffer();
+				if (wbRecordQueue.isEmpty())
+					return null;
 			} catch (IOException e) {
 				return null;
 			}
@@ -334,7 +336,12 @@ public class BufferedWebStreamIterator extends WebStream implements Iterator<WbR
 				// Construct metadata
 				metadata = new Metadata(docID, truePageLen, offset, timeStamp, url);
 				
-				wbRecordQueue.put(WbRecordFactory.getWbRecord(metadata, truePageBytes));
+				// If the Web page is so defective that the factory
+				// refuses to mind a record, then skip it:
+				WbRecord wbRecord = WbRecordFactory.getWbRecord(metadata, truePageBytes);
+				if (wbRecord == null)
+					continue;
+				wbRecordQueue.put(wbRecord);
 				totalNumPagesRetrieved++;
 				numPagesThisRound++;
 			} catch(EOFException e) {

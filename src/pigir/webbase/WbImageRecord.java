@@ -24,6 +24,8 @@ package pigir.webbase;
 
 import java.util.Vector;
 
+import org.apache.pig.data.DataByteArray;
+
 @SuppressWarnings("unchecked")
 public class WbImageRecord extends WbBinaryRecord {
 	
@@ -41,7 +43,7 @@ public class WbImageRecord extends WbBinaryRecord {
 	}
 	
 	@Override
-	public byte[] getContent() {
-		return this.wbContent;
+	public DataByteArray getContent() {
+		return new DataByteArray(this.wbContent);
 	}
 }
