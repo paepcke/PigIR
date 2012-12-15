@@ -102,7 +102,7 @@ public class ChopChars extends EvalFunc<String> {
 	}
 
 	static String chomp (String str, String regexp) {
-		return org.apache.commons.lang3.StringUtils. removeEnd(str, regexp);
+		return org.apache.commons.lang3.StringUtils.removeEnd(str, regexp);
 	}
 	
 	public static void main(String[] argv) {
