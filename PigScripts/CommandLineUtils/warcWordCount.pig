@@ -48,7 +48,7 @@
    start this script will do that automatically.
 */   
 /*REGISTER $PIG_HOME/contrib/piggybank/java/piggybank.jar;*/
-REGISTER $PIG_HOME/share/pig/contrib/piggybank/piggybank.jar;
+REGISTER $USER_CONTRIB/piggybank.jar;
 REGISTER $USER_CONTRIB/PigIR.jar;
 REGISTER $USER_CONTRIB/jsoup-1.5.2.jar
 
@@ -57,6 +57,9 @@ docs = LOAD '$srcFile'
        AS (warcRecordId:chararray, contentLength:int, date:chararray, warc_type:chararray,
            optionalHeaderFlds:bytearray, content:chararray);
 
+/*********/
+DUMP docs
+/*********/
 
 strippedDocs = FOREACH docs GENERATE pigir.pigudf.StripHTML(content);
 
@@ -72,9 +75,11 @@ strippedGroupedWords = GROUP strippedWords BY $0;
 wordCounts = FOREACH strippedGroupedWords GENERATE $0,COUNT($1);
 
 /*********/
---DUMP wordCounts
+DUMP wordCounts
+
+--$OUTPUT_COMMAND;
 /*********/
 
 
-$OUTPUT_COMMAND;
+
 

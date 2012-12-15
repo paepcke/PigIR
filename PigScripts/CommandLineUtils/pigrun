@@ -84,4 +84,4 @@ PIG_COMMAND="${PIG_COMMAND} ${PIG_SCRIPT_NAME}"
 #echo "$PIG_HOME/bin/pig -Dpig.usenewlogicalplan=false -v -logfile Logs ${PIG_COMMAND}"
 
 /usr/bin/time --format="Runtime (m:ss.millisec): %E" \
-	$PIG_HOME/bin/pig -Dpig.usenewlogicalplan=false -v -logfile Logs ${PIG_COMMAND}   
+	pig -Dpig.usenewlogicalplan=false -v -logfile Logs ${PIG_COMMAND}   

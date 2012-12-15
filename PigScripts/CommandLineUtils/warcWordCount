@@ -20,5 +20,6 @@ fi
 #**************
 #pigrun srcFile=$srcFile $HOME/PigIR/PigScripts/CommandLineUtils/warcWordCount.pig
 echo "OUTPUT_COMMAND is '$OUTPUT_COMMAND'."
+echo "srcFile: $srcFile"
 pigrun -x local srcFile=$srcFile $HOME/PigIR/PigScripts/CommandLineUtils/warcWordCount.pig
 #**************
