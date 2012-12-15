@@ -342,7 +342,8 @@ public final class Common {
 	public static String runUnixCommand(String cmd) {
         String s = null;
         String stdout = "";
-        String stderr = "";
+        @SuppressWarnings("unused")
+		String stderr = ""; // Only used when debugging in Eclipse
         
         try {
             
@@ -361,7 +362,7 @@ public final class Common {
             
             // read any errors from the attempted command
             while ((s = stdError.readLine()) != null) {
-                stderr += s;
+                stderr += s; // For debugging in Eclipse. Not printed or passed out.
             }
         }
         catch (IOException e) {

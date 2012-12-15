@@ -26,13 +26,11 @@
 # Environment assumptions:
 #     $PIG_HOME is set to point to the Pig installation
 
-
-# Changed from /home/paepcke/contrib:
-PIG_USER_JAR_DIR=$HOME/contrib
+PIG_USER_JAR_DIR=/home/paepcke/contrib
 
 if [ $# -lt 1 ]
 then
-  echo "Usage: pigrun [-x {local|mapreduce}][args] pig-file"
+  echo "Usage: pigrun [args] pig-file"
   exit
 fi
 
@@ -84,4 +82,4 @@ PIG_COMMAND="${PIG_COMMAND} ${PIG_SCRIPT_NAME}"
 #echo "$PIG_HOME/bin/pig -Dpig.usenewlogicalplan=false -v -logfile Logs ${PIG_COMMAND}"
 
 /usr/bin/time --format="Runtime (m:ss.millisec): %E" \
-	pig -Dpig.usenewlogicalplan=false -v -logfile Logs ${PIG_COMMAND}   
+	$PIG_HOME/bin/pig -Dpig.usenewlogicalplan=false -v -logfile Logs ${PIG_COMMAND}   

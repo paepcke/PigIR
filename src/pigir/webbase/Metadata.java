@@ -39,7 +39,6 @@ import org.apache.log4j.Logger;
  */
 public class Metadata implements Map<String,Object> {
 
-	private static final long serialVersionUID = 1L;
 	private static Logger logger = null;
 	private static HashSet<String> keys = new HashSet<String>() {
 		private static final long serialVersionUID = 1L;

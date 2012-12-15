@@ -47,8 +47,7 @@
    via -param command line parameters. Using pigrun to 
    start this script will do that automatically.
 */   
-/*REGISTER $PIG_HOME/contrib/piggybank/java/piggybank.jar;*/
-REGISTER $USER_CONTRIB/piggybank.jar;
+REGISTER $PIG_HOME/contrib/piggybank/java/piggybank.jar;
 REGISTER $USER_CONTRIB/PigIR.jar;
 REGISTER $USER_CONTRIB/jsoup-1.5.2.jar
 
@@ -56,10 +55,6 @@ docs = LOAD '$srcFile'
 		USING pigir.warc.WarcLoader
        AS (warcRecordId:chararray, contentLength:int, date:chararray, warc_type:chararray,
            optionalHeaderFlds:bytearray, content:chararray);
-
-/*********/
-DUMP docs
-/*********/
 
 strippedDocs = FOREACH docs GENERATE pigir.pigudf.StripHTML(content);
 
@@ -69,17 +64,9 @@ strippedDocs = FOREACH docs GENERATE pigir.pigudf.StripHTML(content);
 */   
 strippedWords = FOREACH strippedDocs GENERATE FLATTEN(pigir.pigudf.RegexpTokenize(content, null, 1, 1));
 
-
 strippedGroupedWords = GROUP strippedWords BY $0;
 
 wordCounts = FOREACH strippedGroupedWords GENERATE $0,COUNT($1);
 
-/*********/
-DUMP wordCounts
-
---$OUTPUT_COMMAND;
-/*********/
-
-
-
+$OUTPUT_COMMAND;
 

@@ -14,6 +14,8 @@ import org.apache.pig.data.TupleFactory;
  * This method is thus a generalized trim().
  * @author paepcke
  *
+ * Revisions:
+ * 	- Replaced chomp(String,String) with removedEnd(String,String) as the former is deprecated in org.apache.lang3. Dec 14, 2012
  */
 public class ChopChars extends EvalFunc<String> {
 	
@@ -100,7 +102,7 @@ public class ChopChars extends EvalFunc<String> {
 	}
 
 	static String chomp (String str, String regexp) {
-		return org.apache.commons.lang.StringUtils.chomp(str, regexp);
+		return org.apache.commons.lang3.StringUtils. removeEnd(str, regexp);
 	}
 	
 	public static void main(String[] argv) {
