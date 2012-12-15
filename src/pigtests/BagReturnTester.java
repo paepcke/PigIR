@@ -31,7 +31,8 @@ public class BagReturnTester {
 			pserver.registerJar("contrib/pigUtils.jar");
 			//pserver.debugOn();
 			pserver.registerQuery(
-					"docs = LOAD 'file://E:/users/paepcke/dldev/EclipseWorkspaces/PigUtils/src/Datasets/morTweetsSmall.csv' USING " + 
+					  //"docs = LOAD 'file://E:/users/paepcke/dldev/EclipseWorkspaces/PigUtils/src/Datasets/morTweetsSmall.csv' USING " + 
+					  "docs = LOAD 'resources/Datasets/morTweetsSmall.csv' USING " + 
 					             "org.apache.pig.piggybank.storage.CSVLoader AS " +
 					             "(txt:chararray," +
 					             "source:chararray," + 

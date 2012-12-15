@@ -35,7 +35,8 @@ public class StoreFDATweetTfIdf {
 			// pserver.debugOn();
 			pserver.registerQuery(
 					//"docs = LOAD 'file://E:/users/paepcke/dldev/EclipseWorkspaces/PigUtils/src/Datasets/morTweetsSmall.csv' USING " + 
-					"docs = LOAD 'file://E:/users/paepcke/dldev/EclipseWorkspaces/PigUtils/src/Datasets/FDADataSortedCRLFFixed.csv' USING " + 
+					//"docs = LOAD 'file://E:/users/paepcke/dldev/EclipseWorkspaces/PigUtils/src/Datasets/FDADataSortedCRLFFixed.csv' USING " + 
+					"docs = LOAD 'resources/Datasets/FDADataSortedCRLFFixed.csv' USING " + 
 					             "org.apache.pig.piggybank.storage.CSVLoader AS " +
 					             "(txt:chararray," +
 					             "source:chararray," + 

@@ -36,7 +36,7 @@ class QuickTests {
 			pserver.registerJar("contrib/PigIR.jar");
 			
 			pserver.registerQuery(
-					"docs = LOAD 'Datasets/usColleges.csv' " +
+					"docs = LOAD 'resources/Datasets/usColleges.csv' " +
 					"		USING org.apache.pig.piggybank.storage.CSVExcelStorage() " +
 					"       AS (abbrev:chararray, name:chararray, country:chararray, state:chararray," +
 					"           city:chararray);"

@@ -36,8 +36,9 @@ public class TestTFIDF{
 			
 			// pserver.debugOn();
 			pserver.registerQuery(
-					"docs = LOAD 'file://E:/users/paepcke/dldev/Datasets/morTweetsSmall.csv' USING " + 
-					//"docs = LOAD 'file://E:/users/paepcke/dldev/EclipseWorkspaces/Pigir/src/Datasets/FDADataSortedCRLFFixed.csv' USING " + 
+					//"docs = LOAD 'file://E:/users/paepcke/dldev/Datasets/morTweetsSmall.csv' USING " + 
+					//"docs = LOAD 'file://E:/users/paepcke/dldev/EclipseWorkspaces/Pigir/src/Datasets/FDADataSortedCRLFFixed.csv' USING " +
+					"docs = LOAD 'resources/Datasets/morTweetsSmall.csv' USING " + 
 					             "org.apache.pig.piggybank.storage.CSVLoader AS " +
 					             "(txt:chararray," +
 					             "source:chararray," + 

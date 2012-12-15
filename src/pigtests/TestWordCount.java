@@ -33,7 +33,7 @@ public class TestWordCount {
 			pserver.registerJar("contrib/PigIR.jar");
 			
 			pserver.registerQuery(
-					"docs = LOAD 'Datasets/ClueWeb09_English_Sample.warc' " +
+					"docs = LOAD 'resources/Datasets/ClueWeb09_English_Sample.warc' " +
 					"		USING pigir.warc.WarcLoader" +
 					"       AS (warcRecordId:chararray, contentLength:int, date:chararray, warc_type:chararray," +
 					"           optionalHeaderFlds:bytearray, content:chararray);"

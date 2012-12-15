@@ -34,7 +34,7 @@ class TestWarcLoad {
 			pserver.registerJar("contrib/PigIR.jar");
 			
 			pserver.registerQuery(
-					"docs = LOAD 'Datasets/ClueWeb09_English_Sample.warc' " +
+					"docs = LOAD 'resources/Datasets/ClueWeb09_English_Sample.warc' " +
 					//"docs = LOAD 'file://E:/users/paepcke/dldev/Datasets/ClueWeb09_English_Sample.warc' " +
 					//"docs = LOAD 'file://E:/users/paepcke/dldev/Datasets/ClueWeb09_English_SampleCompressed.warc.gz' " +
 					//"docs = LOAD 'file://" +
