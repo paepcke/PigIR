@@ -14,7 +14,8 @@
 	<property name="local.pigtest.dir" location="PigScripts/" />
 	
 	<!-- <property name="pig.jar" location="${env.PIG_HOME}/pig-0.8.0-core-withsrc.jar" /> -->
-	<property name="pig.jar" location="C:/Users/Paepcke/Software/Hadoop/pig-0.8.0/pig-0.8.0-core-withsrc.jar" />
+	<property name="pig.jar" 
+		  location="C:/Users/Paepcke/Software/Hadoop/pig-0.8.0/pig-0.8.0-core-withsrc.jar" />
 	<property name="hadoop.jar" location="${env.HADOOP_HOME}/hadoop-0.20.2-core.jar" />
 	
  	<property name="local.jar.dir" location="contrib" />
@@ -24,15 +25,16 @@
 	<property name="local.log.dir" value="${local.src.dir}/Logs" />
 	<property name="remote.dir" location="${ilc0.jar.dir}" />
 	
-    <path id="classpath">
-      <pathelement location="${pig.jar}"/>
-      <pathelement location="${hadoop.jar}"/>
+    <path id="project.class.path">
+      <fileset dir="lib">
+	<include name="**/*.jar" />
+      </fileset>
     </path>
-	
-	<property name="scp.command" value="C:\\cygwin\\bin\\scp" />
-	<!-- <property name="scp.keyfile" location="${myEnv.HOME}/.ssh/id_rsa" /> -->
-	<property name="scp.keyfile" location="C:\\Users\\Paepcke\\.ssh\\id_rsa" />
-	<!-- <property name="scp.keyfile" location="${myEnv.HOME}/.ssh/id_rsa.pub" />  -->
+
+    <property name="scp.command" value="C:\\cygwin\\bin\\scp" />
+    <!-- <property name="scp.keyfile" location="${myEnv.HOME}/.ssh/id_rsa" /> -->
+    <property name="scp.keyfile" location="C:\\Users\\Paepcke\\.ssh\\id_rsa" />
+    <!-- <property name="scp.keyfile" location="${myEnv.HOME}/.ssh/id_rsa.pub" />  -->
 	
     <!-- ================================================================== -->
     <!-- Main target                                                        -->
@@ -48,12 +50,12 @@
 	
 	<target name="compile" description="Compile all java sources.">
 		<echo>*** Compiling sources.***</echo>
-		<!--
-		<javac srcdir="${local.src.dir}" destdir="${local.classes.dir}" classpath="${classpath}" />
-		-->
-		<javac srcdir="${local.src.dir}" destdir="${local.classes.dir}" 
-			classpath="${pig.jar}"
-		/>
+		<echo level="verbose">*** local.lib.dir: ${local.lib.dir}.***</echo>
+		<echo level="verbose">*** Classpath: ${project.class.path}.***</echo>
+		<javac srcdir="${local.src.dir}" destdir="${local.classes.dir}" >
+		  <classpath refid="project.class.path" />
+		</javac>
+
 	</target>
 	
     <!-- ================================================================== -->
