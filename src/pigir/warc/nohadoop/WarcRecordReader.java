@@ -1,7 +1,6 @@
-package pigir.warc;
+package pigir.warc.nohadoop;
 
 import java.io.DataInputStream;
-import java.io.File;
 import java.io.IOException;
 import java.util.zip.GZIPInputStream;
 
@@ -15,9 +14,9 @@ import org.apache.hadoop.mapreduce.InputSplit;
 import org.apache.hadoop.mapreduce.RecordReader;
 import org.apache.hadoop.mapreduce.TaskAttemptContext;
 import org.apache.hadoop.mapreduce.lib.input.FileSplit;
+import org.apache.log4j.Logger;
 
 import pigir.pigudf.LineAndChunkReader;
-import pigir.warc.nohadoop.Logger;
 
 /**
  * Treats keys as offset wbRecordReader file and value as one Warc record. 
@@ -26,7 +25,6 @@ public class WarcRecordReader extends RecordReader<LongWritable, Text> {
 	
   private static final boolean DO_READ_CONTENT = true;
   private static final int DEFAULT_BUFFER_SIZE = 64 * 1024;
-  private final Logger logger = new Logger();
   private long start;
   private long pos;
   private long end;
@@ -37,20 +35,12 @@ public class WarcRecordReader extends RecordReader<LongWritable, Text> {
   private FSDataInputStream fileIn = null;
 
     
-  public void initialize(String warcFilePath)throws IOException {
-	  initialize(warcFileName, 0, -1);
-  }
-  
-  public void initialize(String warcFilePath, int startPos, int length)throws IOException {
+  public void initialize(InputSplit genericSplit,
+                         TaskAttemptContext context) throws IOException {
+    FileSplit split = (FileSplit) genericSplit;
+    Configuration job = context.getConfiguration();
 
-	try {
-		File warcFileObj = new File(warcFilePath);
-	} catch (IOException e) {
-		logger.error("Could not open warc file at " + warcFileName);
-	}
-	
-	  
-    start = startPost
+    start = split.getStart();
     end = start + split.getLength();
     final Path file = split.getPath();
     FileSystem fs = file.getFileSystem(job);

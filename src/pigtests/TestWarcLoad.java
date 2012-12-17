@@ -19,7 +19,8 @@ class TestWarcLoad {
 	public TestWarcLoad() {
 		try {
 			props.setProperty("pig.usenewlogicalplan", "false");
-			pserver = new PigServer(ExecType.MAPREDUCE, props);
+			//pserver = new PigServer(ExecType.MAPREDUCE, props);
+			pserver = new PigServer(ExecType.LOCAL, props);
 		} catch (ExecException e) {
 			e.printStackTrace();
 		}

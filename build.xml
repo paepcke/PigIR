@@ -28,6 +28,7 @@
     <path id="project.class.path">
       <fileset dir="lib">
 	<include name="**/*.jar" />
+	<include name="${env.HADOOP_HOME/conf/*.xml}" />
       </fileset>
     </path>
 
