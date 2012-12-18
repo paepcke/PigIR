@@ -29,8 +29,8 @@ class TestWarcLoad {
 	void doTests() {
 		try {
 			Map<String, String> env = System.getenv();
-			URI piggybankPath = new File(env.get("PIG_HOME"),
-					"contrib/piggybank/java/piggybank.jar").toURI();
+			URI piggybankPath = new File(env.get("PIGIR_HOME"),
+					"lib/piggybank.jar").toURI();
 			pserver.registerJar(piggybankPath.toString());
 			pserver.registerJar("contrib/PigIR.jar");
 			
@@ -78,7 +78,7 @@ class TestWarcLoad {
 			pserver.registerQuery("docsCulled = FOREACH docs GENERATE contentLength,date;");
 			//pserver.registerQuery("docsCulled = FOREACH docs GENERATE contentLength,content;");
 			//Common.print(pserver, "docs");
-			Common.print(pserver, "docsCulled");
+			//ommon.print(pserver, "docsCulled");
 			pserver.dumpSchema("docs");
 			//pserver.dumpSchema("docsCulled");
 			

@@ -1,6 +1,9 @@
 package pigir.warc.nohadoop;
 
 public class Logger {
+	
+	public Logger() {
+	}
 
 	public void info(String logContent) {
 		System.out.println(logContent);

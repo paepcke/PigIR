@@ -14,7 +14,7 @@ import org.apache.hadoop.mapreduce.InputSplit;
 import org.apache.hadoop.mapreduce.RecordReader;
 import org.apache.hadoop.mapreduce.TaskAttemptContext;
 import org.apache.hadoop.mapreduce.lib.input.FileSplit;
-import org.apache.log4j.Logger;
+//import org.apache.log4j.Logger;
 
 import pigir.pigudf.LineAndChunkReader;
 
@@ -33,10 +33,12 @@ public class WarcRecordReader extends RecordReader<LongWritable, Text> {
   private LongWritable keyWarcStreamPos = null;
   private WarcRecord valueWarcRecord = null;
   private FSDataInputStream fileIn = null;
+  private Logger logger=null;
 
     
   public void initialize(InputSplit genericSplit,
                          TaskAttemptContext context) throws IOException {
+	logger = new Logger();
     FileSplit split = (FileSplit) genericSplit;
     Configuration job = context.getConfiguration();
 

@@ -18,7 +18,8 @@ public class TestWordCount {
 	public TestWordCount() {
 		try {
 			props.setProperty("pig.usenewlogicalplan", "false");
-			pserver = new PigServer(ExecType.MAPREDUCE, props);
+			//pserver = new PigServer(ExecType.MAPREDUCE, props);
+			pserver = new PigServer(ExecType.LOCAL, props);
 		} catch (ExecException e) {
 			e.printStackTrace();
 		}
@@ -27,8 +28,8 @@ public class TestWordCount {
 	void doTests() {
 		try {
 			Map<String, String> env = System.getenv();
-			URI piggybankPath = new File(env.get("PIG_HOME"),
-					"contrib/piggybank/java/piggybank.jar").toURI();
+			URI piggybankPath = new File(env.get("PIGIR_HOME"),
+					"lib/piggybank.jar").toURI();
 			pserver.registerJar(piggybankPath.toString());
 			pserver.registerJar("contrib/PigIR.jar");
 			
