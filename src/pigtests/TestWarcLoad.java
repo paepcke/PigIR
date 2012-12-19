@@ -78,7 +78,7 @@ class TestWarcLoad {
 			pserver.registerQuery("docsCulled = FOREACH docs GENERATE contentLength,date;");
 			//pserver.registerQuery("docsCulled = FOREACH docs GENERATE contentLength,content;");
 			//Common.print(pserver, "docs");
-			//ommon.print(pserver, "docsCulled");
+			Common.print(pserver, "docsCulled");
 			pserver.dumpSchema("docs");
 			//pserver.dumpSchema("docsCulled");
 			
