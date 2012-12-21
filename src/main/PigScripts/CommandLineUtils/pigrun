@@ -1,0 +1,86 @@
+#! /bin/bash
+
+# Runs pig with the given pig file. Prints the
+# elapsed clock time at the end. Any Pig parameters
+# passed into this script from the command line 
+# are passed to Pig. The last command line parameter
+# must be the script to run.
+#
+# Passing named parameters to the Pig script: 
+#
+#    Some Pig scripts require or optionally take named parameters
+#    with values. These are documented with the Pig scripts.
+#    Such parameters should be entered on the command line
+#    like this: <parameterName>=<parameterValue>
+# 
+# Examples:
+#     pigrun myScript.pig
+#     pigrun fileName=/home/myname/data.csv myScript.pig
+#     pigrun age=25 gender=female makeProfile.pig
+#
+# Customization of this script to your environment:
+#     Any jar files needed by the script, other than 
+#     piggybank.jar is assumed to be in PIG_USER_JAR_DIR
+#     You can change this variable below.
+#
+# Environment assumptions:
+#     $PIG_HOME is set to point to the Pig installation
+
+#echo "Parameters ($#): $@"
+
+PIG_USER_JAR_DIR=/home/paepcke/contrib
+
+if [ $# -lt 1 ]
+then
+  echo "Usage: pigrun [args] pig-file"
+  exit
+fi
+
+# Hack to find last command line argument
+# without shifting:
+
+for PIG_SCRIPT_NAME; do true; done
+
+# Start building the eventual Pig command:
+
+PIG_COMMAND="-param USER_CONTRIB=$PIG_USER_JAR_DIR"
+PIG_COMMAND="${PIG_COMMAND} -param PIG_HOME=$PIG_HOME"
+
+# Did user include a excecution environment command? 
+#    ==> first two args are -x local or -x mapreduce:
+if [ $1 == "-x" ]
+then
+	PIG_COMMAND="-x $2 ${PIG_COMMAND}"
+	shift 2
+fi	
+
+# For each argument, other than the script name,
+# we pre-pend '-param', which is how Pig expects
+# paramters to be passed in. Example:
+#    pigrun age=35 myScript.pig
+# becomes: 
+#    -param age=35 myScript.pig
+
+for arg in "$@"
+do
+  if [ $arg == ${PIG_SCRIPT_NAME} ]
+  then
+     break
+  fi
+  PIG_COMMAND="${PIG_COMMAND} -param $arg "
+done
+
+# Finally, append the Pig script name to the command:
+
+PIG_COMMAND="${PIG_COMMAND} ${PIG_SCRIPT_NAME}"
+
+# And run the command:
+
+# -v: see the Java backtraces on the console, not just in the log file.
+# -l <dir>: log file directory
+# -f: the Pig script file to execute
+# -p: properties file to use:
+
+#echo "Pig cmd: $PIG_HOME/bin/pig -Dpig.usenewlogicalplan=false -v -logfile Logs ${PIG_COMMAND}"
+/usr/bin/time --format="Runtime (m:ss.millisec): %E" \
+	$PIG_HOME/bin/pig -Dpig.usenewlogicalplan=false -v -logfile Logs ${PIG_COMMAND}   

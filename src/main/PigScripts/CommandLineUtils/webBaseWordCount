@@ -1,0 +1,127 @@
+#!/bin/bash
+
+# Script that runs the PigScript webBaseWordCount.pig with
+# command line paramters.
+
+USAGE="Usage: webBaseWordCount [{-h | --help}] \n
+                         \t\t\t [{-v | --version}] \n
+                         \t\t\t [{-x | --execmode] {local | mapreduce}] \n
+                         \t\t\t [{-d | --destdir} <destinationDirectory>] (default is pwd) \n
+                         \t\t\t [{-n | --numpages} <numberOfPages>] (default is all) \n
+                         \t\t\t [{-s | --startsite} <startSite>] (default is first site) \n
+                         \t\t\t [{-e | --endsite} <endSite>] (default is last site) \n
+                         \t\t\t <crawlName> \n
+    \tExample: webBaseWordCount -d /user/doe/mycounts --startsite www.emus.com gov-04-2007 \n
+    \tExample: webBaseWordCount --numpages 2 gov-04-2007"
+
+
+PROGVERSION=1.0
+EXEC_MODE=mapreduce
+DEST_DIR=`pwd`
+NUM_PAGES=""
+START_SITE=""
+END_SITE=""
+
+SHORTOPTS="hvx:d:n:s:e:"
+LONGOPTS="help,version,execmode:,destdir:,numpages:,startsite:,endsite:"
+
+ARGS=`getopt -s bash --options=$SHORTOPTS  \
+  --longoptions=$LONGOPTS --name=$PROGNAME -- "$@"`
+
+eval set -- "$ARGS"
+
+while true; do
+   case $1 in
+      -h|--help)
+         echo -e $USAGE
+         exit 0
+         ;;
+      -v|--version)
+         echo "$PROGVERSION"
+	 exit 0
+         ;;
+      -x|--execmode)
+         shift
+         EXEC_MODE=$1
+         ;;
+      -d|--destdir)
+         shift
+         DEST_DIR=$1
+         ;;
+      -n|--numpages)
+         shift
+         NUM_PAGES=$1
+         ;;
+      -s|--startsite)
+         shift
+         START_SITE=$1
+         ;;
+      -e|--endsite)
+         shift
+         END_SITE=$1
+         ;;
+      --)
+         shift
+         break
+         ;;
+      *)
+         shift
+         break
+         ;;
+   esac
+   # Throw away the '--' that's added by getopt.
+   # The -- case above doesn't get hit when user
+   # forgets to put in any required args.
+   shift
+done
+
+# echo "execMode : '$EXEC_MODE'"
+# echo "destDir  : '$DEST_DIR'"
+# echo "numPages : '$NUM_PAGES'"
+# echo "startSite: '$START_SITE'"
+# echo "endSite  : '$END_SITE'"
+# echo "crawl: '$1'"
+
+if [ $# == 0 ] 
+then
+    echo "Missing crawl name."
+    echo -e $USAGE
+    exit -1
+else
+    CRAWL_NAME=$1
+fi
+
+# If we are running in cygwin, we have to convert the 
+# path to the Pig script into a Windows path:
+
+export SCRIPT_DIR=`dirname $0`
+if [[ `uname` == *CYGWIN* ]]
+then 
+  export SCRIPT_DIR=`cygpath --mixed ${SCRIPT_DIR}`
+fi
+
+# Check whether the word count target file exists.
+# If so, Pig would run for a long time, and then die. Make
+# this more fail-fast:
+
+EXISTENCE=`hadoop fs -stat ${DEST_DIR}/${CRAWL_NAME}_wordCount.cnt 2> /dev/null` 
+if [ -n "$EXISTENCE" ]
+then
+    echo "File ${DEST_DIR}/${CRAWL_NAME}_wordCount.cnt already exists. Quitting."
+    exit -1
+fi
+
+# The crawl source is expected in the form: crawlName:numPages:startSite:endSite,
+# though numPages, startSite, and endSite are all optional. Rather than 
+# doing lots of if statements, we just always include the three, even
+# if they are empty. If all three are empty that will be crawlName:::,
+# which is fine:
+
+CRAWL_SOURCE=${CRAWL_NAME}:${NUM_PAGES}:${START_SITE}:${END_SITE}
+
+pigrun -x $EXEC_MODE \
+        WORD_COUNT_DEST=${DEST_DIR}/${CRAWL_NAME}_wordCount.cnt \
+        CRAWL_SOURCE=$CRAWL_SOURCE \
+        ${SCRIPT_DIR}/webBaseWordCount.pig
+
+exit 0
