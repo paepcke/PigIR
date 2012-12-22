@@ -34,11 +34,10 @@
    Environment assumptions (all taken care of by pigrun, if 
     you initialized it):
     
-      * $PIG_HOME points to root of Pig installation
-      * $USER_CONTRIB points to location of PigIR.jar
+      * $USER_CONTRIB points to location of PigIR.jar and piggybank.jar
       * $USER_CONTRIB points to location of jsoup-1.5.2.jar
       
-   $PIG_HOME and $USER_CONTRIB are assumed to be passed in
+   $USER_CONTRIB is assumed to be passed in
    via -param command line parameters. The pigrun script that
    is used by warcWordCount takes care of this. Additionally,
    the following env vars must be passed in via -param:
@@ -55,7 +54,7 @@
 -- STORE command for the word count:
 %declare WORD_COUNT_STORE_COMMAND "STORE sorted INTO '$WORD_COUNT_DEST' USING PigStorage(',');";
 
-REGISTER $PIG_HOME/contrib/piggybank/java/piggybank.jar;
+REGISTER $USER_CONTRIB/piggybank.jar;
 REGISTER $USER_CONTRIB/PigIR.jar;
 REGISTER $USER_CONTRIB/jsoup-1.5.2.jar
 
