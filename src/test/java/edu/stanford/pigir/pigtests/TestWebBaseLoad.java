@@ -2,7 +2,6 @@ package edu.stanford.pigir.pigtests;
 
 import java.io.File;
 import java.net.URI;
-import java.util.Map;
 import java.util.Properties;
 
 import org.apache.pig.ExecType;
@@ -27,11 +26,10 @@ class TestWebBaseLoad {
 
 	void doTests() {
 		try {
-			Map<String, String> env = System.getenv();
-			URI piggybankPath = new File(env.get("PIG_HOME"),
-					"contrib/piggybank/java/piggybank.jar").toURI();
+			URI piggybankPath = new File("target/classes/piggybank.jar").toURI();
 			pserver.registerJar(piggybankPath.toString());
-			pserver.registerJar("contrib/PigIR.jar");
+			String pigirJarPath  = Common.findVersionedFileName("target", "pigir", "jar");
+			pserver.registerJar(pigirJarPath);
 			
 			pserver.registerQuery(
 					//"docs = LOAD '2003-06:1' " +
@@ -42,7 +40,7 @@ class TestWebBaseLoad {
 					//"docs = LOAD '2006-05:2' " +
 					// Get five pages:
 					"docs = LOAD '04-2009:5' " +
-					"		USING pigir.webbase.WebBaseLoader() " +
+					"		USING edu.stanford.pigir.webbase.WebBaseLoader() " +
 					"       AS (url:chararray, date:chararray, pageSize:int, position:int, docidInCrawl:int, httpHeader:chararray, content:chararray);"
 			);
 			//pserver.registerQuery("docsCulled = FOREACH docs GENERATE contentLength,date;");

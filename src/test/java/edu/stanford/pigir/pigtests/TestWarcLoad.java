@@ -27,12 +27,6 @@ class TestWarcLoad {
 
 	void doTests() {
 		try {
-			/******
-			Map<String, String> env = System.getenv();
-			URI piggybankPath = new File(env.get("PIGIR_HOME"),
-					"lib/piggybank.jar").toURI();
-			 * 
-			 */
 			URI piggybankPath = new File("target/classes/piggybank.jar").toURI();
 			pserver.registerJar(piggybankPath.toString());
 			String pigirJarPath  = Common.findVersionedFileName("target", "pigir", "jar");

@@ -30,16 +30,16 @@ public class TestTFIDF{
 	
 	void doTests() {
 		try {
-			Map<String,String> env = System.getenv();
-			URI piggybankPath = new File(env.get("PIG_HOME"),"contrib/piggybank/java/piggybank.jar").toURI(); 
+			URI piggybankPath = new File("target/classes/piggybank.jar").toURI();
 			pserver.registerJar(piggybankPath.toString());
-			pserver.registerJar("contrib/PigIR.jar");
+			String pigirJarPath  = Common.findVersionedFileName("target", "pigir", "jar");
+			pserver.registerJar(pigirJarPath);
 			
 			// pserver.debugOn();
 			pserver.registerQuery(
 					//"docs = LOAD 'file://E:/users/paepcke/dldev/Datasets/morTweetsSmall.csv' USING " + 
 					//"docs = LOAD 'file://E:/users/paepcke/dldev/EclipseWorkspaces/Pigir/src/Datasets/FDADataSortedCRLFFixed.csv' USING " +
-					"docs = LOAD 'resources/Datasets/morTweetsSmall.csv' USING " + 
+					"docs = LOAD 'target/classes/resources/Datasets/morTweetsSmall.csv' USING " + 
 					             "org.apache.pig.piggybank.storage.CSVLoader AS " +
 					             "(txt:chararray," +
 					             "source:chararray," + 
@@ -59,16 +59,16 @@ public class TestTFIDF{
 
 			pserver.registerQuery(
 				    "docTokens = FOREACH docs {"  +
-				        "dateAndTime = pigir.SplitDateTime(dateTime);" +
+				        "dateAndTime = edu.stanford.pigir.pigudf.SplitDateTime(dateTime);" +
 				      "GENERATE " +
 				      "  (chararray) dateAndTime.date AS date," +
 				      "  (chararray) dateAndTime.time AS time," +
-				      "  pigir.TFs(pigir.RegexpTokenize(txt," +
+				      "  edu.stanford.pigir.pigudf.TFs(edu.stanford.pigir.pigudf.RegexpTokenize(txt," +
 				      										  RegexpTokenize.USE_DEFAULT_SPLIT_REGEXP + "," +
 				      										  RegexpTokenize.PRESERVE_URLS + "," +
 				      										  RegexpTokenize.KILL_STOPWORDS + ")) " +
 				      										  		"AS tokenTfs," +
-				      "  (chararray) pigir.GetUUID() AS tweetID;" +
+				      "  (chararray) edu.stanford.pigir.pigudf.GetUUID() AS tweetID;" +
 				      "};"
 			);
 			
@@ -106,7 +106,7 @@ public class TestTFIDF{
 					(fdb73531-a2d1-43f1-942e-6fae157b6cfe,New,0.07692307692307693,2)
 				 */
 		    pserver.registerQuery("theTokenTfAndIdfs = FOREACH theTokenTfAndDfs {" +
-		    		"										GENERATE docId,token, pigir.TFIDF(collSizeScalar.collSize,tf,df) AS tfidf;" +
+		    		"										GENERATE docId,token, edu.stanford.pigir.pigudf.TFIDF(collSizeScalar.collSize,tf,df) AS tfidf;" +
 		    		"										};");
 		    
 		    //pserver.registerQuery("store theTokenTfAndIdfs INTO 'Datasets/morTweetTfIDF' USING PigStorage(',');");

@@ -2,7 +2,6 @@ package edu.stanford.pigir.pigtests;
 
 import java.io.File;
 import java.net.URI;
-import java.util.Map;
 import java.util.Properties;
 
 import org.apache.pig.ExecType;
@@ -27,26 +26,25 @@ public class TestWordCount {
 
 	void doTests() {
 		try {
-			Map<String, String> env = System.getenv();
-			URI piggybankPath = new File(env.get("PIGIR_HOME"),
-					"lib/piggybank.jar").toURI();
+			URI piggybankPath = new File("target/classes/piggybank.jar").toURI();
 			pserver.registerJar(piggybankPath.toString());
-			pserver.registerJar("contrib/PigIR.jar");
+			String pigirJarPath  = Common.findVersionedFileName("target", "pigir", "jar");
+			pserver.registerJar(pigirJarPath);
 			
 			pserver.registerQuery(
-					"docs = LOAD 'resources/Datasets/ClueWeb09_English_Sample.warc' " +
-					"		USING pigir.warc.WarcLoader" +
+					"docs = LOAD 'target/classes/Datasets/ClueWeb09_English_Sample.warc' " +
+					"		USING edu.stanford.pigir.warc.WarcLoader" +
 					"       AS (warcRecordId:chararray, contentLength:int, date:chararray, warc_type:chararray," +
 					"           optionalHeaderFlds:bytearray, content:chararray);"
 			);
 			pserver.registerQuery(
-					"strippedDocs = FOREACH docs GENERATE pigir.pigudf.StripHTML(content);");
+					"strippedDocs = FOREACH docs GENERATE edu.stanford.pigir.pigudf.StripHTML(content);");
 			
 			// Tokenize, using default regexp for splitting (the null), eliminiating
 			// stopwords (first 1 in parameter list), and preserving URLs (second 1 in parms):
 			pserver.registerQuery(
 					"strippedWords = FOREACH strippedDocs GENERATE " +
-					                    "FLATTEN(pigir.pigudf.RegexpTokenize(content, null, 1, 1));"
+					                    "FLATTEN(edu.stanford.pigir.pigudf.RegexpTokenize(content, null, 1, 1));"
 			);
 
 			pserver.registerQuery(
