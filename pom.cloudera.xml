@@ -36,6 +36,11 @@
 		  <groupId>org.apache.pig</groupId>
 		  <artifactId>piggybank</artifactId>
 		  <version>0.10.0-cdh4.1.2</version>
+		<artifactItem>
+		  <groupId>org.jsoup</groupId>
+		  <artifactId>jsoup</artifactId>
+		  <version>1.6.3</version>
+		</artifactItem>
 		</artifactItem>
 		<artifactItem>
 		  <groupId>org.antlr</groupId>

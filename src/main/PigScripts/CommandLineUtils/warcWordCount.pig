@@ -34,8 +34,9 @@
    Environment assumptions (all taken care of by pigrun, if 
     you initialized it):
     
-      * $USER_CONTRIB points to location of PigIR.jar and piggybank.jar
+      * $USER_CONTRIB points to location of piggybank.jar
       * $USER_CONTRIB points to location of jsoup-1.5.2.jar
+      * $PIGIR_HOME   points to location project root (above target dir)
       
    $USER_CONTRIB is assumed to be passed in
    via -param command line parameters. The pigrun script that
@@ -55,21 +56,21 @@
 %declare WORD_COUNT_STORE_COMMAND "STORE sorted INTO '$WORD_COUNT_DEST' USING PigStorage(',');";
 
 REGISTER $USER_CONTRIB/piggybank.jar;
-REGISTER $USER_CONTRIB/PigIR.jar;
-REGISTER $USER_CONTRIB/jsoup-1.5.2.jar
+REGISTER $PIGIR_HOME/target/pigir.jar;
+REGISTER $USER_CONTRIB/jsoup.jar
 
 docs = LOAD '$WARC_FILE'
-		USING pigir.warc.WarcLoader
+		USING edu.stanford.pigir.warc.WarcLoader
        AS (warcRecordId:chararray, contentLength:int, date:chararray, warc_type:chararray,
            optionalHeaderFlds:bytearray, content:chararray);
 
-strippedDocs = FOREACH docs GENERATE pigir.pigudf.StripHTML(content);
+strippedDocs = FOREACH docs GENERATE edu.stanford.pigir.pigudf.StripHTML(content);
 
 /* Tokenize, using default regexp for splitting (the null), eliminiating
    stopwords (first '1' in parameter list), and preserving URLs 
    (second '1' in parms):
 */   
-strippedWords = FOREACH strippedDocs GENERATE FLATTEN(pigir.pigudf.RegexpTokenize(content, null, 1, 1));
+strippedWords = FOREACH strippedDocs GENERATE FLATTEN(edu.stanford.pigir.pigudf.RegexpTokenize(content, null, 1, 1));
 
 strippedGroupedWords = GROUP strippedWords BY $0;
 

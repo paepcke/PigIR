@@ -28,7 +28,8 @@
 
 #echo "Parameters ($#): $@"
 
-PIG_USER_JAR_DIR=../../../../target/classes
+[ -z "$PIGIR_HOME" ] && echo "Need to set PIGIR_HOME to root of PigIR project" && exit 1;
+PIG_USER_JAR_DIR=$PIGIR_HOME/target/classes
 
 if [ $# -lt 1 ]
 then
@@ -45,6 +46,7 @@ for PIG_SCRIPT_NAME; do true; done
 
 PIG_COMMAND="-param USER_CONTRIB=$PIG_USER_JAR_DIR"
 PIG_COMMAND="${PIG_COMMAND} -param PIG_HOME=$PIG_HOME"
+PIG_COMMAND="${PIG_COMMAND} -param PIGIR_HOME=$PIGIR_HOME"
 
 # Did user include a excecution environment command? 
 #    ==> first two args are -x local or -x mapreduce:
