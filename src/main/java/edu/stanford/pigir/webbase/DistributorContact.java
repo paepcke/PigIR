@@ -337,7 +337,7 @@ public class DistributorContact implements Writable, Serializable {
 		try {
 			FileUtils.copyURLToFile(crawlListURL, tmpFile, Constants.WB_CONNECTING_TIMEOUT, Constants.WB_INTERNET_READ_TIMEOUTE);
 		} catch (Exception e) {
-			String errMsg = "Could not copy fresh WebBase crawl directory list into cash:\n     " +
+			String errMsg = "Could not copy fresh WebBase crawl directory list into cache:\n     " +
 							e.getMessage();
 			if (oldDirectoryListFile.exists()) {
 				errMsg += "\n     Using cached version.";

@@ -31,11 +31,11 @@
       buildWebBaseIndex gov-03-2009::access.usgs.gov
     
     Environment expectations:
-      * $PIG_HOME points to root of Pig installation
-      * $USER_CONTRIB points to location of PigIR.jar
+      * $USER_CONTRIB points to location of piggybank.jar
       * $USER_CONTRIB points to location of jsoup-1.5.2.jar
+      * $PIGIR_HOME   points to location project root (above target dir)
 
-   $PIG_HOME and $USER_CONTRIB are assumed to be passed in
+   $USER_CONTRIB are assumed to be passed in
    via -param command line parameters. The pigrun script that
    is used by webBaseWordCount takes care of this. Additionally,
    the following env vars must be passed in via -param:
@@ -51,12 +51,12 @@
 -- STORE command for the word count:
 %declare WORD_COUNT_STORE_COMMAND "STORE sorted INTO '$WORD_COUNT_DEST' USING PigStorage(',');";
 
-REGISTER $PIG_HOME/contrib/piggybank/java/piggybank.jar;
-REGISTER $USER_CONTRIB/PigIR.jar;
-REGISTER $USER_CONTRIB/jsoup-1.5.2.jar
+REGISTER $USER_CONTRIB/piggybank.jar;
+REGISTER $PIGIR_HOME/target/pigir.jar;
+REGISTER $PIGIR_HOME/target/classes/jsoup.jar
 
 docs = LOAD '$CRAWL_SOURCE'
-	USING pigir.webbase.WebBaseLoader()
+	USING edu.stanford.pigir.webbase.WebBaseLoader()
 	AS (url:chararray,
 	    date:chararray,
 	 	pageSize:int,
@@ -65,13 +65,13 @@ docs = LOAD '$CRAWL_SOURCE'
 	 	httpHeader,
 	 	content:chararray);
 
-strippedDocs = FOREACH docs GENERATE pigir.pigudf.StripHTML(content);
+strippedDocs = FOREACH docs GENERATE edu.stanford.pigir.pigudf.StripHTML(content);
 
 /* Tokenize, using default regexp for splitting (the null), eliminiating
    stopwords (first '1' in parameter list), and preserving URLs 
    (second '1' in parms):
 */   
-strippedWords = FOREACH strippedDocs GENERATE FLATTEN(pigir.pigudf.RegexpTokenize(content, null, 1, 1));
+strippedWords = FOREACH strippedDocs GENERATE FLATTEN(edu.stanford.pigir.pigudf.RegexpTokenize(content, null, 1, 1));
 
 strippedGroupedWords = GROUP strippedWords BY $0;
 

@@ -6,7 +6,7 @@
 USAGE="Usage: webBaseWordCount [{-h | --help}] \n
                          \t\t\t [{-v | --version}] \n
                          \t\t\t [{-x | --execmode] {local | mapreduce}] \n
-                         \t\t\t [{-d | --destdir} <destinationDirectory>] (default is pwd) \n
+                         \t\t\t [{-d | --destdir} <destinationDirectory>] (default: pwd if execmode==local; else '/user/<username>') \n
                          \t\t\t [{-n | --numpages} <numberOfPages>] (default is all) \n
                          \t\t\t [{-s | --startsite} <startSite>] (default is first site) \n
                          \t\t\t [{-e | --endsite} <endSite>] (default is last site) \n
@@ -17,7 +17,6 @@ USAGE="Usage: webBaseWordCount [{-h | --help}] \n
 
 PROGVERSION=1.0
 EXEC_MODE=mapreduce
-DEST_DIR=`pwd`
 NUM_PAGES=""
 START_SITE=""
 END_SITE=""
@@ -74,6 +73,16 @@ while true; do
    # forgets to put in any required args.
    shift
 done
+
+if [ -z $DEST_DIR ]
+then    
+    if [ $EXEC_MODE == local ] 
+    	then
+    	    DEST_DIR=`pwd`
+    	else
+    	    DEST_DIR='/user/'`whoami`
+    fi     
+fi    
 
 # echo "execMode : '$EXEC_MODE'"
 # echo "destDir  : '$DEST_DIR'"

@@ -35,11 +35,11 @@
       buildWebBaseIndex gov-03-2009::access.usgs.gov
     
     Environment expectations:
-      * $PIG_HOME points to root of Pig installation
-      * $USER_CONTRIB points to location of PigIR.jar
+      * $USER_CONTRIB points to location of piggybank.jar
       * $USER_CONTRIB points to location of jsoup-1.5.2.jar
+      * $PIGIR_HOME   points to location project root (above target dir)
 
-   $PIG_HOME and $USER_CONTRIB are assumed to be passed in
+   $USER_CONTRIB are assumed to be passed in
    via -param command line parameters. The pigrun script that
    is used by buildWebBaseIndex takes care of this. Additionally,
    the following env vars must be passed in via -param:
@@ -66,12 +66,12 @@
 -- STORE command for the final index:
 %declare INDEX_STORE_COMMAND "STORE sortedIndex INTO '$INDEX_DEST' USING PigStorage(',');";
 
-REGISTER $PIG_HOME/contrib/piggybank/java/piggybank.jar;
-REGISTER $USER_CONTRIB/PigIR.jar;
-REGISTER $USER_CONTRIB/jsoup-1.5.2.jar
+REGISTER $USER_CONTRIB/piggybank.jar;
+REGISTER $PIGIR_HOME/target/pigir.jar;
+REGISTER $USER_CONTRIB/jsoup.jar
 
 docs = LOAD '$CRAWL_SOURCE'
-	USING pigir.webbase.WebBaseLoader()
+	USING edu.stanford.pigir.webbase.WebBaseLoader()
 	AS (url:chararray,
 	    date:chararray,
 	 	pageSize:int,
@@ -84,7 +84,7 @@ indexPackages = FOREACH docs GENERATE
 			url, 
 			date, 
 			pageSize, 
-			pigir.pigudf.IndexOneDoc(pigir.pigudf.GetLUID(), content) AS postingsPackage; 
+			edu.stanford.pigir.pigudf.IndexOneDoc(edu.stanford.pigir.pigudf.GetLUID(), content) AS postingsPackage; 
 
 -- Now we have:
 --    indexPackages: {url:chararray,

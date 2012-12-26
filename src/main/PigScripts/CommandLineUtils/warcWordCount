@@ -6,13 +6,12 @@
 USAGE="Usage: warcWordCoun [{-h | --help}] \n
                            \t\t\t [{-v | --version}] \n
                            \t\t\t [{-x | --execmode] {local | mapreduce}] \n
-                           \t\t\t [{-d | --destdir} <destinationDirectory>] (default is pwd) \n
+                           \t\t\t [{-d | --destdir} <destinationDirectory>] (default: pwd if execmode==local; else '/user/<username>') \n
                            \t\t\t <warcFilePathOnHDFS> \n
     \tExample: warWordCount -d /user/doe/mycounts Dataset/gov-04-2007.warc \n"
 
 PROGVERSION=1.0
 EXEC_MODE=mapreduce
-DEST_DIR=`pwd`
 NUM_PAGES=""
 START_SITE=""
 END_SITE=""
@@ -70,6 +69,16 @@ while true; do
    shift
 done
 
+if [ -z $DEST_DIR ]
+then    
+    if [ $EXEC_MODE == local ] 
+    	then
+    	    DEST_DIR=`pwd`
+    	else
+    	    DEST_DIR='/user/'`whoami`
+    fi     
+fi    
+
 # echo "execMode : '$EXEC_MODE'"
 # echo "destDir  : '$DEST_DIR'"
 # echo "numPages : '$NUM_PAGES'"
@@ -105,6 +114,11 @@ then
     echo "File ${DEST_DIR}/${WARC_NAME}_wordCount.cnt already exists. Quitting."
     exit -1
 fi
+
+echo "Starting warcWordCount:
+Exec mode: -x $EXEC_MODE
+Input file : $WARC_NAME
+Output file: ${DEST_DIR}/${WARC_NAME}_wordCount.cnt"
 
 pigrun -x $EXEC_MODE \
         WORD_COUNT_DEST=${DEST_DIR}/${WARC_NAME}_wordCount.cnt \
