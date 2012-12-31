@@ -72,6 +72,9 @@ do
   PIG_COMMAND="${PIG_COMMAND} -param $arg "
 done
 
+export JAVA_HOME=$JAVA_HOME
+export PIG_CLASSPATH=$HADOOP_HOME/conf 
+
 # Finally, append the Pig script name to the command:
 
 PIG_COMMAND="${PIG_COMMAND} ${PIG_SCRIPT_NAME}"

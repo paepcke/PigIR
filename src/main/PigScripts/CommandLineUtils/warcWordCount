@@ -108,6 +108,10 @@ fi
 # If so, Pig would run for a long time, and then die. Make
 # this more fail-fast:
 
+#***************
+echo "DEST_DIR: $DEST_DIR. WARC_NAME: $WARC_NAME"
+#***************
+
 EXISTENCE=`hadoop fs -stat ${DEST_DIR}/${WARC_NAME}_wordCount.cnt 2> /dev/null` 
 if [ -n "$EXISTENCE" ]
 then
