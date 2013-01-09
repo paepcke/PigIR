@@ -74,7 +74,14 @@ ngrams = FOREACH strippedDocs GENERATE FLATTEN(edu.stanford.pigir.pigudf.NGramGe
 */   
 --strippedWords = FOREACH strippedDocs GENERATE FLATTEN(edu.stanford.pigir.pigudf.RegexpTokenize(content, null, 1, 0));
 
-groupedNgrams = GROUP ngrams BY $0;
+STORE ngrams INTO '/tmp/ungroupedNgrams.csv';
+
+storedNgrams = LOAD '/tmp/ungroupedNgrams.csv'
+	   		   USING PigStorage
+               AS (word1:chararray, word2:chararray);
+
+groupedNgrams = GROUP storedNgrams BY $0;
+--groupedNgrams = GROUP ngrams BY $0;
 
 --ngrams = FOREACH strippedGroupedWords GENERATE $0 AS word:chararray ,COUNT($1) AS count:long;
 --sorted     = ORDER wordCounts BY word PARALLEL 5;
