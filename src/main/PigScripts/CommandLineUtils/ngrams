@@ -124,10 +124,14 @@ Exec mode: -x $EXEC_MODE
 Input file : $WARC_NAME
 Output file: ${DEST_DIR}/${WARC_NAME}_wordCount.cnt"
 
+# Units her are in MB. Default is 1000MB=1GB
+# Increase that for this run to 10GB:
+export PIG_HEAPSIZE=10000
+
 pigrun -x $EXEC_MODE \
-        NGRAM_DEST=${DEST_DIR}/${WARC_NAME}_ngrams.csv \
-        WARC_FILE=$WARC_NAME \
-        ${SCRIPT_DIR}/ngrams.pig
+       NGRAM_DEST=${DEST_DIR}/${WARC_NAME}_ngrams.csv \
+       WARC_FILE=$WARC_NAME \
+       ${SCRIPT_DIR}/ngrams.pig
 
 exit 0
 

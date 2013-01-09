@@ -53,11 +53,11 @@
 */       
 
 -- STORE command for the word count:
-%declare NGRAM_STORE_COMMAND "STORE sorted INTO '$NGRAM_DEST' USING PigStorage(',');";
+%declare NGRAM_STORE_COMMAND "STORE groupedNgrams INTO '$NGRAM_DEST' USING PigStorage(',');";
 
 REGISTER $USER_CONTRIB/piggybank.jar;
 REGISTER $PIGIR_HOME/target/pigir.jar;
-REGISTER $USER_CONTRIB/jsoup.jar
+REGISTER $USER_CONTRIB/jsoup.jar;
 
 docs = LOAD '$WARC_FILE'
 		USING edu.stanford.pigir.warc.WarcLoader
@@ -66,7 +66,7 @@ docs = LOAD '$WARC_FILE'
 
 strippedDocs = FOREACH docs GENERATE edu.stanford.pigir.pigudf.StripHTML(content);
 
-ngrams = FOREACH strippedDocs GENERATE edu.stanford.pigir.pigudf.NGramGenerator(content)
+ngrams = FOREACH strippedDocs GENERATE FLATTEN(edu.stanford.pigir.pigudf.NGramGenerator(content));
 
 /* Tokenize, using default regexp for splitting (the null), eliminiating
    stopwords (first '1' in parameter list), and removing URLs 
@@ -74,7 +74,7 @@ ngrams = FOREACH strippedDocs GENERATE edu.stanford.pigir.pigudf.NGramGenerator(
 */   
 --strippedWords = FOREACH strippedDocs GENERATE FLATTEN(edu.stanford.pigir.pigudf.RegexpTokenize(content, null, 1, 0));
 
---strippedGroupedWords = GROUP strippedWords BY $0;
+groupedNgrams = GROUP ngrams BY $0;
 
 --ngrams = FOREACH strippedGroupedWords GENERATE $0 AS word:chararray ,COUNT($1) AS count:long;
 --sorted     = ORDER wordCounts BY word PARALLEL 5;

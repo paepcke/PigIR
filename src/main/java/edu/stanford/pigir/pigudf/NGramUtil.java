@@ -58,7 +58,8 @@ public class NGramUtil {
 		for (int i = 0; i < stop; i++) {
 			StringBuilder sb = new StringBuilder();
 			for (int j = 0; j < maxN; j++) {
-				sb.append(words[i + j]).append(" ");
+				//sb.append(words[i + j]).append(" ");
+				sb.append(words[i + j]).append(",");
 			}
 			sb.deleteCharAt(sb.length() - 1);
 			ngrams.add(sb.toString());
