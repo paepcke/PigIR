@@ -4,7 +4,6 @@ package edu.stanford.pigir.pigtests;
 import java.io.File;
 import java.io.IOException;
 import java.net.URI;
-import java.util.Map;
 import java.util.Properties;
 
 import org.apache.pig.ExecType;

@@ -16,3 +16,4 @@ PigScripts/orderErrorLocal.pig
 PigScripts/orderErrorLocal.pig~
 ilc0
 target
+pom.xml
