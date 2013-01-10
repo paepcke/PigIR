@@ -3,6 +3,7 @@ package edu.stanford.pigir.pigudf;
 import java.io.IOException;
 import java.util.ArrayList;
 
+import org.apache.pig.FilterFunc;
 import org.apache.pig.backend.executionengine.ExecException;
 import org.apache.pig.data.Tuple;
 import org.apache.pig.data.TupleFactory;
@@ -13,7 +14,7 @@ import org.apache.pig.data.TupleFactory;
  * if all fields are purely numeric. Recognizes hyphen, plus, and minus
  * as strings.  
  */
-public class CSVFieldsNumeric {
+public class CSVFieldsNumeric extends FilterFunc {
 	
 	
 	public Boolean exec(Tuple input) throws IOException {

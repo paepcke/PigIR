@@ -16,6 +16,7 @@ import org.apache.pig.data.TupleFactory;
  * as strings. 
  */
 public class IsNumber extends FilterFunc {
+	
 	public Boolean exec(Tuple input) throws IOException {
 		if (input == null || input.size() == 0)
 			return null;
