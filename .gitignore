@@ -17,3 +17,4 @@ PigScripts/orderErrorLocal.pig~
 ilc0
 target
 pom.xml
+.externalToolBuilders/
