@@ -53,7 +53,7 @@
 */       
 
 -- STORE command for the word count:
-%declare NGRAM_STORE_COMMAND "STORE groupedNgrams INTO '$NGRAM_DEST' USING PigStorage(',');";
+%declare NGRAM_STORE_COMMAND "STORE countedNgrams INTO '$NGRAM_DEST' USING PigStorage(',');";
 
 REGISTER $USER_CONTRIB/piggybank.jar;
 REGISTER $PIGIR_HOME/target/pigir.jar;
@@ -66,22 +66,37 @@ docs = LOAD '$WARC_FILE'
 
 strippedDocs = FOREACH docs GENERATE edu.stanford.pigir.pigudf.StripHTML(content);
 
+/*
+Get this data structure:
+foo,bar
+blue,gray
+foo,bar
+1,4
+*/
 ngrams = FOREACH strippedDocs GENERATE FLATTEN(edu.stanford.pigir.pigudf.NGramGenerator(content));
 
-/* Tokenize, using default regexp for splitting (the null), eliminiating
-   stopwords (first '1' in parameter list), and removing URLs 
-   ('0' in parms):
-*/   
---strippedWords = FOREACH strippedDocs GENERATE FLATTEN(edu.stanford.pigir.pigudf.RegexpTokenize(content, null, 1, 0));
+/*
+Get the following data structure:
+a,step,{(a,step,)}
+a,team,{(a,team,),(a,team,),(a,team,),(a,team,)}
 
-STORE ngrams INTO '/tmp/ungroupedNgrams.csv';
+*/
+groupedNgrams = GROUP ngrams BY $0;
 
-storedNgrams = LOAD '/tmp/ungroupedNgrams.csv'
-	   		   USING PigStorage
-               AS (word1:chararray, word2:chararray);
+/*
+Generate:
+(man,woman,5)
+(this,that,20)
+Where the number is the ngram count.
+*/
 
-groupedNgrams = GROUP storedNgrams BY $0;
---groupedNgrams = GROUP ngrams BY $0;
+/* A DESCRIBE of groupedNGrams would return:
+groupedNgrams: {group: chararray,ngrams: {(edu.stanford.pigir.pigudf.ngramgenerator_content_4::ngram: chararray)}}
+*/
+--DESCRIBE groupedNgrams;
+
+--countedNGrams = FOREACH groupedNgrams GENERATE $0 AS word:chararray, $1 AS word:chararray, COUNT($3) AS count:long;
+countedNgrams = FOREACH groupedNgrams GENERATE group AS wordPair:chararray, SIZE(ngrams) AS count:long;
 
 --ngrams = FOREACH strippedGroupedWords GENERATE $0 AS word:chararray ,COUNT($1) AS count:long;
 --sorted     = ORDER wordCounts BY word PARALLEL 5;

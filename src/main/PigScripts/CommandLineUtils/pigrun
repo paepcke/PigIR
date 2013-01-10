@@ -88,5 +88,5 @@ PIG_COMMAND="${PIG_COMMAND} ${PIG_SCRIPT_NAME}"
 
 echo "Pig cmd: pig -Dpig.usenewlogicalplan=false -Dpig.temp.dir=/user/paepcke -v -logfile Logs ${PIG_COMMAND}"
 /usr/bin/time --format="Runtime (m:ss.millisec): %E" \
-        pig -Dmapred.child.java.opts=-Xmx10g -Dpig.usenewlogicalplan=false -Dpig.temp.dir=/user/paepcke -v -logfile Logs ${PIG_COMMAND}   
+        pig -Dpig.temp.dir=/user/paepcke -v -logfile Logs ${PIG_COMMAND}   
 	#****pig -Dpig.usenewlogicalplan=false -Dpig.temp.dir=/user/paepcke -v -logfile Logs ${PIG_COMMAND}   
