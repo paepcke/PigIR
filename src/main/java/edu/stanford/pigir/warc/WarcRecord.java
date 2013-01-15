@@ -38,7 +38,9 @@ package edu.stanford.pigir.warc;
  *                                Replaced separate header API with a 
  *                                Map<String,String> implementation that
  *                                includes 'content' as one of its fields.
- * 
+ * Jan 15, 2013; Andreas Paepcke: added ability to accept multiple WARC versions. 
+ * 								  Search for WARC_VERSIONS, and add new ones as
+ * 								  appropriate.  
  */
 
 import java.io.EOFException;
@@ -155,8 +157,8 @@ public class WarcRecord extends Text implements WarcRecordMap {
 	};
 	
 	// Marker to look for when finding the next WARC record wbRecordReader a stream:
-	public static String WARC_VERSION = "WARC/0.18";
-	public static String WARC_VERSION_LINE = "WARC/0.18\n";
+	public static String[] WARC_VERSIONS = {"WARC/0.18", "WARC/1.0"};
+	//public static String WARC_VERSION_LINE = "WARC/0.18\n";
 	private static String NEWLINE="\n";
 	
 	private static HashMap<String,String> tmpHeaderMap = new HashMap<String, String>();
@@ -328,8 +330,11 @@ public class WarcRecord extends Text implements WarcRecordMap {
 		while ((!foundMark) && ((bytesRead = warcLineReader.readLine(txtBuf))!=0)) {
 			line = txtBuf.toString();
 			tmpGrandTotalBytesRead += bytesRead;
-			if (line.startsWith(WARC_VERSION)) {
-				foundMark=true;
+			int i;
+			for (i=0; i < WARC_VERSIONS.length; i++) {
+				if (line.startsWith(WARC_VERSIONS[i])) {
+					foundMark=true;
+				}
 			}
 			txtBuf.clear();
 		}
