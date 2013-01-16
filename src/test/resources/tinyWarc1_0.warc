@@ -1,0 +1,1980 @@
+WARC/1.0
+WARC-Type: warcinfo
+WARC-Date: 2012-12-07T18:54:56Z
+WARC-Filename: WEB-20121207185456922-00000-23301~mono.stanford.edu~8443.warc.gz
+WARC-Record-ID: <urn:uuid:155c7215-756f-4609-b10d-104b7ce86a69>
+Content-Type: application/warc-fields
+Content-Length: 406
+
+software: Heritrix/3.1.0 http://crawler.archive.org
+ip: 127.0.1.1
+hostname: mono.stanford.edu
+format: WARC File Format 1.0
+conformsTo: http://bibnum.bnf.fr/WARC/WARC_ISO_28500_version1_latestdraft.pdf
+isPartOf: small_crawls
+description: Basic crawl starting with useful defaults
+robots: obey
+http-header-user-agent: Mozilla/5.0 (compatible; heritrix/3.1.0 +http://infolab.stanford.edu/~paepcke)
+
+
+
+WARC/1.0
+WARC-Type: response
+WARC-Target-URI: dns:www.dmoz.org
+WARC-Date: 2012-12-07T18:54:56Z
+WARC-IP-Address: 171.64.64.64
+WARC-Record-ID: <urn:uuid:c1f78b79-d21f-49fd-80c6-b723b05b323b>
+Content-Type: text/dns
+Content-Length: 62
+
+20121207185456
+dmoz-beta.egslb.aol.com.	30	IN	A	64.12.239.187
+
+
+WARC/1.0
+WARC-Type: response
+WARC-Target-URI: http://www.dmoz.org/robots.txt
+WARC-Date: 2012-12-07T18:54:59Z
+WARC-Payload-Digest: sha1:WR7NXVYNEP6VHQRAJBSAJLG4I4SRHWPL
+WARC-IP-Address: 64.12.239.187
+WARC-Record-ID: <urn:uuid:049e822e-698b-4e26-9f64-da99d13f37ff>
+Content-Type: application/http; msgtype=response
+Content-Length: 456
+
+HTTP/1.1 200 OK
+Date: Fri, 07 Dec 2012 18:55:32 GMT
+Server: Apache
+Accept-Ranges: bytes
+Content-Length: 296
+Connection: close
+Content-Type: text/plain
+
+# Please do not crawl us faster than 1 hit/second.
+#
+# If you need to examine many dmoz pages, please download the rdf file from
+# http://rdf.dmoz.org/ instead of crawling us.
+#
+User-agent: *
+Crawl-Delay: 1
+Disallow: /public/
+Disallow: /editors/
+Disallow: /search/
+Disallow: /cgi-bin/
+
+
+WARC/1.0
+WARC-Type: request
+WARC-Target-URI: http://www.dmoz.org/robots.txt
+WARC-Date: 2012-12-07T18:54:59Z
+WARC-Concurrent-To: <urn:uuid:049e822e-698b-4e26-9f64-da99d13f37ff>
+WARC-Record-ID: <urn:uuid:6719fa60-035c-46a9-920f-68fecd54de66>
+Content-Type: application/http; msgtype=request
+Content-Length: 232
+
+GET /robots.txt HTTP/1.0
+User-Agent: Mozilla/5.0 (compatible; heritrix/3.1.0 +http://infolab.stanford.edu/~paepcke)
+Connection: close
+Accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8
+Host: www.dmoz.org
+
+
+
+WARC/1.0
+WARC-Type: metadata
+WARC-Target-URI: http://www.dmoz.org/robots.txt
+WARC-Date: 2012-12-07T18:54:59Z
+WARC-Concurrent-To: <urn:uuid:049e822e-698b-4e26-9f64-da99d13f37ff>
+WARC-Record-ID: <urn:uuid:8260191e-e5b3-4464-9a48-9e8b7ad55ad8>
+Content-Type: application/warc-fields
+Content-Length: 143
+
+force-fetch:
+via: http://www.dmoz.org/Health
+hopsFromSeed: P
+fetchTimeMs: 149
+outlink: http://www.dmoz.org/favicon.ico I =INFERRED_MISC
+
+
+
+WARC/1.0
+WARC-Type: response
+WARC-Target-URI: http://www.dmoz.org/Health
+WARC-Date: 2012-12-07T18:55:03Z
+WARC-Payload-Digest: sha1:F7E545Z5C5O7JFC2TOVN74DT7YXFNN5N
+WARC-IP-Address: 64.12.239.187
+WARC-Record-ID: <urn:uuid:a2e9947f-607f-4ad7-b96e-89bfc5f4fad9>
+Content-Type: application/http; msgtype=response
+Content-Length: 38532
+
+HTTP/1.1 200 OK
+Date: Fri, 07 Dec 2012 18:55:35 GMT
+Server: Apache
+Set-Cookie: JSESSIONID=F993CFAE3E161943ABCA3CECF552220E; Path=/
+Content-Language: en
+Content-Length: 38292
+Connection: close
+Content-Type: text/html;charset=UTF-8
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+
+<link rel="icon" href="/img/mozilla.ico" type="image/x-icon" />
+<link rel="shortcut icon" href="/img/mozilla.ico" type="image/x-icon" />
+
+<link rel="stylesheet" type="text/css" href=http://o.aolcdn.com/os/dmoz/editors/css/dmoznew.css />
+<style>
+.remBld {float:left; font-weight:bold; margin-right:5px; font-size:17px;}
+#_alt_ctrl_ALL, #_alt_ctrl_Z {border-right:none !important;}
+ul.right_align {float:left;}
+</style>
+<script type="text/javascript" src="http://o.aolcdn.com/os/dmoz/editors/scripts/jquery.js"></script>
+</head>
+<body dir="LTR">
+
+<div class="none">
+<!-- SiteCatalyst code version: H.7.  Copyright 1997-2007 Omniture, Inc. More info available at http://www.omniture.com -->
+<script type="text/javascript"><!--
+if(navigator.appVersion.indexOf('MSIE')>=0)document.write(unescape('%3C')+'\!-'+'-')
+//--></script>
+<!-- End SiteCatalyst code version: H.2. -->
+</div>
+
+<div id="doc"  class="nodViewN">
+	<div id="hd" style="border-bottom:0;">
+    	<a id="logo" class="logoN" href="/" alt="dmoz logo" title="open directory project"></a>
+        <div id="partnership">
+        	<img width="83" height="24" align="middle" alt="In Partnership with AOL Search" src="http://o.aolcdn.com/os/dmoz/img/aolsearch.gif">
+        </div>
+    </div>
+    <div id="hd-bar">
+    	<div class="float-l">&nbsp;</div>
+        <div class="float-r">
+        	<a style="font-weight:700" href="/docs/en/about.html">about dmoz</a> | 
+            <a href="http://blog.dmoz.org/">dmoz blog</a> | 
+            
+            <a href="/public/abuse?cat=Health&lang=en">report abuse/spam</a> | 
+            <a href="/help/en/helpmain.html">help</a>
+        </div>
+       
+    </div>
+    <div id="bd-cross">
+    	<form class="center mb1em" action="/search" method="get">
+            <input size="45" name="q" class="searchNod" >
+            <input type=submit value="Search" class="btn" >
+            <select name="cat" class="selectNod" >
+			   
+               <option value="all" selected id="all-yes"><label for="all-yes">the entire directory</label></option>
+			   
+                 <option value="Health"  id="all-no"><label for="all-no">only in Health</label></option>
+                 
+            </select>
+            <input type=hidden name=all value="no" >
+        </form>
+
+        <div class="navigate" style="">
+        	<div class="descript">
+			<div id="descript" class="descriptN"><a href="/desc/Health">Description</a></div>
+			
+			</div>
+            <ul class="navigate">
+                <li class="first">
+                <a href="/">Top</a></li>
+               	
+   				<li class="last">
+                  	<strong><span class='remBld'>: </span>Health</strong>&nbsp;<em>(51,513)</em>
+                </li>
+                
+            </ul>
+	      <title>Open Directory - Health</title>
+
+        </div>
+        
+        <div class="clear"></div>		
+        
+			
+            <div class="dir-1 borN">
+				<span><img src='http://o.aolcdn.com/os/dmoz/img/dividerN.gif' style="height:2px;float:left;width:100%" /></span>
+                <ul class="directory dir-col">
+                
+                	<li class="">
+                        <a href="/Health/Animal/">Animal</a> 
+                        <em>(4,996)</em>
+                    </li>
+                
+                </ul>
+                <ul class="directory dir-col">
+                
+                </ul>
+                <div class="clear"></div>
+            </div>
+        
+			
+            <div class="dir-1 borN">
+				<span><img src='http://o.aolcdn.com/os/dmoz/img/dividerN.gif' style="height:2px;float:left;width:100%" /></span>
+                <ul class="directory dir-col">
+                
+                	<li class="">
+                        <a href="/Health/Alternative/">Alternative</a> 
+                        <em>(4,144)</em>
+                    </li>
+                
+                	<li class="">
+                        <a href="/Business/Healthcare/">Healthcare Industry</a>@ 
+                        <em>(5,062)</em>
+                    </li>
+                
+                	<li class="">
+                        <a href="/Health/Medicine/">Medicine</a> 
+                        <em>(9,368)</em>
+                    </li>
+                
+                	<li class="">
+                        <a href="/Health/Mental_Health/">Mental Health</a> 
+                        <em>(3,988)</em>
+                    </li>
+                
+                	<li class="">
+                        <a href="/Health/Regional/">Regional</a> 
+                        <em>(0)</em>
+                    </li>
+                
+                </ul>
+                <ul class="directory dir-col">
+                
+                </ul>
+                <div class="clear"></div>
+            </div>
+        
+			
+            <div class="dir-1 borN">
+				<span><img src='http://o.aolcdn.com/os/dmoz/img/dividerN.gif' style="height:2px;float:left;width:100%" /></span>
+                <ul class="directory dir-col">
+                
+                	<li class="">
+                        <a href="/Health/Addictions/">Addictions</a> 
+                        <em>(2,121)</em>
+                    </li>
+                
+                	<li class="">
+                        <a href="/Health/Aging/">Aging</a> 
+                        <em>(58)</em>
+                    </li>
+                
+                	<li class="">
+                        <a href="/Health/Beauty/">Beauty</a> 
+                        <em>(415)</em>
+                    </li>
+                
+                	<li class="">
+                        <a href="/Health/Child_Health/">Child Health</a> 
+                        <em>(368)</em>
+                    </li>
+                
+                	<li class="">
+                        <a href="/Health/Conditions_and_Diseases/">Conditions and Diseases</a> 
+                        <em>(12,828)</em>
+                    </li>
+                
+                	<li class="">
+                        <a href="/Health/Conferences/">Conferences</a> 
+                        <em>(0)</em>
+                    </li>
+                
+                	<li class="">
+                        <a href="/Health/Dentistry/">Dentistry</a> 
+                        <em>(476)</em>
+                    </li>
+                
+                	<li class="">
+                        <a href="/Health/Directories/">Directories</a> 
+                        <em>(5)</em>
+                    </li>
+                
+                	<li class="">
+                        <a href="/Society/Disabled/">Disabilities</a>@ 
+                        <em>(815)</em>
+                    </li>
+                
+                	<li class="">
+                        <a href="/Health/Education/">Education</a> 
+                        <em>(137)</em>
+                    </li>
+                
+                	<li class="">
+                        <a href="/Business/Healthcare/Employment/">Employment</a>@ 
+                        <em>(309)</em>
+                    </li>
+                
+                	<li class="">
+                        <a href="/Science/Environment/Environmental_Health/">Environmental Health</a>@ 
+                        <em>(239)</em>
+                    </li>
+                
+                	<li class="">
+                        <a href="/Health/Fitness/">Fitness</a> 
+                        <em>(241)</em>
+                    </li>
+                
+                	<li class="">
+                        <a href="/Society/History/By_Topic/Social_History/Health/">History</a>@ 
+                        <em>(7)</em>
+                    </li>
+                
+                	<li class="">
+                        <a href="/Health/Home_Health/">Home Health</a> 
+                        <em>(210)</em>
+                    </li>
+                
+                	<li class="">
+                        <a href="/Business/Financial_Services/Insurance/Life_and_Health/">Insurance</a>@ 
+                        <em>(109)</em>
+                    </li>
+                
+                	<li class="">
+                        <a href="/Society/Issues/Health/">Issues</a>@ 
+                        <em>(1,664)</em>
+                    </li>
+                
+                	<li class="">
+                        <a href="/Recreation/Travel/Specialty_Travel/Medical_Tourism/">Medical Tourism</a>@ 
+                        <em>(54)</em>
+                    </li>
+                
+                	<li class="">
+                        <a href="/Health/Men%27s_Health/">Men's Health</a> 
+                        <em>(149)</em>
+                    </li>
+                
+                	<li class="">
+                        <a href="/Health/News_and_Media/">News and Media</a> 
+                        <em>(179)</em>
+                    </li>
+                
+                	<li class="">
+                        <a href="/Health/Nursing/">Nursing</a> 
+                        <em>(948)</em>
+                    </li>
+                
+                </ul>
+                <ul class="directory dir-col">
+                
+                	<li class="">
+                        <a href="/Health/Nutrition/">Nutrition</a> 
+                        <em>(458)</em>
+                    </li>
+                
+                	<li class="">
+                        <a href="/Health/Occupational_Health_and_Safety/">Occupational Health and Safety</a> 
+                        <em>(355)</em>
+                    </li>
+                
+                	<li class="">
+                        <a href="/Health/Organizations/">Organizations</a> 
+                        <em>(118)</em>
+                    </li>
+                
+                	<li class="">
+                        <a href="/Health/Pharmacy/">Pharmacy</a> 
+                        <em>(2,366)</em>
+                    </li>
+                
+                	<li class="">
+                        <a href="/Health/Products_and_Shopping/">Products and Shopping</a> 
+                        <em>(0)</em>
+                    </li>
+                
+                	<li class="">
+                        <a href="/Health/Professions/">Professions</a> 
+                        <em>(1,115)</em>
+                    </li>
+                
+                	<li class="">
+                        <a href="/Health/Public_Health_and_Safety/">Public Health and Safety</a> 
+                        <em>(2,570)</em>
+                    </li>
+                
+                	<li class="">
+                        <a href="/Health/News_and_Media/Publications/">Publications</a>@ 
+                        <em>(114)</em>
+                    </li>
+                
+                	<li class="">
+                        <a href="/Health/Reproductive_Health/">Reproductive Health</a> 
+                        <em>(1,549)</em>
+                    </li>
+                
+                	<li class="">
+                        <a href="/Health/Resources/">Resources</a> 
+                        <em>(87)</em>
+                    </li>
+                
+                	<li class="">
+                        <a href="/Health/Search_Engines/">Search Engines</a> 
+                        <em>(9)</em>
+                    </li>
+                
+                	<li class="">
+                        <a href="/Health/Senior_Health/">Senior Health</a> 
+                        <em>(557)</em>
+                    </li>
+                
+                	<li class="">
+                        <a href="/Health/Senses/">Senses</a> 
+                        <em>(255)</em>
+                    </li>
+                
+                	<li class="">
+                        <a href="/Health/Services/">Services</a> 
+                        <em>(33)</em>
+                    </li>
+                
+                	<li class="">
+                        <a href="/Health/Specific_Substances/">Specific Substances</a> 
+                        <em>(471)</em>
+                    </li>
+                
+                	<li class="">
+                        <a href="/Health/Support_Groups/">Support Groups</a> 
+                        <em>(248)</em>
+                    </li>
+                
+                	<li class="">
+                        <a href="/Health/Teen_Health/">Teen Health</a> 
+                        <em>(46)</em>
+                    </li>
+                
+                	<li class="">
+                        <a href="/Recreation/Travel/Preparation/Health/">Travel Health</a>@ 
+                        <em>(61)</em>
+                    </li>
+                
+                	<li class="">
+                        <a href="/Health/Weight_Loss/">Weight Loss</a> 
+                        <em>(244)</em>
+                    </li>
+                
+                	<li class="">
+                        <a href="/Health/Women%27s_Health/">Women's Health</a> 
+                        <em>(396)</em>
+                    </li>
+                
+                </ul>
+                <div class="clear"></div>
+            </div>
+        
+        
+            <fieldset class="fieldcap">
+                <legend>See also:</legend>
+                <ul class="directory">
+                
+                	<li>
+                        <a href="/Business/Business_Services/Consulting/Medical_and_Life_Sciences/">Business: Business Services: Consulting: Medical and Life Sciences</a> 
+                        <em>(271)</em>
+                    </li>
+                
+                	<li>
+                        <a href="/Kids_and_Teens/Health/">Kids and Teens: Health</a> 
+                        <em>(879)</em>
+                    </li>
+                
+                	<li>
+                        <a href="/Recreation/Humor/Medical/">Recreation: Humor: Medical</a> 
+                        <em>(13)</em>
+                    </li>
+                
+                	<li>
+                        <a href="/Science/Social_Sciences/Communication/Health_Communication/">Science: Social Sciences: Communication: Health Communication</a> 
+                        <em>(3)</em>
+                    </li>
+                
+                </ul>
+            </fieldset>
+        
+        
+            <fieldset class="fieldcap fieldcapN">
+                <legend>This category in other languages:</legend>
+                <ul class="language">
+                	
+                    <li>
+                    	<a href="/World/Afrikaans/Gesondheid/">Afrikaans</a>
+                        <em>(3)</em>
+					</li>
+                    
+                    <li>
+                    	<a href="/World/Shqip/Sh%C3%ABndet%C3%ABsia/">Albanian</a>
+                        <em>(2)</em>
+					</li>
+                    
+                    <li>
+                    	<a href="/World/Arabic/%D8%B5%D8%AD%D8%A9/">Arabic</a>
+                        <em>(153)</em>
+					</li>
+                    
+                    <li>
+                    	<a href="/World/Armenian/%D4%B1%D5%BC%D5%B8%D5%B2%D5%BB%D5%B8%D6%82%D5%A9%D5%B5%D5%B8%D6%82%D5%B6/">Armenian</a>
+                        <em>(29)</em>
+					</li>
+                    
+                    <li>
+                    	<a href="/World/Azerbaijani/S%C9%99hiyy%C9%99/">Azerbaijani</a>
+                        <em>(8)</em>
+					</li>
+                    
+                    <li>
+                    	<a href="/World/Bashkir/%D2%BA%D0%B0%D1%83%D0%BB%D1%8B%D2%A1/">Bashkir</a>
+                        <em>(2)</em>
+					</li>
+                    
+                    <li>
+                    	<a href="/World/Euskara/Osasuna/">Basque</a>
+                        <em>(23)</em>
+					</li>
+                    
+                    <li>
+                    	<a href="/World/Belarusian/%D0%97%D0%B4%D0%B0%D1%80%D0%BE%D1%9E%D0%B5/">Belarusian</a>
+                        <em>(0)</em>
+					</li>
+                    
+                    <li>
+                    	<a href="/World/Bosanski/Zdravlje/">Bosnian</a>
+                        <em>(27)</em>
+					</li>
+                    
+                    <li>
+                    	<a href="/World/Brezhoneg/Yec%27hed/">Breton</a>
+                        <em>(2)</em>
+					</li>
+                    
+                    <li>
+                    	<a href="/World/Bulgarian/%D0%97%D0%B4%D1%80%D0%B0%D0%B2%D0%B5/">Bulgarian</a>
+                        <em>(72)</em>
+					</li>
+                    
+                    <li>
+                    	<a href="/World/Catal%C3%A0/Salut/">Catalan</a>
+                        <em>(572)</em>
+					</li>
+                    
+                    <li>
+                    	<a href="/World/Chinese_Traditional/%E5%81%A5%E5%BA%B7/">Chinese</a>
+                        <em>(60)</em>
+					</li>
+                    
+                    <li>
+                    	<a href="/World/Chinese_Simplified/%E5%81%A5%E5%BA%B7/">Chinese Simplified</a>
+                        <em>(1,060)</em>
+					</li>
+                    
+                    <li>
+                    	<a href="/World/Hrvatski/Zdravlje/">Croatian</a>
+                        <em>(127)</em>
+					</li>
+                    
+                    <li>
+                    	<a href="/World/%C4%8Cesky/Zdrav%C3%AD/">Czech</a>
+                        <em>(814)</em>
+					</li>
+                    
+                    <li>
+                    	<a href="/World/Dansk/Sundhed/">Danish</a>
+                        <em>(2,604)</em>
+					</li>
+                    
+                    <li>
+                    	<a href="/World/Nederlands/Gezondheid/">Dutch</a>
+                        <em>(4,254)</em>
+					</li>
+                    
+                    <li>
+                    	<a href="/World/Esperanto/Sano/">Esperanto</a>
+                        <em>(18)</em>
+					</li>
+                    
+                    <li>
+                    	<a href="/World/Eesti/Tervis/">Estonian</a>
+                        <em>(20)</em>
+					</li>
+                    
+                    <li>
+                    	<a href="/World/Persian/%D8%A8%D9%87%D8%AF%D8%A7%D8%B4%D8%AA/">Farsi</a>
+                        <em>(85)</em>
+					</li>
+                    
+                    <li>
+                    	<a href="/World/Suomi/Terveys/">Finnish</a>
+                        <em>(160)</em>
+					</li>
+                    
+                    <li>
+                    	<a href="/World/Fran%C3%A7ais/Sant%C3%A9/">French</a>
+                        <em>(9,089)</em>
+					</li>
+                    
+                    <li>
+                    	<a href="/World/Furlan/Sal%C3%BBt/">Furlan</a>
+                        <em>(2)</em>
+					</li>
+                    
+                    <li>
+                    	<a href="/World/Galego/Sa%C3%BAde/">Galego</a>
+                        <em>(34)</em>
+					</li>
+                    
+                    <li>
+                    	<a href="/World/Deutsch/Gesundheit/">German</a>
+                        <em>(24,367)</em>
+					</li>
+                    
+                    <li>
+                    	<a href="/World/Greek/%CE%A5%CE%B3%CE%B5%CE%AF%CE%B1/">Greek</a>
+                        <em>(244)</em>
+					</li>
+                    
+                    <li>
+                    	<a href="/World/Gujarati/%E0%AA%B8%E0%AB%8D%E0%AA%B5%E0%AA%BE%E0%AA%B8%E0%AB%8D%E0%AA%A5%E0%AB%8D%E0%AA%AF/">Gujarati</a>
+                        <em>(1)</em>
+					</li>
+                    
+                    <li>
+                    	<a href="/World/Hebrew/%D7%91%D7%A8%D7%99%D7%90%D7%95%D7%AA/">Hebrew</a>
+                        <em>(530)</em>
+					</li>
+                    
+                    <li>
+                    	<a href="/World/Hindi/%E0%A4%B8%E0%A5%8D%E0%A4%B5%E0%A4%BE%E0%A4%B8%E0%A5%8D%E0%A4%A5%E0%A5%8D%E0%A4%AF/">Hindi</a>
+                        <em>(6)</em>
+					</li>
+                    
+                    <li>
+                    	<a href="/World/Magyar/Eg%C3%A9szs%C3%A9g/">Hungarian</a>
+                        <em>(412)</em>
+					</li>
+                    
+                    <li>
+                    	<a href="/World/%C3%8Dslenska/Heilsa/">Icelandic</a>
+                        <em>(18)</em>
+					</li>
+                    
+                    <li>
+                    	<a href="/World/Bahasa_Indonesia/Kesehatan/">Indonesian</a>
+                        <em>(30)</em>
+					</li>
+                    
+                    <li>
+                    	<a href="/World/Italiano/Salute/">Italian</a>
+                        <em>(2,695)</em>
+					</li>
+                    
+                    <li>
+                    	<a href="/World/Japanese/%E5%81%A5%E5%BA%B7/">Japanese</a>
+                        <em>(5,483)</em>
+					</li>
+                    
+                    <li>
+                    	<a href="/World/Kannada/%E0%B2%86%E0%B2%B0%E0%B3%8B%E0%B2%97%E0%B3%8D%E0%B2%AF/">Kannada</a>
+                        <em>(2)</em>
+					</li>
+                    
+                    <li>
+                    	<a href="/World/Kazakh/%D0%A1%D0%B0%D1%83%D0%BB%D1%8B%D2%9B/">Kazakh</a>
+                        <em>(0)</em>
+					</li>
+                    
+                    <li>
+                    	<a href="/World/Korean/%EA%B1%B4%EA%B0%95%2C%EC%9D%98%ED%95%99/">Korean</a>
+                        <em>(194)</em>
+					</li>
+                    
+                    <li>
+                    	<a href="/World/Kyrgyz/%D0%A1%D0%B0%D0%BB%D0%B0%D0%BC%D0%B0%D1%82%D1%82%D1%8B%D0%BA_%D1%81%D0%B0%D0%BA%D1%82%D0%BE%D0%BE/">Kyrgyz</a>
+                        <em>(0)</em>
+					</li>
+                    
+                    <li>
+                    	<a href="/World/Lingua_Latina/Sanitas/">Latin</a>
+                        <em>(0)</em>
+					</li>
+                    
+                    <li>
+                    	<a href="/World/Latviski/Vesel%C4%ABba/">Latvian</a>
+                        <em>(55)</em>
+					</li>
+                    
+                    <li>
+                    	<a href="/World/Lietuvi%C5%B3/Sveikata/">Lietuvių</a>
+                        <em>(197)</em>
+					</li>
+                    
+                    <li>
+                    	<a href="/World/L%C3%ABtzebuergesch/Gesondheet/">Luxembourgish</a>
+                        <em>(0)</em>
+					</li>
+                    
+                    <li>
+                    	<a href="/World/Makedonski/%D0%97%D0%B4%D1%80%D0%B0%D0%B2%D1%98%D0%B5/">Macedonian</a>
+                        <em>(3)</em>
+					</li>
+                    
+                    <li>
+                    	<a href="/World/Bahasa_Melayu/Kesihatan/">Malay</a>
+                        <em>(3)</em>
+					</li>
+                    
+                    <li>
+                    	<a href="/World/Marathi/%E0%A4%86%E0%A4%B0%E0%A5%8B%E0%A4%97%E0%A5%8D%E0%A4%AF/">Marathi</a>
+                        <em>(2)</em>
+					</li>
+                    
+                    <li>
+                    	<a href="/World/Nordfriisk/S%C3%BCnjhaid/">Nordfriisk</a>
+                        <em>(1)</em>
+					</li>
+                    
+                    <li>
+                    	<a href="/World/Norsk/Helse/">Norwegian</a>
+                        <em>(466)</em>
+					</li>
+                    
+                    <li>
+                    	<a href="/World/O%27zbekcha/Salomatlik/">O'zbekcha</a>
+                        <em>(1)</em>
+					</li>
+                    
+                    <li>
+                    	<a href="/World/Ossetian/%C3%86%D0%BD%C3%A6%D0%BD%D0%B8%D0%B7%D0%B4%D0%B7%D0%B8%D0%BD%D0%B0%D0%B4/">Ossetian</a>
+                        <em>(0)</em>
+					</li>
+                    
+                    <li>
+                    	<a href="/World/Polski/Zdrowie/">Polish</a>
+                        <em>(540)</em>
+					</li>
+                    
+                    <li>
+                    	<a href="/World/Portugu%C3%AAs/Sa%C3%BAde/">Portuguese</a>
+                        <em>(314)</em>
+					</li>
+                    
+                    <li>
+                    	<a href="/World/Rom%C3%A2n%C4%83/S%C4%83n%C4%83tate/">Romanian</a>
+                        <em>(464)</em>
+					</li>
+                    
+                    <li>
+                    	<a href="/World/Rumantsch/Sanadad/">Romansh</a>
+                        <em>(0)</em>
+					</li>
+                    
+                    <li>
+                    	<a href="/World/Russian/%D0%97%D0%B4%D0%BE%D1%80%D0%BE%D0%B2%D1%8C%D0%B5/">Russian</a>
+                        <em>(1,758)</em>
+					</li>
+                    
+                    <li>
+                    	<a href="/World/Sardu/Salude/">Sardinian</a>
+                        <em>(1)</em>
+					</li>
+                    
+                    <li>
+                    	<a href="/World/G%C3%A0idhlig/Sl%C3%A0inte/">Scots Gaelic</a>
+                        <em>(1)</em>
+					</li>
+                    
+                    <li>
+                    	<a href="/World/Seeltersk/Suundegaid/">Seeltersk</a>
+                        <em>(1)</em>
+					</li>
+                    
+                    <li>
+                    	<a href="/World/Srpski/Zdravlje/">Serbian</a>
+                        <em>(137)</em>
+					</li>
+                    
+                    <li>
+                    	<a href="/World/Sinhala/%E0%B7%83%E0%B7%9E%E0%B6%B6%E0%B7%8A%E2%80%8D%E0%B6%BA%E0%B6%BA/">Sinhala</a>
+                        <em>(1)</em>
+					</li>
+                    
+                    <li>
+                    	<a href="/World/Slovensky/Zdravie/">Slovak</a>
+                        <em>(110)</em>
+					</li>
+                    
+                    <li>
+                    	<a href="/World/Slovensko/Zdravje/">Slovenian</a>
+                        <em>(41)</em>
+					</li>
+                    
+                    <li>
+                    	<a href="/World/Espa%C3%B1ol/Salud/">Spanish</a>
+                        <em>(1,868)</em>
+					</li>
+                    
+                    <li>
+                    	<a href="/World/Kiswahili/Afya/">Swahili</a>
+                        <em>(1)</em>
+					</li>
+                    
+                    <li>
+                    	<a href="/World/Svenska/H%C3%A4lso-_och_sjukv%C3%A5rd/">Swedish</a>
+                        <em>(806)</em>
+					</li>
+                    
+                    <li>
+                    	<a href="/World/Tagalog/Kalusugan/">Tagalog</a>
+                        <em>(9)</em>
+					</li>
+                    
+                    <li>
+                    	<a href="/World/Taiwanese/%E5%81%A5%E5%BA%B7/">Taiwanese</a>
+                        <em>(31)</em>
+					</li>
+                    
+                    <li>
+                    	<a href="/World/Tatar%C3%A7a/S%C3%A4l%C3%A4m%C3%A4t/">Tatar</a>
+                        <em>(1)</em>
+					</li>
+                    
+                    <li>
+                    	<a href="/World/Thai/%E0%B8%AA%E0%B8%B8%E0%B8%82%E0%B8%A0%E0%B8%B2%E0%B8%9E/">Thai</a>
+                        <em>(114)</em>
+					</li>
+                    
+                    <li>
+                    	<a href="/World/T%C3%BCrk%C3%A7e/Sa%C4%9Fl%C4%B1k/">Turkish</a>
+                        <em>(1,407)</em>
+					</li>
+                    
+                    <li>
+                    	<a href="/World/T%C3%BCrkmen%C3%A7e/Saglyk/">Türkmençe</a>
+                        <em>(2)</em>
+					</li>
+                    
+                    <li>
+                    	<a href="/World/Ukrainian/%D0%97%D0%B4%D0%BE%D1%80%D0%BE%D0%B2%27%D1%8F/">Ukrainian</a>
+                        <em>(440)</em>
+					</li>
+                    
+                    <li>
+                    	<a href="/World/Uyghurche/Salametlik/">Uyghurche</a>
+                        <em>(1)</em>
+					</li>
+                    
+                    <li>
+                    	<a href="/World/Ti%E1%BA%BFng_Vi%E1%BB%87t/Y_t%E1%BA%BF_-_S%E1%BB%A9c_kho%E1%BA%BB/">Vietnamese</a>
+                        <em>(16)</em>
+					</li>
+                    
+                    <li>
+                    	<a href="/World/Cymraeg/Iechyd/">Welsh</a>
+                        <em>(0)</em>
+					</li>
+                    
+                </ul>
+            </fieldset>
+        
+        			
+			<span><img src='http://o.aolcdn.com/os/dmoz/img/dividerN.gif' style="height:2px;float:left;width:100%" /></span>
+			<fieldset class="fieldcap">
+        	<ul class="directory-url" style="margin-left:0;">
+            
+            	<li class="star">
+            
+                	<a href="http://www.hon.ch/">Health On the Net Foundation</a> 
+			
+					
+                    - Guides lay persons and non-medical users and medical practitioners to useful and reliable online medical and health information. Provides leadership in setting ethical standards for Web site developers.
+                    
+                </li>
+			
+            	<li class="star">
+            
+                	<a href="http://www.webmd.com/">WebMD</a> 
+			
+					
+                    - Resource for consumers, physicians, nurses, and educators.  Includes news, chat forums, health quizzes and consumer product updates.
+                    
+                </li>
+			
+				<li>
+			
+                	<a href="http://www.aolhealth.com/">AOL Health</a> 
+			
+					
+                    - Find advice, information about diseases and drugs, fitness tips, and news items.
+                    
+                </li>
+			
+				<li>
+			
+                	<a href="http://www.bbc.co.uk/health/">BBC Health</a> 
+			
+					
+                    - Features current news plus archives, guides by subject, &quot;Ask a Doctor&quot;, searchable conditions database, message board, and e-mail newsletter subscription.
+                    
+                </li>
+			
+				<li>
+			
+                	<a href="http://www.intelihealth.com/">InteliHealth</a> 
+			
+					
+                    - Harvard Medical School's consumer health information, journal databases, a medical dictionary, FAQs on latest news and live forums.
+                    
+                </li>
+			
+            </ul>
+        </fieldset>
+        
+        
+
+	<span><img src='http://o.aolcdn.com/os/dmoz/img/dividerN.gif' style="height:2px;float:left;width:100%" /></span>
+		
+        <fieldset class="fieldcap fieldcapRn" style="font-size:1.2em; margin-top:11px;">
+        	
+					<ul class="disc-large">
+					        <div class="float-l">
+			
+                    <li>Usenet alt.health 
+					- <a href="news:alt.health">news: </a>
+					- <a href="http://groups.google.com/group/alt.health">Google Groups</a></li>
+			
+					</div>
+					</ul>
+			
+			
+                  
+			<ul class="disc-large">
+				<div class="float-l">
+				<!--<br>-->
+				<li >
+				<span style="margin-right:140px; font-size:16px;">
+				"<b>Health</b>"&nbsp;search&nbsp;on:&nbsp;&nbsp;
+				
+	            <a href="http://search.aol.com/aol/search?query=health" class="srchOnFrstLnk">AOL</a>&nbsp;-
+<a href="http://search.ask.com/web?q=health">Ask</a>&nbsp;-
+<a href="http://www.bing.com/search?q=health">Bing</a>&nbsp;-
+<a href="http://gigablast.com/search?q=health">Gigablast</a>&nbsp;-
+<a href="http://www.google.com/search?q=health">Google</a>&nbsp;-
+<a href="http://search.lycos.com/?query=health">Lycos</a>&nbsp;-
+<a href="http://search.yahoo.com/bin/search?p=health">Yahoo</a>&nbsp;-
+<a href="http://search.yippy.com/search?query=health">Yippy</a> 				
+				
+				</li>
+	            </div>
+			
+		        <div class="float-r" style="float:right; margin-top:2px;">
+			
+
+	            </div>
+				
+            </ul>
+
+        </fieldset>
+		<span><img src='http://o.aolcdn.com/os/dmoz/img/dividerN.gif' style="height:2px;float:left;width:100%" /></span>
+        <fieldset class="fieldcap center">
+        	
+        	<span class="volEditN">
+        	
+	        Category editors:
+	         <a href="/public/profile?editor=liloth">liloth</a>, <a href="/public/profile?editor=pchere">pchere</a>, <a href="/public/profile?editor=nocturnal">nocturnal</a>, <a href="/public/profile?editor=shara">shara</a>, <a href="/public/profile?editor=makrhod">makrhod</a>
+        	</span>
+        	
+        	
+        </fieldset>
+	  
+
+        <div class="float-r">
+        	<img src="/img/moz/sunflower.gif" width = 78 height = 113 alt="[Sunflower Mozilla]">
+        </div>
+    </div>
+    <div id="ft">
+    	
+        
+            <span class="float-l">Copyright &copy; 2012 Netscape</span>
+        
+        <span class="float-r"><a href="/docs/en/termsofuse.html" style="font-size:.9em;">Terms of Use</a></span>
+    </div>
+    <div id="ft-bar" class="ft-barN" style="color:#000; font-family:times New Roman;font-size:16px;">
+    	<b>Visit our sister sites</b>&nbsp;&nbsp;<a href="http://www.mozilla.org/">mozilla.org</a>&nbsp;|&nbsp;<a href="http://musicmoz.org/">MusicMoz</a>&nbsp;|&nbsp;<a href="http://en.wikipedia.org/">Wikipedia</a><br><br>
+    	<div  class="ft-barUpN">Last update: 
+		
+				Thursday, June 14, 2012 11:27:49 PM EDT 
+		
+		- <a href="/editors/editcat/index?cat=Health">edit</a></div>
+    </div>
+</div>
+<div id="omniture">
+<script type="text/javascript">
+function runOmni(){(function(){var F,t,n,v,p,q,u,o,i,f,D,d,k,c,b,x,g,E,s,z,C,m,r,a,l,B,e,w,A,y,j,h;F=location.protocol.toLowerCase();t=location.hostname.toLowerCase();n=location.port;v=location.pathname.toLowerCase();p=location.search.toLowerCase();q=document.title.toLowerCase();s_265.pfxID="odp";s_265.server=t;s_265.channel="us.dmozodp";s_265.charSet="UTF-8";s_265.linkInternalFilters="aol.com,javascript:,dmoz.org";u=t.split(".");o=(u.length>1)?u[u.length-2]+"."+u[u.length-1]:"";if((o==="dmoz.org")||(t+":"+n==="dmozqa-m01.ihost.aol.com:8081")||(t+":"+n==="10.146.172.49:9099")){s_265.prop12=F+"//"+t+v;i=(v.indexOf("/world/")>-1)?1:0;f=v.split("/");D=(i===1)?parseInt(f.length,10)-4:parseInt(f.length,10)-2;d=(f[f.length-1].length>0)?f[f.length-1].split(".")[0]:" - ";k=(f[f.length-1].length>0)?f[f.length-1]:" - ";c=(i===1)?f[3]:f[1];b=(i===1)?f[4]:f[2];if(i===0){x="english"}else{if((i===1)&&(D===-1)){x="world top"}else{if((i===1)&&(D>-1)){x=f[2]}}}s_265.prop16=x;j=(D>0)?"level-"+D:"level-0";switch(D){case -1:A=t+" - world top";y=A;h=A;break;case 0:if(d!==" - "){A="utilities";y="general info";h=t+" - "+d}else{A=t+" - top";y=A;h=A}break;case 1:A=c;y="top";h=(d!==" - ")?h=A+" - "+d:h="category main";break;case 2:A=c;y=b;h=(d!==" - ")?h=A+" - "+y+" - "+d:h="subcategory main";break;default:A=c;y=b;h=(d!==" - ")?h=A+" - "+y+" - "+d:h="level-"+D+" main";break}if(t==="search.dmoz.org"){A="utilities";y="search";j="level-0";h=d+" - home";g=((d==="search")&&(p.split("=")[0]==="?search"))?1:0;if(g===1){E=s_265.getQueryParam("search","",p);s_265.eVar11="sTerms:f|"+E;s_265.prop18=(s_265.getQueryParam("all").toLowerCase()!=="yes")?s_265.getQueryParam("cat").toLowerCase():"";s_265.prop18=s_265.prop18||"all";s=s_265.getQueryParam("t").toLowerCase();z=s_265.getQueryParam("morecat").toLowerCase();if(s==="c"||s==="s"||s==="b"){s_265.prop19=s}else{s_265.prop19=(z===1)?"c":"b"}C=(parseInt(s_265.getQueryParam("Kids"),10)===1)?"kids":"none";m=(parseInt(s_265.getQueryParam("Teens"),10)===1)?"teens":"none";r=(parseInt(s_265.getQueryParam("Mteens"),10)===1)?"mteens":"none";s_265.prop20=C+"|"+m+"|"+r;a=((s_265.prop19!=="c")&&(z.length===0)&&(s_265.getQueryParam("co").length===0))?((parseInt(s_265.getQueryParam("start")/20,10)+1)+""):(z.length===0)?((parseInt(s_265.getQueryParam("start")/25,10)+1)+""):((parseInt(s_265.getQueryParam("morecat")/25,10)+1)+"");s_265.prop21="page "+a;h="search results";l=(((a*1)===1)&&(z.length===0)&&(s_265.getQueryParam("start","",document.referrer).length===0))?1:0;if(l===1){B=(s.length>0)?"advanced search":((s.length===0)&&(s_265.getQueryParam("cat").length>0))?"branch search":"standard search";s_265.events="event1";s_265.eVar1=B}}e=1}if(e!==1){switch(c){case"help":A="utilities";y="help";j="level-0";h=(d!==" - ")?"dmoz help - "+d:"dmoz help - helpmain";e=1;break;case"profiles":A="utilities";y="profiles";j="level-0";h="dmoz - user profile";s_265.mmxtitle=h;s_265.mmxcustom="http://www.dmoz.org/profiles/user.html";e=1;break;case"become_an_editor":case"user-banners":case"awards":A="utilities";y="general info";j="level-0";h="dmoz - general info - "+q;e=1;break;case"guidelines":A="utilities";y="editors";j="level-0";h=(D>1)?"editors - "+c+" - "+b+" - "+q:"editors guidelines - "+q;e=1;break;case"newsletter":j="level-0";switch(D){case 1:y="newsletter article archive";h=y;break;case 2:h="newsletter "+y+" - "+q;break}e=1;break;case"erz":A="utilities";y="editors";j="level-0";h=(D>1)?"erz - "+b+" - "+q:"erz - top - "+q;e=1;break}}if(e!==1){if((t==="www.dmoz.org")&&(D===0)&&(d==="reinstate")){A="utilities";y="editors";h="editors - "+q;e=1}if(t==="report-abuse.dmoz.org"){A="utilities";y="report abuse";j="level-0";h=((D===0)&&(d==="faq"))?"dmoz report abuse system faq":"dmoz report abuse system";e=1}else{if(t==="rdf.dmoz.org"){A="utilities";y="rdf";j="level-0";if((D===0)&&(d===" - ")){h="rdf - main"}else{if((D===1)&&(d===" - ")){h="rdf - file index"}else{if((D===1)&&(d!==" - ")){h="rdf - "+d}}}e=1}}}if(e!==1){if((c==="cgi-bin")&&(t!=="search.dmoz.org")){A="utilities";j="level-0";switch(d){case"apply":case"forgot":y="editors";h=(d==="forgot")?"editors - password reminder form":(s_265.getQueryParam("submit").length===0)?"editors - application info":"editors - application";e=1;break;case"add":case"update":case"update2":case"update3":case"reinstate":y="editors";if(d==="add"){h="editors - submit a site instructions"}else{if(d==="update"){h="editors - update listing instructions"}else{if(d==="update2"){h="editors - update listing form"}else{if(d==="update3"){h="editors - update listing form received"}else{if(d==="reinstate"){h="editors - account reinstatement form received"}}}}}e=1;break;case"send":case"send2":y="editors";h=(d==="send")?"send editors feedback":"editors feedback received";e=1;break}}}if(e!==1){if((k==="desc.html")||(k==="faq.html")){w=(k==="desc.html")?"description":"faq";h=(D===1)?"branch category ":(D===2)?"branch subcategory ":"branch level-"+D+" ";h=h+w}}s_265.trackExternalLinks=false;s_265.mmxgo=true;s_265.prop1=A;s_265.prop2=y;s_265.prop17=j;s_265.pageName=h;s_265.t()}}())}var s_account="aoldmozodp,aolsvc";(function(){var b=document,a=b.createElement("script");a.type="text/javascript";a.src=(location.protocol==="https:"?"https://s":"http://o")+".aolcdn.com/omniunih.js";b.getElementsByTagName("head")[0].appendChild(a)}());
+</script>
+</div>
+</body>
+</html>
+
+
+
+WARC/1.0
+WARC-Type: request
+WARC-Target-URI: http://www.dmoz.org/Health
+WARC-Date: 2012-12-07T18:55:03Z
+WARC-Concurrent-To: <urn:uuid:a2e9947f-607f-4ad7-b96e-89bfc5f4fad9>
+WARC-Record-ID: <urn:uuid:92aacae4-d31d-4d7c-9118-251c3e0de031>
+Content-Type: application/http; msgtype=request
+Content-Length: 228
+
+GET /Health HTTP/1.0
+User-Agent: Mozilla/5.0 (compatible; heritrix/3.1.0 +http://infolab.stanford.edu/~paepcke)
+Connection: close
+Accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8
+Host: www.dmoz.org
+
+
+
+WARC/1.0
+WARC-Type: metadata
+WARC-Target-URI: http://www.dmoz.org/Health
+WARC-Date: 2012-12-07T18:55:03Z
+WARC-Concurrent-To: <urn:uuid:a2e9947f-607f-4ad7-b96e-89bfc5f4fad9>
+WARC-Record-ID: <urn:uuid:1cfa5a38-cd87-4ee8-9412-f1fb7c2bd73c>
+Content-Type: application/warc-fields
+Content-Length: 12805
+
+seed:
+fetchTimeMs: 364
+outlink: http://www.dmoz.org/public/profile?editor=pchere L a/@href
+outlink: http://www.dmoz.org/help/en/helpmain.html L a/@href
+outlink: http://www.dmoz.org/aol.com,javascript:,dmoz.org X =JS_MISC
+outlink: http://www.dmoz.org/Health/Nutrition/ L a/@href
+outlink: http://www.dmoz.org/World/Gujarati/%E0%AA%B8%E0%AB%8D%E0%AA%B5%E0%AA%BE%E0%AA%B8%E0%AB%8D%E0%AA%A5%E0%AB%8D%E0%AA%AF/ L a/@href
+outlink: http://www.dmoz.org/World/Belarusian/%D0%97%D0%B4%D0%B0%D1%80%D0%BE%D1%9E%D0%B5/ L a/@href
+outlink: http://www.dmoz.org/World/Dansk/Sundhed/ L a/@href
+outlink: http://www.dmoz.org/World/Uyghurche/Salametlik/ L a/@href
+outlink: http://www.dmoz.org/World/Fran%C3%A7ais/Sant%C3%A9/ L a/@href
+outlink: http://www.dmoz.org/us.dmozodp X =JS_MISC
+outlink: http://www.dmoz.org/docs/en/termsofuse.html L a/@href
+outlink: http://www.dmoz.org/World/Afrikaans/Gesondheid/ L a/@href
+outlink: http://www.dmoz.org/dmoz.org X =JS_MISC
+outlink: http://www.dmoz.org/World/Thai/%E0%B8%AA%E0%B8%B8%E0%B8%82%E0%B8%A0%E0%B8%B2%E0%B8%9E/ L a/@href
+outlink: http://www.dmoz.org/World/Azerbaijani/S%C9%99hiyy%C9%99/ L a/@href
+outlink: http://www.dmoz.org/World/Ti%E1%BA%BFng_Vi%E1%BB%87t/Y_t%E1%BA%BF_-_S%E1%BB%A9c_kho%E1%BA%BB/ L a/@href
+outlink: 10.146.172.49:9099 X =JS_MISC
+outlink: http://www.dmoz.org/public/abuse?cat=Health&lang=en L a/@href
+outlink: http://www.dmoz.org/World/Ossetian/%C3%86%D0%BD%C3%A6%D0%BD%D0%B8%D0%B7%D0%B4%D0%B7%D0%B8%D0%BD%D0%B0%D0%B4/ L a/@href
+outlink: http://groups.google.com/group/alt.health L a/@href
+outlink: http://www.aolhealth.com/ L a/@href
+outlink: http://www.dmoz.org/Recreation/Travel/Specialty_Travel/Medical_Tourism/ L a/@href
+outlink: http://www.dmoz.org/Health/Home_Health/ L a/@href
+outlink: http://www.dmoz.org/Health/Conditions_and_Diseases/ L a/@href
+outlink: http://www.dmoz.org/World/Chinese_Traditional/%E5%81%A5%E5%BA%B7/ L a/@href
+outlink: http://www.dmoz.org/ X =JS_MISC
+outlink: http://www.dmoz.org/Health/Search_Engines/ L a/@href
+outlink: http://www.dmoz.org/World/Slovensky/Zdravie/ L a/@href
+outlink: http://www.bing.com/search?q=health L a/@href
+outlink: http://www.dmoz.org/World/Slovensko/Zdravje/ L a/@href
+outlink: http://www.dmoz.org/Health/Dentistry/ L a/@href
+outlink: http://www.dmoz.org/public/profile?editor=shara L a/@href
+outlink: http://www.dmoz.org/World/Cymraeg/Iechyd/ L a/@href
+outlink: http://www.dmoz.org/World/Bahasa_Indonesia/Kesehatan/ L a/@href
+outlink: http://rdf.dmoz.org/ X =JS_MISC
+outlink: http://www.dmoz.org/Health/Mental_Health/ L a/@href
+outlink: http://www.dmoz.org/World/Hindi/%E0%A4%B8%E0%A5%8D%E0%A4%B5%E0%A4%BE%E0%A4%B8%E0%A5%8D%E0%A4%A5%E0%A5%8D%E0%A4%AF/ L a/@href
+outlink: http://www.dmoz.org/search L form/@action
+outlink: http://www.dmoz.org/Kids_and_Teens/Health/ L a/@href
+outlink: http://www.dmoz.org/World/Eesti/Tervis/ L a/@href
+outlink: http://www.dmoz.org/Health/Medicine/ L a/@href
+outlink: http://www.dmoz.org/World/T%C3%BCrk%C3%A7e/Sa%C4%9Fl%C4%B1k/ L a/@href
+outlink: http://www.dmoz.org/public/profile?editor=nocturnal L a/@href
+outlink: http://o.aolcdn.com/os/dmoz/img/dividerN.gif E img/@src
+outlink: http://www.dmoz.org/World/Hebrew/%D7%91%D7%A8%D7%99%D7%90%D7%95%D7%AA/ L a/@href
+outlink: http://search.yahoo.com/bin/search?p=health L a/@href
+outlink: http://www.dmoz.org/World/Kannada/%E0%B2%86%E0%B2%B0%E0%B3%8B%E0%B2%97%E0%B3%8D%E0%B2%AF/ L a/@href
+outlink: http://www.dmoz.org/World/Japanese/%E5%81%A5%E5%BA%B7/ L a/@href
+outlink: http://www.dmoz.org/World/Galego/Sa%C3%BAde/ L a/@href
+outlink: http://www.dmoz.org/.aolcdn.com/omniunih.js X =JS_MISC
+outlink: http://www.dmoz.org/World/Korean/%EA%B1%B4%EA%B0%95%2C%EC%9D%98%ED%95%99/ L a/@href
+outlink: http://www.dmoz.org/Health/Organizations/ L a/@href
+outlink: http://www.dmoz.org/Business/Financial_Services/Insurance/Life_and_Health/ L a/@href
+outlink: http://www.dmoz.org/Health/Public_Health_and_Safety/ L a/@href
+outlink: http://www.dmoz.org/World/Suomi/Terveys/ L a/@href
+outlink: http://search.ask.com/web?q=health L a/@href
+outlink: http://www.dmoz.org/World/T%C3%BCrkmen%C3%A7e/Saglyk/ L a/@href
+outlink: http://www.dmoz.org/World/Sardu/Salude/ L a/@href
+outlink: http://www.dmoz.org/World/Polski/Zdrowie/ L a/@href
+outlink: news:alt.health L a/@href
+outlink: http://www.dmoz.org/Health/Education/ L a/@href
+outlink: http://www.dmoz.org/public/profile?editor=makrhod L a/@href
+outlink: http://www.dmoz.org/Health/Directories/ L a/@href
+outlink: http://www.dmoz.org/World/Rom%C3%A2n%C4%83/S%C4%83n%C4%83tate/ L a/@href
+outlink: http://www.dmoz.org/;s_265.events= X =JS_MISC
+outlink: http://www.dmoz.org/Health/Support_Groups/ L a/@href
+outlink: http://search.yippy.com/search?query=health L a/@href
+outlink: http://www.mozilla.org/ L a/@href
+outlink: http://search.dmoz.org/ X =JS_MISC
+outlink: http://www.dmoz.org/Health/Pharmacy/ L a/@href
+outlink: http://www.dmoz.org/img/mozilla.ico E link/@href
+outlink: http://www.dmoz.org/Health/Women%27s_Health/ L a/@href
+outlink: http://www.dmoz.org/World/Kazakh/%D0%A1%D0%B0%D1%83%D0%BB%D1%8B%D2%9B/ L a/@href
+outlink: http://www.dmoz.org/World/Nordfriisk/S%C3%BCnjhaid/ L a/@href
+outlink: http://www.dmoz.org/ L a/@href
+outlink: http://en.wikipedia.org/ L a/@href
+outlink: http://www.dmoz.org/World/G%C3%A0idhlig/Sl%C3%A0inte/ L a/@href
+outlink: http://www.dmoz.org/World/Italiano/Salute/ L a/@href
+outlink: http://www.dmoz.org/Health/Senses/ L a/@href
+outlink: http://www.dmoz.org/Health/Conferences/ L a/@href
+outlink: http://www.dmoz.org/;s_265.linkInternalFilters= X =JS_MISC
+outlink: http://www.dmoz.org/;s_265.charSet= X =JS_MISC
+outlink: http://blog.dmoz.org/ L a/@href
+outlink: http://www.dmoz.org/World/Brezhoneg/Yec%27hed/ L a/@href
+outlink: http://www.dmoz.org/World/Bulgarian/%D0%97%D0%B4%D1%80%D0%B0%D0%B2%D0%B5/ L a/@href
+outlink: http://www.dmoz.org/;s_265.server=t;s_265.channel= X =JS_MISC
+outlink: http://www.dmoz.org/img/moz/sunflower.gif E img/@src
+outlink: http://www.dmoz.org/World/L%C3%ABtzebuergesch/Gesondheet/ L a/@href
+outlink: http://www.dmoz.org/Health/Specific_Substances/ L a/@href
+outlink: http://www.dmoz.org/World/Lingua_Latina/Sanitas/ L a/@href
+outlink: http://www.dmoz.org/World/Furlan/Sal%C3%BBt/ L a/@href
+outlink: http://search.aol.com/aol/search?query=health L a/@href
+outlink: http://www.dmoz.org/faq.html X =JS_MISC
+outlink: http://www.dmoz.org/Health/Regional/ L a/@href
+outlink: http://www.dmoz.org/World/%C4%8Cesky/Zdrav%C3%AD/ L a/@href
+outlink: http://www.dmoz.org/World/Srpski/Zdravlje/ L a/@href
+outlink: http://www.dmoz.org/World/Makedonski/%D0%97%D0%B4%D1%80%D0%B0%D0%B2%D1%98%D0%B5/ L a/@href
+outlink: http://www.dmoz.org/docs/en/about.html L a/@href
+outlink: http://www.dmoz.org/favicon.ico I =INFERRED_MISC
+outlink: http://www.bbc.co.uk/health/ L a/@href
+outlink: http://www.dmoz.org/World/Armenian/%D4%B1%D5%BC%D5%B8%D5%B2%D5%BB%D5%B8%D6%82%D5%A9%D5%B5%D5%B8%D6%82%D5%B6/ L a/@href
+outlink: http://www.dmoz.org/World/Tagalog/Kalusugan/ L a/@href
+outlink: http://www.dmoz.org/World/%C3%8Dslenska/Heilsa/ L a/@href
+outlink: http://www.dmoz.org/World/Deutsch/Gesundheit/ L a/@href
+outlink: http://www.webmd.com/ L a/@href
+outlink: http://www.dmoz.org/Health/Teen_Health/ L a/@href
+outlink: http://o.aolcdn.com/os/dmoz/editors/scripts/jquery.js E script/@src
+outlink: http://www.dmoz.org/World/Rumantsch/Sanadad/ L a/@href
+outlink: http://www.dmoz.org/Health/Fitness/ L a/@href
+outlink: http://www.dmoz.org/World/Nederlands/Gezondheid/ L a/@href
+outlink: http://www.dmoz.org/profiles/user.html X =JS_MISC
+outlink: http://www.dmoz.org/World/Kiswahili/Afya/ L a/@href
+outlink: http://www.dmoz.org/Health/Reproductive_Health/ L a/@href
+outlink: http://www.dmoz.org/Health/Addictions/ L a/@href
+outlink: http://www.dmoz.org/editors/editcat/index?cat=Health L a/@href
+outlink: dmozqa-m01.ihost.aol.com:8081 X =JS_MISC
+outlink: http://www.dmoz.org/Health/Services/ L a/@href
+outlink: http://www.dmoz.org/World/Bosanski/Zdravlje/ L a/@href
+outlink: http://www.dmoz.org/World/O%27zbekcha/Salomatlik/ L a/@href
+outlink: http://www.dmoz.org/World/Norsk/Helse/ L a/@href
+outlink: http://www.dmoz.org/Health/News_and_Media/ L a/@href
+outlink: http://www.dmoz.org/;s_265.mmxtitle=h;s_265.mmxcustom= X =JS_MISC
+outlink: http://www.dmoz.org/Health/Alternative/ L a/@href
+outlink: http://www.dmoz.org/Health/Resources/ L a/@href
+outlink: http://www.dmoz.org/Business/Business_Services/Consulting/Medical_and_Life_Sciences/ L a/@href
+outlink: http://www.dmoz.org/desc.html X =JS_MISC
+outlink: http://www.dmoz.org/World/Tatar%C3%A7a/S%C3%A4l%C3%A4m%C3%A4t/ L a/@href
+outlink: http://www.dmoz.org/Health/Products_and_Shopping/ L a/@href
+outlink: http://www.dmoz.org/Health/Occupational_Health_and_Safety/ L a/@href
+outlink: http://www.dmoz.org/Science/Social_Sciences/Communication/Health_Communication/ L a/@href
+outlink: http://www.dmoz.org/World/Esperanto/Sano/ L a/@href
+outlink: https://s/ X =JS_MISC
+outlink: http://o.aolcdn.com/os/dmoz/img/aolsearch.gif E img/@src
+outlink: http://www.dmoz.org/World/Arabic/%D8%B5%D8%AD%D8%A9/ L a/@href
+outlink: http://www.dmoz.org/Science/Environment/Environmental_Health/ L a/@href
+outlink: http://www.dmoz.org/World/Chinese_Simplified/%E5%81%A5%E5%BA%B7/ L a/@href
+outlink: http://www.dmoz.org/public/profile?editor=liloth L a/@href
+outlink: http://www.dmoz.org/World/Seeltersk/Suundegaid/ L a/@href
+outlink: http://www.dmoz.org/World/Taiwanese/%E5%81%A5%E5%BA%B7/ L a/@href
+outlink: http://www.dmoz.org/World/Shqip/Sh%C3%ABndet%C3%ABsia/ L a/@href
+outlink: http://www.dmoz.org/World/Euskara/Osasuna/ L a/@href
+outlink: http://www.dmoz.org/Health/Aging/ L a/@href
+outlink: http://www.hon.ch/ L a/@href
+outlink: http://www.dmoz.org/Health/Weight_Loss/ L a/@href
+outlink: http://www.dmoz.org/World/Greek/%CE%A5%CE%B3%CE%B5%CE%AF%CE%B1/ L a/@href
+outlink: http://www.dmoz.org/Health/Child_Health/ L a/@href
+outlink: http://www.dmoz.org/World/Hrvatski/Zdravlje/ L a/@href
+outlink: http://search.lycos.com/?query=health L a/@href
+outlink: http://www.dmoz.org/world/ X =JS_MISC
+outlink: http://www.dmoz.org/Health/Beauty/ L a/@href
+outlink: http://www.dmoz.org/Society/Disabled/ L a/@href
+outlink: http://report-abuse.dmoz.org/ X =JS_MISC
+outlink: http://www.dmoz.org/Recreation/Humor/Medical/ L a/@href
+outlink: http://www.dmoz.org/World/Latviski/Vesel%C4%ABba/ L a/@href
+outlink: http://www.dmoz.org/World/Marathi/%E0%A4%86%E0%A4%B0%E0%A5%8B%E0%A4%97%E0%A5%8D%E0%A4%AF/ L a/@href
+outlink: http://www.dmoz.org/World/Lietuvi%C5%B3/Sveikata/ L a/@href
+outlink: http://www.dmoz.org/Health/News_and_Media/Publications/ L a/@href
+outlink: http://www.dmoz.org/Health/Senior_Health/ L a/@href
+outlink: http://www.dmoz.org/World/Sinhala/%E0%B7%83%E0%B7%9E%E0%B6%B6%E0%B7%8A%E2%80%8D%E0%B6%BA%E0%B6%BA/ L a/@href
+outlink: http://o/ X =JS_MISC
+outlink: http://www.dmoz.org/World/Espa%C3%B1ol/Salud/ L a/@href
+outlink: http://www.dmoz.org/World/Catal%C3%A0/Salut/ L a/@href
+outlink: http://www.dmoz.org/Society/History/By_Topic/Social_History/Health/ L a/@href
+outlink: http://www.dmoz.org/Health/Nursing/ L a/@href
+outlink: http://gigablast.com/search?q=health L a/@href
+outlink: http://www.dmoz.org/World/Bahasa_Melayu/Kesihatan/ L a/@href
+outlink: http://www.dmoz.org/World/Kyrgyz/%D0%A1%D0%B0%D0%BB%D0%B0%D0%BC%D0%B0%D1%82%D1%82%D1%8B%D0%BA_%D1%81%D0%B0%D0%BA%D1%82%D0%BE%D0%BE/ L a/@href
+outlink: http://www.dmoz.org/Health/Animal/ L a/@href
+outlink: http://www.dmoz.org/World/Ukrainian/%D0%97%D0%B4%D0%BE%D1%80%D0%BE%D0%B2%27%D1%8F/ L a/@href
+outlink: http://www.dmoz.org/World/Portugu%C3%AAs/Sa%C3%BAde/ L a/@href
+outlink: http://www.dmoz.org/Health/Men%27s_Health/ L a/@href
+outlink: http://www.dmoz.org/desc/Health L a/@href
+outlink: http://www.dmoz.org/World/Persian/%D8%A8%D9%87%D8%AF%D8%A7%D8%B4%D8%AA/ L a/@href
+outlink: http://www.dmoz.org/World/Svenska/H%C3%A4lso-_och_sjukv%C3%A5rd/ L a/@href
+outlink: http://www.dmoz.org/Business/Healthcare/Employment/ L a/@href
+outlink: http://www.dmoz.org/World/Magyar/Eg%C3%A9szs%C3%A9g/ L a/@href
+outlink: http://www.intelihealth.com/ L a/@href
+outlink: http://www.dmoz.org/World/Russian/%D0%97%D0%B4%D0%BE%D1%80%D0%BE%D0%B2%D1%8C%D0%B5/ L a/@href
+outlink: http://www.dmoz.org/Health/Professions/ L a/@href
+outlink: http://www.dmoz.org/Society/Issues/Health/ L a/@href
+outlink: http://www.dmoz.org/World/Bashkir/%D2%BA%D0%B0%D1%83%D0%BB%D1%8B%D2%A1/ L a/@href
+outlink: http://www.dmoz.org/Business/Healthcare/ L a/@href
+outlink: http://o.aolcdn.com/os/dmoz/editors/css/dmoznew.css E link/@href
+outlink: http://www.dmoz.org/Recreation/Travel/Preparation/Health/ L a/@href
+outlink: http://musicmoz.org/ L a/@href
+outlink: http://www.google.com/search?q=health L a/@href
+
+
+
+WARC/1.0
+WARC-Type: response
+WARC-Target-URI: dns:groups.google.com
+WARC-Date: 2012-12-07T18:55:03Z
+WARC-IP-Address: 171.64.64.64
+WARC-Record-ID: <urn:uuid:58abf375-77a8-4bed-97b9-61a347f17310>
+Content-Type: text/dns
+Content-Length: 279
+
+20121207185503
+groups.l.google.com.	29	IN	A	173.194.79.138
+groups.l.google.com.	29	IN	A	173.194.79.139
+groups.l.google.com.	29	IN	A	173.194.79.100
+groups.l.google.com.	29	IN	A	173.194.79.101
+groups.l.google.com.	29	IN	A	173.194.79.102
+groups.l.google.com.	29	IN	A	173.194.79.113
+
+
+WARC/1.0
+WARC-Type: response
+WARC-Target-URI: dns:www.aolhealth.com
+WARC-Date: 2012-12-07T18:55:03Z
+WARC-IP-Address: 171.64.64.64
+WARC-Record-ID: <urn:uuid:cdd11a00-970a-4d42-a4c9-e0adc2acfcba>
+Content-Type: text/dns
+Content-Length: 78
+
+20121207185503
+living.blogsmith.aol.com.aol.akadns.net.	30	IN	A	207.200.65.50
+
+
+WARC/1.0
+WARC-Type: response
+WARC-Target-URI: dns:www.bing.com
+WARC-Date: 2012-12-07T18:55:03Z
+WARC-IP-Address: 171.64.64.64
+WARC-Record-ID: <urn:uuid:cca778f6-9479-4e6d-893a-cc3f40017f6e>
+Content-Type: text/dns
+Content-Length: 138
+
+20121207185503
+a134.dsw3.akamai.net.	18	IN	A	63.80.4.72
+a134.dsw3.akamai.net.	18	IN	A	63.80.4.75
+a134.dsw3.akamai.net.	18	IN	A	63.80.4.80
+
+
+WARC/1.0
+WARC-Type: response
+WARC-Target-URI: dns:rdf.dmoz.org
+WARC-Date: 2012-12-07T18:55:03Z
+WARC-IP-Address: 171.64.64.64
+WARC-Record-ID: <urn:uuid:526abb29-e4d1-48c5-bec3-0d494d825b50>
+Content-Type: text/dns
+Content-Length: 61
+
+20121207185503
+dmoz-rdf.egslb.aol.com.	30	IN	A	207.200.74.93
+
+
+WARC/1.0
+WARC-Type: response
+WARC-Target-URI: dns:o.aolcdn.com
+WARC-Date: 2012-12-07T18:55:03Z
+WARC-IP-Address: 171.64.64.64
+WARC-Record-ID: <urn:uuid:39045611-227d-4fc6-a02e-31bd74f76e07>
+Content-Type: text/dns
+Content-Length: 109
+
+20121207185503
+a1123.dscg.akamai.net.	20	IN	A	198.189.255.207
+a1123.dscg.akamai.net.	20	IN	A	198.189.255.217
+
+
+WARC/1.0
+WARC-Type: response
+WARC-Target-URI: dns:search.yahoo.com
+WARC-Date: 2012-12-07T18:55:03Z
+WARC-IP-Address: 171.64.64.64
+WARC-Record-ID: <urn:uuid:48ddde8d-1c72-4566-9267-f53f42765ca1>
+Content-Type: text/dns
+Content-Length: 64
+
+20121207185503
+m1.search.ysta1.b.yahoo.com.	42	IN	A	74.6.117.48
+
+
+WARC/1.0
+WARC-Type: response
+WARC-Target-URI: dns:search.ask.com
+WARC-Date: 2012-12-07T18:55:03Z
+WARC-IP-Address: 171.64.64.64
+WARC-Record-ID: <urn:uuid:f58b100a-9c7d-4e00-b801-356fa5b2b47e>
+Content-Type: text/dns
+Content-Length: 55
+
+20121207185503
+search.ask.com.		30	IN	A	66.235.120.127
+
+
+WARC/1.0
+WARC-Type: response
+WARC-Target-URI: dns:search.yippy.com
+WARC-Date: 2012-12-07T18:55:03Z
+WARC-IP-Address: 171.64.64.64
+WARC-Record-ID: <urn:uuid:6b781cde-a351-4d2e-b9b6-598a2dea53df>
+Content-Type: text/dns
+Content-Length: 57
+
+20121207185503
+search.yippy.com.	1800	IN	A	66.36.242.102
+
+
+WARC/1.0
+WARC-Type: response
+WARC-Target-URI: dns:www.mozilla.org
+WARC-Date: 2012-12-07T18:55:03Z
+WARC-IP-Address: 171.64.64.64
+WARC-Record-ID: <urn:uuid:a446cfe8-376a-4079-a161-85b4136e71e6>
+Content-Type: text/dns
+Content-Length: 65
+
+20121207185503
+mozorg.dynect.mozilla.net.	18	IN	A	63.245.217.105
+
+
+WARC/1.0
+WARC-Type: response
+WARC-Target-URI: dns:search.dmoz.org
+WARC-Date: 2012-12-07T18:55:03Z
+WARC-IP-Address: 171.64.64.64
+WARC-Record-ID: <urn:uuid:453a6072-f338-483b-90c0-e0381e3234e5>
+Content-Type: text/dns
+Content-Length: 63
+
+20121207185503
+dmoz-beta.egslb.aol.com.	23	IN	A	205.188.95.207
+
+
+WARC/1.0
+WARC-Type: response
+WARC-Target-URI: dns:en.wikipedia.org
+WARC-Date: 2012-12-07T18:55:03Z
+WARC-IP-Address: 171.64.64.64
+WARC-Record-ID: <urn:uuid:b37ce7fd-c8a3-4905-99f1-07b0e4943e0e>
+Content-Type: text/dns
+Content-Length: 74
+
+20121207185503
+wikipedia-lb.eqiad.wikimedia.org.	1276	IN	A	208.80.154.225
+
+
+WARC/1.0
+WARC-Type: response
+WARC-Target-URI: dns:blog.dmoz.org
+WARC-Date: 2012-12-07T18:55:03Z
+WARC-IP-Address: 171.64.64.64
+WARC-Record-ID: <urn:uuid:0315c0da-a43c-4131-8ad4-a6549d30345d>
+Content-Type: text/dns
+Content-Length: 79
+
+20121207185503
+outside.blogsmith.aol.com.aol.akadns.net.	59	IN	A	207.200.65.48
+
+
+WARC/1.0
+WARC-Type: response
+WARC-Target-URI: dns:search.aol.com
+WARC-Date: 2012-12-07T18:55:03Z
+WARC-IP-Address: 171.64.64.64
+WARC-Record-ID: <urn:uuid:90b3d9aa-2fdc-4154-85b5-375245273287>
+Content-Type: text/dns
+Content-Length: 74
+
+20121207185503
+search-west.aol.com.aol.akadns.net.	60	IN	A	207.200.66.100
+
+
+WARC/1.0
+WARC-Type: response
+WARC-Target-URI: dns:www.bbc.co.uk
+WARC-Date: 2012-12-07T18:55:03Z
+WARC-IP-Address: 171.64.64.64
+WARC-Record-ID: <urn:uuid:029e3eb9-0cde-4832-8299-326d15b3009c>
+Content-Type: text/dns
+Content-Length: 55
+
+20121207185503
+www.bbc.net.uk.		295	IN	A	212.58.244.66
+
+
+WARC/1.0
+WARC-Type: response
+WARC-Target-URI: dns:www.webmd.com
+WARC-Date: 2012-12-07T18:55:03Z
+WARC-IP-Address: 171.64.64.64
+WARC-Record-ID: <urn:uuid:abb89cf2-66f0-4f18-95bb-2b8fefb4520a>
+Content-Type: text/dns
+Content-Length: 55
+
+20121207185503
+www.webmd.com.		2920	IN	A	208.93.170.17
+
+
+WARC/1.0
+WARC-Type: response
+WARC-Target-URI: dns:www.google.com
+WARC-Date: 2012-12-07T18:55:04Z
+WARC-IP-Address: 171.64.64.64
+WARC-Record-ID: <urn:uuid:3ab48e7f-0c25-4498-8ec7-01e9042e817e>
+Content-Type: text/dns
+Content-Length: 210
+
+20121207185504
+www.google.com.		53	IN	A	74.125.224.83
+www.google.com.		53	IN	A	74.125.224.84
+www.google.com.		53	IN	A	74.125.224.80
+www.google.com.		53	IN	A	74.125.224.81
+www.google.com.		53	IN	A	74.125.224.82
+
+
+WARC/1.0
+WARC-Type: response
+WARC-Target-URI: dns:report-abuse.dmoz.org
+WARC-Date: 2012-12-07T18:55:04Z
+WARC-IP-Address: 171.64.64.64
+WARC-Record-ID: <urn:uuid:fa9da7ff-0375-4a87-9132-1adee3d35a3c>
+Content-Type: text/dns
+Content-Length: 61
+
+20121207185504
+dirt05.netscape.com.	3600	IN	A	207.200.81.151
+
+
+WARC/1.0
+WARC-Type: response
+WARC-Target-URI: dns:musicmoz.org
+WARC-Date: 2012-12-07T18:55:04Z
+WARC-IP-Address: 171.64.64.64
+WARC-Record-ID: <urn:uuid:fe16bb48-a6af-45c0-94d4-eae7c564f2d3>
+Content-Type: text/dns
+Content-Length: 56
+
+20121207185504
+musicmoz.org.		86400	IN	A	207.200.81.151
+
+
+WARC/1.0
+WARC-Type: response
+WARC-Target-URI: dns:gigablast.com
+WARC-Date: 2012-12-07T18:55:04Z
+WARC-IP-Address: 171.64.64.64
+WARC-Record-ID: <urn:uuid:3d515812-ada2-4c70-ba30-54cf5bec9435>
+Content-Type: text/dns
+Content-Length: 54
+
+20121207185504
+gigablast.com.		3600	IN	A	50.22.70.146
+
+
+WARC/1.0
+WARC-Type: response
+WARC-Target-URI: dns:search.lycos.com
+WARC-Date: 2012-12-07T18:55:04Z
+WARC-IP-Address: 171.64.64.64
+WARC-Record-ID: <urn:uuid:2c4c518b-d4da-4bbe-8e09-8acacd836799>
+Content-Type: text/dns
+Content-Length: 68
+
+20121207185504
+orig-10063.lycos.cotcdn.net.	360	IN	A	208.93.137.190
+
+
+WARC/1.0
+WARC-Type: response
+WARC-Target-URI: dns:www.intelihealth.com
+WARC-Date: 2012-12-07T18:55:04Z
+WARC-IP-Address: 171.64.64.64
+WARC-Record-ID: <urn:uuid:3ee6e4bb-b65e-4942-8c7d-55b4b5e482cf>
+Content-Type: text/dns
+Content-Length: 107
+
+20121207185504
+www.intelihealth.com.	300	IN	A	206.213.253.97
+www.intelihealth.com.	300	IN	A	206.213.211.97
+
+
+WARC/1.0
+WARC-Type: response
+WARC-Target-URI: dns:www.hon.ch
+WARC-Date: 2012-12-07T18:55:04Z
+WARC-IP-Address: 171.64.64.64
+WARC-Record-ID: <urn:uuid:69bf815c-fb9b-4700-8268-201504911dd0>
+Content-Type: text/dns
+Content-Length: 57
+
+20121207185504
+web-hon.hcuge.ch.	276	IN	A	129.195.254.33
+
+
+WARC/1.0
+WARC-Type: response
+WARC-Target-URI: http://www.aolhealth.com/robots.txt
+WARC-Date: 2012-12-07T18:55:06Z
+WARC-Payload-Digest: sha1:X23XKDYPKDGV2Y3NBQS2T534IDX7W2JQ
+WARC-IP-Address: 207.200.65.50
+WARC-Record-ID: <urn:uuid:b1633ef8-fbb7-424a-ae8e-ce2014f25338>
+Content-Type: application/http; msgtype=response
+Content-Length: 599
+
+HTTP/1.1 301 Moved Permanently
+Date: Fri, 07 Dec 2012 18:55:38 GMT
+Server: Apache/2.2
+Location: http://www.huffingtonpost.com/healthy-living/
+Content-Length: 326
+Keep-Alive: timeout=5, max=999985
+Connection: Keep-Alive
+Content-Type: text/html; charset=iso-8859-1
+
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 2.0//EN">
+<html><head>
+<title>301 Moved Permanently</title>
+</head><body>
+<h1>Moved Permanently</h1>
+<p>The document has moved <a href="http://www.huffingtonpost.com/healthy-living/">here</a>.</p>
+<hr>
+<address>Apache/2.2 Server at www.aolhealth.com Port 1080</address>
+</body></html>
+
+
+WARC/1.0
+WARC-Type: request
+WARC-Target-URI: http://www.aolhealth.com/robots.txt
+WARC-Date: 2012-12-07T18:55:06Z
+WARC-Concurrent-To: <urn:uuid:b1633ef8-fbb7-424a-ae8e-ce2014f25338>
+WARC-Record-ID: <urn:uuid:fab479d2-b438-4aaf-a733-73a1b48b8327>
+Content-Type: application/http; msgtype=request
+Content-Length: 237
+
+GET /robots.txt HTTP/1.0
+User-Agent: Mozilla/5.0 (compatible; heritrix/3.1.0 +http://infolab.stanford.edu/~paepcke)
+Connection: close
+Accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8
+Host: www.aolhealth.com
+
+
+
+WARC/1.0
+WARC-Type: metadata
+WARC-Target-URI: http://www.aolhealth.com/robots.txt
+WARC-Date: 2012-12-07T18:55:06Z
+WARC-Concurrent-To: <urn:uuid:b1633ef8-fbb7-424a-ae8e-ce2014f25338>
+WARC-Record-ID: <urn:uuid:1c1eeb0f-b363-48b9-a0b5-fa21671c3511>
+Content-Type: application/warc-fields
+Content-Length: 280
+
+force-fetch:
+via: http://www.aolhealth.com/
+hopsFromSeed: LP
+fetchTimeMs: 9
+outlink: http://www.aolhealth.com/favicon.ico I =INFERRED_MISC
+outlink: http://www.huffingtonpost.com/healthy-living/ R Location:
+outlink: http://www.huffingtonpost.com/healthy-living/ L a/@href
+
+
+
+WARC/1.0
+WARC-Type: response
+WARC-Target-URI: http://www.bing.com/robots.txt
+WARC-Date: 2012-12-07T18:55:06Z
+WARC-Payload-Digest: sha1:4TCB7V43CWQIBRUSPLZWQRSIJHKKCNSS
+WARC-IP-Address: 63.80.4.72
+WARC-Record-ID: <urn:uuid:80de5f98-caae-44fb-92b8-035e91c09270>
+Content-Type: application/http; msgtype=response
+Content-Length: 2312
+
+HTTP/1.0 200 OK
+Content-Type: text/plain
+Last-Modified: Thu, 21 Jun 2012 18:52:26 GMT
+Cache-Control: public, max-age=12388220
+Date: Fri, 07 Dec 2012 18:55:38 GMT
+Content-Length: 2102
+Connection: close
+
+User-agent: *
+Disallow: /bmi/
+Disallow: /browse
+Disallow: /BVFrame.aspx
+Disallow: /BVSandbox.aspx
+Disallow: /cashback/admin
+Disallow: /cashback/go
+Disallow: /challenge
+Disallow: /community/forums/tags
+Disallow: /community/login.aspx?
+Disallow: /fd/
+Disallow: /history
+Disallow: /images/search?
+Disallow: /images?
+Disallow: /kids/
+Disallow: /maps/clicks.ashx?
+Disallow: /math/
+Disallow: /news/search?
+Disallow: /nutrition/
+Disallow: /ping
+Disallow: /previewx
+Disallow: /products/?q
+Disallow: /products/accelerator
+Disallow: /products/search?q
+Disallow: /profile/
+Disallow: /Proxy.ashx
+Disallow: /results
+Disallow: /search
+Disallow: /Search
+Disallow: /settings
+Disallow: /shenghuo
+Disallow: /shopping/*/c/*?q
+Disallow: /shopping/*/search
+Disallow: /shopping/accelerator
+Disallow: /shopping/cashback/go
+Disallow: /shopping/cashback/search?q
+Disallow: /shopping/results
+Disallow: /shopping/sa/
+Disallow: /shopping/search?
+Disallow: /shopping/twitter
+Disallow: /social/search?
+Disallow: /spbasic
+Disallow: /spresults
+Disallow: /static/
+Disallow: /travel/css
+Disallow: /travel/flight/flightSearch
+Disallow: /travel/flight/flightSearchAction
+Disallow: /travel/hotel/hotelMiniSearchRequest
+Disallow: /travel/hotel/hotelSearch
+Disallow: /travel/scripts
+Disallow: /travel/secure
+Disallow: /twitter/search?
+Disallow: /url
+Disallow: /videos/search?
+Disallow: /videos?
+Disallow: /w3c/
+Disallow: /xrank/search?
+
+Sitemap: http://sitemap.video.msn.com/sitemap/sitemap-en-us-index.xml
+Sitemap: http://www.bing.com/celebrities/sitemap.xml
+Sitemap: http://www.bing.com/finance/sitemapIndex.xml
+Sitemap: http://www.bing.com/movies/search/sitemap.xml
+Sitemap: http://www.bing.com/music/sitemaps.xml
+Sitemap: http://www.bing.com/news/sitemap.xml
+Sitemap: http://www.bing.com/onlinegames/sitemap.xml
+Sitemap: http://www.bing.com/shopping/static/sitemapindex.xml
+Sitemap: http://www.bing.com/travel/sitemap.xml
+Sitemap: http://www.bing.com/tv/sitemap.xml
+Sitemap: http://www.bing.com/videogames/sitemap.xml
+Sitemap: http://www.bing.com/weather/sitemap.xml
+
+
+WARC/1.0
+WARC-Type: request
+WARC-Target-URI: http://www.bing.com/robots.txt
+WARC-Date: 2012-12-07T18:55:06Z
+WARC-Concurrent-To: <urn:uuid:80de5f98-caae-44fb-92b8-035e91c09270>
+WARC-Record-ID: <urn:uuid:8c4d6897-f9c1-4d97-8bea-5d4c1a19f4ed>
+Content-Type: application/http; msgtype=request
+Content-Length: 232
+
+GET /robots.txt HTTP/1.0
+User-Agent: Mozilla/5.0 (compatible; heritrix/3.1.0 +http://infolab.stanford.edu/~paepcke)
+Connection: close
+Accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8
+Host: www.bing.com
+
+
+
+WARC/1.0
+WARC-Type: metadata
+WARC-Target-URI: http://www.bing.com/robots.txt
+WARC-Date: 2012-12-07T18:55:06Z
+WARC-Concurrent-To: <urn:uuid:80de5f98-caae-44fb-92b8-035e91c09270>
+WARC-Record-ID: <urn:uuid:25f4e833-3ce6-44f9-a630-6d96a068be66>
+Content-Type: application/warc-fields
+Content-Length: 151
+
+force-fetch:
+via: http://www.bing.com/search?q=health
+hopsFromSeed: LP
+fetchTimeMs: 6
+outlink: http://www.bing.com/favicon.ico I =INFERRED_MISC
+
+
+
+WARC/1.0
+WARC-Type: response
+WARC-Target-URI: http://groups.google.com/robots.txt
+WARC-Date: 2012-12-07T18:55:06Z
+WARC-Payload-Digest: sha1:7ROCOROMABGL7HSOJLAV5BSCDSXQL43L
+WARC-IP-Address: 173.194.79.138
+WARC-Record-ID: <urn:uuid:e8f67b52-f8d7-4f86-a18e-db2ed57d6e17>
+Content-Type: application/http; msgtype=response
+Content-Length: 1355
+
+HTTP/1.0 200 OK
+Content-Type: text/plain
+Date: Fri, 07 Dec 2012 18:55:38 GMT
+Expires: Fri, 07 Dec 2012 18:55:38 GMT
+Cache-Control: private, max-age=0
+X-Content-Type-Options: nosniff
+X-Frame-Options: SAMEORIGIN
+X-XSS-Protection: 1; mode=block
+Server: GSE
+
+# robots.txt for Google Groups.  See this URL for documentation on robots.txt:
+# https://developers.google.com/webmasters/control-crawl-index/docs/robots_txt
+# Note in particular that "the most specific rule based on the length of the
+# [path] entry will trump the less specific (shorter) rule."
+User-agent: *
+
+Disallow: /groups/search
+Disallow: /groups/dir?*q=
+Disallow: /a/*.*/groups/search
+Disallow: /a/*.*/groups/dir?*q=
+
+Disallow: /d/search*
+Disallow: /d/topicsearch*
+Disallow: /a/*.*/d/search*
+Disallow: /a/*.*/d/topicsearch*
+
+Allow: /$
+Allow: /a/
+Allow: /a/*.*/about
+Allow: /a/*.*/browse_
+Allow: /a/*.*/group
+Allow: /a/*.*/groups
+Allow: /a/*.*/images
+Allow: /a/*.*/index
+Allow: /a/*.*/messages
+Allow: /a/*.*/msg/
+Allow: /a/*.*/threads
+Allow: /a/*.*/topics
+Allow: /a/*.*/tree
+Allow: /about
+Allow: /browse_
+Allow: /finance
+Allow: /group
+Allow: /groups
+Allow: /images
+Allow: /index
+Allow: /messages
+Allow: /msg/
+Allow: /support
+Allow: /threads
+Allow: /topics
+Allow: /tree
+
+Allow: /a/*.*/d/
+Allow: /a/*.*/forum$
+Allow: /a/*.*/forum/
+Allow: /d/
+Allow: /forum$
+Allow: /forum/
+
+Disallow: /
+
+
+WARC/1.0
+WARC-Type: request
+WARC-Target-URI: http://groups.google.com/robots.txt
+WARC-Date: 2012-12-07T18:55:06Z
+WARC-Concurrent-To: <urn:uuid:e8f67b52-f8d7-4f86-a18e-db2ed57d6e17>
+WARC-Record-ID: <urn:uuid:7d2c8cf2-7615-45c3-8671-10493ae53250>
+Content-Type: application/http; msgtype=request
+Content-Length: 237
+
+GET /robots.txt HTTP/1.0
+User-Agent: Mozilla/5.0 (compatible; heritrix/3.1.0 +http://infolab.stanford.edu/~paepcke)
+Connection: close
+Accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8
+Host: groups.google.com
+
+
+
+WARC/1.0
+WARC-Type: metadata
+WARC-Target-URI: http://groups.google.com/robots.txt
+WARC-Date: 2012-12-07T18:55:06Z
+WARC-Concurrent-To: <urn:uuid:e8f67b52-f8d7-4f86-a18e-db2ed57d6e17>
+WARC-Record-ID: <urn:uuid:6fd43f23-c270-41a7-af43-efbf4ca02e03>
+Content-Type: application/warc-fields
+Content-Length: 163
+
+force-fetch:
+via: http://groups.google.com/group/alt.health
+hopsFromSeed: LP
+fetchTimeMs: 54
+outlink: http://groups.google.com/favicon.ico I =INFERRED_MISC
+
+
+
+WARC/1.0
+WARC-Type: response
+WARC-Target-URI: http://www.dmoz.org/aol.com,javascript:,dmoz.org
+WARC-Date: 2012-12-07T18:55:06Z
+WARC-Payload-Digest: sha1:WYDSJP5BE3VOAVZQADOTQJK76YRDT2T5
+WARC-IP-Address: 64.12.239.187
+WARC-Record-ID: <urn:uuid:705984e8-7d69-4659-a2d5-7d591544b8e8>
+Content-Type: application/http; msgtype=response
+Content-Length: 432
+
+HTTP/1.1 302 Found
+Date: Fri, 07 Dec 2012 18:55:38 GMT
+Server: Apache
+Location: http://www.dmoz.org/docs/en/error.html
+Content-Length: 222
+Connection: close
+Content-Type: text/html; charset=iso-8859-1
+
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 2.0//EN">
+<html><head>
+<title>302 Found</title>
+</head><body>
+<h1>Found</h1>
+<p>The document has moved <a href="http://www.dmoz.org/docs/en/error.html">here</a>.</p>
+</body></html>
+
+
+WARC/1.0
+WARC-Type: request
+WARC-Target-URI: http://www.dmoz.org/aol.com,javascript:,dmoz.org
+WARC-Date: 2012-12-07T18:55:06Z
+WARC-Concurrent-To: <urn:uuid:705984e8-7d69-4659-a2d5-7d591544b8e8>
+WARC-Record-ID: <urn:uuid:ca1455bd-b065-44fa-af5f-d204a5ac32db>
+Content-Type: application/http; msgtype=request
+Content-Length: 340
+
+GET /aol.com,javascript:,dmoz.org HTTP/1.0
+User-Agent: Mozilla/5.0 (compatible; heritrix/3.1.0 +http://infolab.stanford.edu/~paepcke)
+Connection: close
+Referer: http://www.dmoz.org/Health
+Accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8
+Host: www.dmoz.org
+Cookie: JSESSIONID=F993CFAE3E161943ABCA3CECF552220E
+
+
+
+WARC/1.0
+WARC-Type: metadata
+WARC-Target-URI: http://www.dmoz.org/aol.com,javascript:,dmoz.org
+WARC-Date: 2012-12-07T18:55:06Z
+WARC-Concurrent-To: <urn:uuid:705984e8-7d69-4659-a2d5-7d591544b8e8>
+WARC-Record-ID: <urn:uuid:792dd380-b37a-45eb-9239-44392bb14a59>
+Content-Type: application/warc-fields
+Content-Length: 249
+
+via: http://www.dmoz.org/Health
+hopsFromSeed: X
+fetchTimeMs: 152
+outlink: http://www.dmoz.org/favicon.ico I =INFERRED_MISC
+outlink: http://www.dmoz.org/docs/en/error.html L a/@href
+outlink: http://www.dmoz.org/docs/en/error.html R Location:
+
+
+
+WARC/1.0
+WARC-Type: response
+WARC-Target-URI: http://search.yahoo.com/robots.txt
+WARC-Date: 2012-12-07T18:55:06Z
+WARC-Payload-Digest: sha1:2SJWYHYOVKVVUACBPU757V4ADQV5DBJA
+WARC-IP-Address: 74.6.117.48
+WARC-Record-ID: <urn:uuid:7f656ea7-e656-4b82-8754-ba66ee8e425d>
+Content-Type: application/http; msgtype=response
+Content-Length: 525
+
+HTTP/1.1 200 OK
+Date: Fri, 07 Dec 2012 18:55:38 GMT
+P3P: policyref="http://info.yahoo.com/w3c/p3p.xml", CP="CAO DSP COR CUR ADM DEV TAI PSA PSD IVAi IVDi CONi TELo OTPi OUR DELi SAMi OTRi UNRi PUBi IND PHY ONL UNI PUR FIN COM NAV INT DEM CNT STA POL HEA PRE LOC GOV"
+Last-Modified: Tue, 27 Nov 2012 19:00:58 GMT
+Accept-Ranges: bytes
+Content-Length: 82
+Vary: Accept-Encoding
+Connection: close
+Content-Type: text/plain; charset=utf-8
+
+User-agent: *
+Disallow: /search
+Disallow: /bin
+Disallow: /language
+Disallow: /yhs
+
+
+WARC/1.0
+WARC-Type: request
+WARC-Target-URI: http://search.yahoo.com/robots.txt
+WARC-Date: 2012-12-07T18:55:06Z
+WARC-Concurrent-To: <urn:uuid:7f656ea7-e656-4b82-8754-ba66ee8e425d>
+WARC-Record-ID: <urn:uuid:e7b627b4-cf76-41e6-a079-9df26be005df>
+Content-Type: application/http; msgtype=request
+Content-Length: 236
+
+GET /robots.txt HTTP/1.0
+User-Agent: Mozilla/5.0 (compatible; heritrix/3.1.0 +http://infolab.stanford.edu/~paepcke)
+Connection: close
+Accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8
+Host: search.yahoo.com
+
+
+
+WARC/1.0
+WARC-Type: metadata
+WARC-Target-URI: http://search.yahoo.com/robots.txt
+WARC-Date: 2012-12-07T18:55:06Z
+WARC-Concurrent-To: <urn:uuid:7f656ea7-e656-4b82-8754-ba66ee8e425d>
+WARC-Record-ID: <urn:uuid:a277315b-737c-41fb-81dd-b8f07d7f54d9>
+Content-Type: application/warc-fields
+Content-Length: 163
+
+force-fetch:
+via: http://search.yahoo.com/bin/search?p=health
+hopsFromSeed: LP
+fetchTimeMs: 5
+outlink: http://search.yahoo.com/favicon.ico I =INFERRED_MISC
+
+
+
