@@ -8,14 +8,17 @@ import org.apache.pig.backend.executionengine.ExecException;
 import org.apache.pig.data.Tuple;
 import org.apache.pig.data.TupleFactory;
 
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 /**
  * @author paepcke
  * Pig Filter function: Receives a CSV string and returns true 
- * if all fields are purely numeric. Recognizes hyphen, plus, and minus
- * as parts of numbers.  
+ * if all fields are composed of only alpha chars.
  */
-public class CSVFieldsNumeric extends FilterFunc {
+public class CSVOnlyLetters extends FilterFunc {
 	
+        static Pattern alphaOnlyPattern = Pattern.compile("[a-zA-Z,]+");
 	
 	public Boolean exec(Tuple input) throws IOException {
 		if (input == null || input.size() == 0)
@@ -26,11 +29,8 @@ public class CSVFieldsNumeric extends FilterFunc {
 		} catch (ExecException ee) {
 			throw new IOException("Caught exception processing input row ", ee);
 		}
-		if (isNumeric(value)) {
-			return true;
-		} else {
-			return false;
-		}
+		Matcher m = alphaOnlyPattern.matcher(value);
+		return m.matches();
 	}
     
 	public static boolean isNumeric(String str) {
