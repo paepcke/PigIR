@@ -29,6 +29,7 @@ public class CSVOnlyLetters extends FilterFunc {
 		} catch (ExecException ee) {
 			throw new IOException("Caught exception processing input row ", ee);
 		}
+		// Length is ok, only letters involved?
 		Matcher m = alphaOnlyPattern.matcher(value);
 		return m.matches();
 	}
@@ -84,12 +85,14 @@ public class CSVOnlyLetters extends FilterFunc {
 		if (numChecker.exec(testTuple)) {
 			throw new IOException("foo,399 was not recognized as a number.");
 		}
+
 		input.clear();
 		input.add("foo.bar");
 		testTuple = TupleFactory.getInstance().newTuple(input);
 		if (numChecker.exec(testTuple)) {
 			throw new IOException("recognized foo.bar as a number.");
 		}
+		
 		System.out.println("All good with CSVFieldsNumeric.");
 	}
 }

@@ -41,7 +41,10 @@ strippedDocs = FOREACH docs GENERATE edu.stanford.pigir.pigudf.StripHTML(content
 ngrams = FOREACH strippedDocs GENERATE FLATTEN(edu.stanford.pigir.pigudf.NGramGenerator(content));
 
 -- Keep only words with alpha chars...no numbers:
-ngramsFiltered = FILTER ngrams by edu.stanford.pigir.pigudf.CSVOnlyLetters($0);
+ngramsAlphaFiltered = FILTER ngrams by edu.stanford.pigir.pigudf.CSVOnlyLetters($0);
+
+-- Keep only fields shorter than 20 chars. More than that is garbage:
+ngramsLenFiltered = FILTER ngramsAlphaFiltered by edu.stanford.pigir.pigudf.CSVOnlyLetters($0,20);
 
 /*
    Get the following data structure:
@@ -51,7 +54,7 @@ ngramsFiltered = FILTER ngrams by edu.stanford.pigir.pigudf.CSVOnlyLetters($0);
       groupedNgrams: groupedNgrams: {group: chararray,
        		     		     ngramsFiltered: {(edu.stanford.pigir.pigudf.ngramgenerator...: chararray)}}
 */
-groupedNgrams = GROUP ngramsFiltered BY $0;
+groupedNgrams = GROUP ngramsLenFiltered BY $0;
 
 /*
    Now generate:
