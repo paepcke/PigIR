@@ -19,10 +19,10 @@ public class CSVMaxLength extends FilterFunc {
 		if (input == null || input.size() < 2)
 			return null;
 		String value = null;
-		int maxSize  = -1;
+		Integer maxSize  = -1;
 		try {
 			value   = (String)input.get(0);
-			maxSize = (int)input.get(1);
+			maxSize = (Integer)input.get(1);
 		} catch (ExecException ee) {
 			throw new IOException("Caught exception processing input row ", ee);
 		}
