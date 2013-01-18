@@ -18,7 +18,7 @@
 */       
 
 -- STORE command for the final output:
-%declare NGRAM_STORE_COMMAND "STORE countedNgrams INTO '$NGRAM_DEST' USING PigStorage(',');";
+%declare NGRAM_STORE_COMMAND "STORE sortedNgrams INTO '$NGRAM_DEST' USING PigStorage(',');";
 
 REGISTER $USER_CONTRIB/piggybank.jar;
 REGISTER $PIGIR_HOME/target/pigir.jar;
@@ -40,7 +40,7 @@ strippedDocs = FOREACH docs GENERATE edu.stanford.pigir.pigudf.StripHTML(content
 */
 ngrams = FOREACH strippedDocs GENERATE FLATTEN(edu.stanford.pigir.pigudf.NGramGenerator(content));
 
--- Keep only words with alpha chars...no numbers:
+-- Keep only ngrams with alpha chars...no numbers:
 ngramsAlphaFiltered = FILTER ngrams by edu.stanford.pigir.pigudf.CSVOnlyLetters($0);
 
 -- Keep only fields shorter than 20 chars. More than that is garbage:
@@ -64,6 +64,10 @@ groupedNgrams = GROUP ngramsLenFiltered BY $0;
 */
 
 countedNgrams = FOREACH groupedNgrams GENERATE group AS wordPair:chararray, SIZE(ngramsFiltered) AS count:long;
---sortedNgrams  = ORDER countedNgrams BY wordPair PARALLEL 5;
+
+-- Keep only ngrams with counts > 1:
+ngramsGreaterOne = FILTER countedNgrams by $2>1;
+
+sortedNgrams  = ORDER ngramsGreaterOne BY wordPair PARALLEL 5;
 
 $NGRAM_STORE_COMMAND;
