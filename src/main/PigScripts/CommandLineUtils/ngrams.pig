@@ -44,7 +44,7 @@ ngrams = FOREACH strippedDocs GENERATE FLATTEN(edu.stanford.pigir.pigudf.NGramGe
 ngramsAlphaFiltered = FILTER ngrams by edu.stanford.pigir.pigudf.CSVOnlyLetters($0);
 
 -- Keep only fields shorter than 20 chars. More than that is garbage:
-ngramsLenFiltered = FILTER ngramsAlphaFiltered by edu.stanford.pigir.pigudf.CSVOnlyLetters($0,20);
+ngramsLenFiltered = FILTER ngramsAlphaFiltered by edu.stanford.pigir.pigudf.CSVMaxLength($0,20);
 
 /*
    Get the following data structure:
@@ -63,7 +63,7 @@ groupedNgrams = GROUP ngramsLenFiltered BY $0;
    Where the number is the ngram count.
 */
 
-countedNgrams = FOREACH groupedNgrams GENERATE group AS wordPair:chararray, SIZE(ngramsFiltered) AS count:long;
+countedNgrams = FOREACH groupedNgrams GENERATE group AS wordPair:chararray, SIZE(ngramsLenFiltered) AS count:long;
 
 -- Keep only ngrams with counts > 1:
 ngramsGreaterOne = FILTER countedNgrams by $2>1;
