@@ -66,7 +66,7 @@ groupedNgrams = GROUP ngramsLenFiltered BY $0;
 countedNgrams = FOREACH groupedNgrams GENERATE group AS wordPair:chararray, SIZE(ngramsLenFiltered) AS count:long;
 
 -- Keep only ngrams with counts > 1:
-ngramsGreaterOne = FILTER countedNgrams by $2>1;
+ngramsGreaterOne = FILTER countedNgrams by $1>1;
 
 sortedNgrams  = ORDER ngramsGreaterOne BY wordPair PARALLEL 5;
 
