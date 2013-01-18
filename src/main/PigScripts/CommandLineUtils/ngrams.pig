@@ -18,7 +18,8 @@
 */       
 
 -- STORE command for the final output:
-%declare NGRAM_STORE_COMMAND "STORE sortedNgrams INTO '$NGRAM_DEST' USING PigStorage(',');";
+--%declare NGRAM_STORE_COMMAND "STORE sortedNgrams INTO '$NGRAM_DEST' USING PigStorage(',');";
+%declare NGRAM_STORE_COMMAND "STORE ngramsGreaterOne INTO '$NGRAM_DEST' USING PigStorage(',');";
 
 REGISTER $USER_CONTRIB/piggybank.jar;
 REGISTER $PIGIR_HOME/target/pigir.jar;
@@ -68,6 +69,6 @@ countedNgrams = FOREACH groupedNgrams GENERATE group AS wordPair:chararray, SIZE
 -- Keep only ngrams with counts > 1:
 ngramsGreaterOne = FILTER countedNgrams by $1>1;
 
-sortedNgrams  = ORDER ngramsGreaterOne BY wordPair PARALLEL 5;
+--sortedNgrams  = ORDER ngramsGreaterOne BY wordPair PARALLEL 5;
 
 $NGRAM_STORE_COMMAND;
