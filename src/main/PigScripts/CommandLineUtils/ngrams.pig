@@ -18,8 +18,8 @@
 */       
 
 -- STORE command for the final output:
---%declare NGRAM_STORE_COMMAND "STORE sortedNgrams INTO '$NGRAM_DEST' USING PigStorage(',');";
-%declare NGRAM_STORE_COMMAND "STORE ngramsGreaterOne INTO '$NGRAM_DEST' USING PigStorage(',');";
+%declare NGRAM_STORE_COMMAND "STORE sortedNgrams INTO '$NGRAM_DEST' USING PigStorage(',');";
+--%declare NGRAM_STORE_COMMAND "STORE ngramsGreaterOne INTO '$NGRAM_DEST' USING PigStorage(',');";
 
 REGISTER $USER_CONTRIB/piggybank.jar;
 REGISTER $PIGIR_HOME/target/pigir.jar;
@@ -30,7 +30,8 @@ docs = LOAD '$WARC_FILE'
        AS (warcRecordId:chararray, contentLength:int, date:chararray, warc_type:chararray,
            optionalHeaderFlds:bytearray, content:chararray);
 
-strippedDocs = FOREACH docs GENERATE edu.stanford.pigir.pigudf.StripHTML(content);
+docsLenFiltered = FILTER docs BY SIZE(content) < 700000;
+strippedDocs = FOREACH docsLenFiltered GENERATE edu.stanford.pigir.pigudf.StripHTML(content);
 
 /*
    Get this data structure:
@@ -69,6 +70,6 @@ countedNgrams = FOREACH groupedNgrams GENERATE group AS wordPair:chararray, SIZE
 -- Keep only ngrams with counts > 1:
 ngramsGreaterOne = FILTER countedNgrams by $1>1;
 
---sortedNgrams  = ORDER ngramsGreaterOne BY wordPair PARALLEL 5;
+sortedNgrams  = ORDER ngramsGreaterOne BY wordPair PARALLEL 5;
 
 $NGRAM_STORE_COMMAND;
