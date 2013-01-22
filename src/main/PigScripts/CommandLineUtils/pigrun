@@ -89,5 +89,8 @@ PIG_COMMAND="${PIG_COMMAND} ${PIG_SCRIPT_NAME}"
 #echo "Pig cmd: pig -Dpig.usenewlogicalplan=false -Dpig.temp.dir=/user/paepcke -v -logfile Logs ${PIG_COMMAND}"
 echo "Pig cmd: pig -Dpig.temp.dir=/user/paepcke -v -logfile Logs ${PIG_COMMAND}"
 /usr/bin/time --format="Runtime (m:ss.millisec): %E" \
-        pig -Dpig.temp.dir=/user/paepcke -v -logfile Logs ${PIG_COMMAND}   
-	#****pig -Dpig.usenewlogicalplan=false -Dpig.temp.dir=/user/paepcke -v -logfile Logs ${PIG_COMMAND}   
+	     pig -Dpig.temp.dir=/user/paepcke -v -logfile Logs ${PIG_COMMAND}   
+        #pig -Dpig.temp.dir=/user/paepcke -Dmapred.child.java.opts=-Xmx25769m -Dmapred.tasktracker.map.tasks.maximum=1 -Dmapred.tasktracker.reduce.tasks.maximum=1 -v -logfile Logs ${PIG_COMMAND}   
+        #pig -Dpig.temp.dir=/user/paepcke -Dmapred.child.java.opts=-Xmx12288m -Dmapred.tasktracker.map.tasks.maximum=1 -Dmapred.tasktracker.reduce.tasks.maximum=1 -v -logfile Logs ${PIG_COMMAND}   
+        #pig -Dpig.temp.dir=/user/paepcke -v -logfile Logs ${PIG_COMMAND}   
+	    #pig -Dpig.usenewlogicalplan=false -Dpig.temp.dir=/user/paepcke -v -logfile Logs ${PIG_COMMAND}   
