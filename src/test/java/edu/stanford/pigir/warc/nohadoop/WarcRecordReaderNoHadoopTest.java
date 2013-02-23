@@ -1,15 +1,12 @@
-package edu.stanford.pigir.warc.nohadoop;
+package test.java.edu.stanford.pigir.warc.nohadoop;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.*;
 
 import java.io.File;
 import java.io.IOException;
 
-import org.junit.Before;
-import org.junit.Test;
-
-import edu.stanford.pigir.warc.nohadoop.WarcRecordReader;
+import main.java.edu.stanford.pigir.warc.nohadoop.WarcRecord;
+import main.java.edu.stanford.pigir.warc.nohadoop.WarcRecordReader;
 
 public class WarcRecordReaderNoHadoopTest {
 
