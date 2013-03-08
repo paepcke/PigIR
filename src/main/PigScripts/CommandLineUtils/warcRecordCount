@@ -1,5 +1,7 @@
 #!/bin/bash
 
-pigrun -x $EXEC_MODE \
-        WARC_FILE=$WARC_NAME \
+export SCRIPT_DIR=`dirname $0`
+
+#pigrun -x local \
+pigrun -x mapreduce \
         ${SCRIPT_DIR}/warcRecordCount.pig

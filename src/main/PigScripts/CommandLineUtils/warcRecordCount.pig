@@ -52,18 +52,20 @@
 
 -- STORE command for the word count:
 --%declare WORD_COUNT_STORE_COMMAND "STORE sorted INTO '$WORD_COUNT_DEST' USING PigStorage(',');";
-%declare WORD_COUNT_STORE_COMMAND "dump(recCount;";
+%declare WORD_COUNT_STORE_COMMAND "DUMP recCount;";
 
 REGISTER $USER_CONTRIB/piggybank.jar;
 REGISTER $PIGIR_HOME/target/pigir.jar;
 
 --docs = LOAD '$WARC_FILE'
-docs = LOAD '/tmp/paepckeTest/'
+docs = LOAD '/user/paepcke/paepckeTest/'
 		USING edu.stanford.pigir.warc.WarcLoader
        AS (warcRecordId:chararray, contentLength:int, date:chararray, warc_type:chararray,
            optionalHeaderFlds:bytearray, content:chararray);
 
-recCount = COUNT(docs);
+
+docsGroup = GROUP docs ALL;
+recCount = FOREACH docsGroup GENERATE COUNT(docs);
 
 $WORD_COUNT_STORE_COMMAND;
 
