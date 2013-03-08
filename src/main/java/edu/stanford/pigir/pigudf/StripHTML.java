@@ -15,6 +15,7 @@ import org.apache.pig.data.TupleFactory;
 import org.apache.pig.impl.logicalLayer.FrontendException;
 import org.apache.pig.impl.logicalLayer.schema.Schema;
 import org.jsoup.Jsoup;
+import org.jsoup.safety.Whitelist;
 
 import edu.stanford.pigir.Common;
 
@@ -98,7 +99,7 @@ public class StripHTML extends EvalFunc<String> {
 		while ( (line=br.readLine()) != null) {
 			sb.append(line);
 		}
-		String textOnly = Jsoup.parse(sb.toString()).text();
+		String textOnly = Jsoup.clean(sb.toString(), Whitelist.none());
 		return textOnly;
 	}
 	
