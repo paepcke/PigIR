@@ -1,0 +1,5 @@
+#!/bin/bash
+
+pigrun -x $EXEC_MODE \
+        WARC_FILE=$WARC_NAME \
+        ${SCRIPT_DIR}/warcRecordCount.pig
