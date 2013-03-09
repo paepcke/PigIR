@@ -1,4 +1,4 @@
-package edu.stanford.pigir.warc;
+package test.java.edu.stanford.pigir.warc;
 
 import java.io.IOException;
 import java.net.URI;
@@ -16,8 +16,16 @@ import org.apache.hadoop.mapreduce.TaskAttemptContext;
 import org.apache.hadoop.mapreduce.TaskAttemptID;
 import org.apache.hadoop.security.Credentials;
 
-public class TaskAttemptContextForTesting implements TaskAttemptContext {
+public class TaskAttemptContextForTesting extends TaskAttemptContext {
 
+	public TaskAttemptContextForTesting(Configuration conf, TaskAttemptID taskId) {
+		super(new Configuration(), new TaskAttemptID());
+	}
+
+	public TaskAttemptContextForTesting() {
+		this(null, null);
+	}	
+	
 	@Override
 	public Configuration getConfiguration() {
 		// TODO Auto-generated method stub
@@ -78,7 +86,6 @@ public class TaskAttemptContextForTesting implements TaskAttemptContext {
 		return null;
 	}
 
-	@Override
 	public boolean userClassesTakesPrecedence() {
 		// TODO Auto-generated method stub
 		return false;
@@ -144,91 +151,76 @@ public class TaskAttemptContextForTesting implements TaskAttemptContext {
 		return null;
 	}
 
-	@Override
 	public boolean getJobSetupCleanupNeeded() {
 		// TODO Auto-generated method stub
 		return false;
 	}
 
-	@Override
 	public boolean getProfileEnabled() {
 		// TODO Auto-generated method stub
 		return false;
 	}
 
-	@Override
 	public String getProfileParams() {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
-	@Override
 	public String getUser() {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
-	@Override
 	public boolean getSymlink() {
 		// TODO Auto-generated method stub
 		return false;
 	}
 
-	@Override
 	public Path[] getArchiveClassPaths() {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
-	@Override
 	public URI[] getCacheArchives() throws IOException {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
-	@Override
 	public URI[] getCacheFiles() throws IOException {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
-	@Override
 	public Path[] getLocalCacheArchives() throws IOException {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
-	@Override
 	public Path[] getLocalCacheFiles() throws IOException {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
-	@Override
 	public Path[] getFileClassPaths() {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
-	@Override
 	public String[] getArchiveTimestamps() {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
-	@Override
 	public String[] getFileTimestamps() {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
-	@Override
 	public int getMaxMapAttempts() {
 		// TODO Auto-generated method stub
 		return 0;
 	}
 
-	@Override
 	public int getMaxReduceAttempts() {
 		// TODO Auto-generated method stub
 		return 0;

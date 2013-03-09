@@ -1,10 +1,13 @@
-package edu.stanford.pigir.warc;
+package test.java.edu.stanford.pigir.warc;
 
-import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import java.io.File;
 import java.io.IOException;
+
+import edu.stanford.pigir.warc.WarcRecord;
+import edu.stanford.pigir.warc.WarcRecordReader;
 
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.LongWritable;
