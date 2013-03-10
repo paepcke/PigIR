@@ -114,7 +114,10 @@ public class PigWarcStorage extends StoreFunc {
     	mOut.write(CR);
     	mOut.write(LF);
     	mOut.write(CR);
-    	//***** PUT BACK mOut.write(LF);
+    	// The following LF should be necessary,
+    	// but somehow an addition LF slips in
+    	// elsewhere, making this one superfluous:
+    	//mOut.write(LF);
 
     	Text text = new Text(mOut.toByteArray());
         try {
