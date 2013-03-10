@@ -69,13 +69,14 @@ public class PigWarcStorage extends StoreFunc {
     	int i=0;
     	Object tupleField = null;
     	//**************
+    	File testResultFile = new File("/tmp/test/testResult.txt");
     	String msg = ("======== Tuple len: " + numCols + "\n");
     	for (int j=0; j<numCols; j++) {
     		Object fld = tuple.get(j);
     		String str = getFieldValue(fld);
     		msg += "---------Field " + j + str + "\n";
     	}
-    	FileUtils.write(new File("/tmp/test/testResult.txt"), msg, true);
+    	FileUtils.write(testResultFile, msg, true);
     	//**************    	
     	
     	
@@ -98,6 +99,9 @@ public class PigWarcStorage extends StoreFunc {
     	// followed by the WARC content field and the closing dual CRLF:
     	mOut.write(CR);
     	mOut.write(LF);
+    	//*****************
+    	FileUtils.write(testResultFile, "Last entry: '" + getFieldValue(tuple.get(numCols - 1)) + "'", true); 
+    	//*****************
     	mOut.write(getFieldValue(tuple.get(numCols - 1)).getBytes(UTF8));
     	mOut.write(CR);
     	mOut.write(LF);
