@@ -1,5 +1,6 @@
 package edu.stanford.pigir.warc;
 
+import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
@@ -8,6 +9,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Properties;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.mapreduce.InputFormat;
@@ -89,6 +91,10 @@ public class WarcLoader extends FileInputLoadFunc implements LoadPushDown {
             mRequiredColumnsInitialized = true;
         }
         try {
+        	//***************
+        	File testResultFile = new File("/tmp/test/testResult.txt");
+        	FileUtils.write(testResultFile, "Required cols: " + mRequiredColumns);
+        	//***************
             boolean done = ! in.nextKeyValue((mRequiredColumns != null) && (CONTENT_COL_INDEX < numColsToReturn) && (mRequiredColumns[CONTENT_COL_INDEX]));
             if (done) {
                 return null;
