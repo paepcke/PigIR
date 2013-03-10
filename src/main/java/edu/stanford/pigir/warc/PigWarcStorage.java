@@ -66,6 +66,15 @@ public class PigWarcStorage extends StoreFunc {
     	int numCols = tuple.size();
     	int i=0;
     	Object tupleField = null;
+    	//**************
+    	for (int j=0; j<numCols; i++) {
+    		Object fld = tuple.get(j);
+    		String str = getFieldValue(fld);
+    		System.out.println("---------Field " + j + str);
+    	}
+    	//**************    	
+    	
+    	
     	for (String headerFieldName : mandatoryWarcHeaderFields) {
     		tupleField = tuple.get(i);
     		if (i > 0)
