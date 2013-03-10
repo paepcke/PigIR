@@ -101,8 +101,14 @@ public class WarcLoader extends FileInputLoadFunc implements LoadPushDown {
         	//***************
             boolean done = ! in.nextKeyValue((mRequiredColumns != null) && (CONTENT_COL_INDEX < numColsToReturn) && (mRequiredColumns[CONTENT_COL_INDEX]));
             if (done) {
+            	//**********
+            	FileUtils.write(testResultFile, "Tuple considered done.\n", true);
+            	//**********
                 return null;
             }
+            //**********
+            FileUtils.write(testResultFile, "Tuple not done.\n", true);
+            //**********
             // Get one Warc record:
             warcRec = (WarcRecord) in.getCurrentValue();
             
@@ -141,6 +147,9 @@ public class WarcLoader extends FileInputLoadFunc implements LoadPushDown {
             // Check whether the WARC record content is wanted wbRecordReader the 
             // result tuple (or is being projected out):
             if ((mRequiredColumns != null) && (++resFieldIndex < numColsToReturn)  && mRequiredColumns[resFieldIndex]) { 
+            	//**********
+            	FileUtils.write(testResultFile, "Content wanted.\n", true);
+            	//**********
             	mProtoTuple.add(warcRec.get(WarcRecord.CONTENT));
             }
             Tuple t =  mTupleFactory.newTupleNoCopy(mProtoTuple);
