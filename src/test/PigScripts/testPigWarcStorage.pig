@@ -13,6 +13,6 @@ docs = LOAD '$WARC_FILE'
        AS (warcRecordId:chararray, contentLength:int, date:chararray, warc_type:chararray,
            optionalHeaderFlds:bytearray, content:chararray);
 
-DUMP docs;
+--DUMP docs;
 
---STORE docs INTO '/tmp/test/testPigWarcStorageResult.warc' USING edu.stanford.pigir.warc.PigWarcStorage();
+STORE docs INTO '/tmp/test/testPigWarcStorageResult.warc' USING edu.stanford.pigir.warc.PigWarcStorage();
