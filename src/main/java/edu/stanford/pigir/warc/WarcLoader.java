@@ -93,7 +93,11 @@ public class WarcLoader extends FileInputLoadFunc implements LoadPushDown {
         try {
         	//***************
         	File testResultFile = new File("/tmp/test/testResult.txt");
-        	FileUtils.write(testResultFile, "Required cols: " + mRequiredColumns);
+        	FileUtils.write(testResultFile, "mRequiredColumns: [", true);
+        	for (boolean required : mRequiredColumns) {
+        		FileUtils.write(testResultFile, "," + required, true);
+        	}
+        	FileUtils.write(testResultFile, "]\n", true);
         	//***************
             boolean done = ! in.nextKeyValue((mRequiredColumns != null) && (CONTENT_COL_INDEX < numColsToReturn) && (mRequiredColumns[CONTENT_COL_INDEX]));
             if (done) {
