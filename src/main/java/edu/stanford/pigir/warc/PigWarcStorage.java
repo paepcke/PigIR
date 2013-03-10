@@ -67,7 +67,8 @@ public class PigWarcStorage extends StoreFunc {
     	int i=0;
     	Object tupleField = null;
     	//**************
-    	for (int j=0; j<numCols; i++) {
+    	System.out.println("======== Tuple len: " + numCols);
+    	for (int j=0; j<numCols; j++) {
     		Object fld = tuple.get(j);
     		String str = getFieldValue(fld);
     		System.out.println("---------Field " + j + str);
