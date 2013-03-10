@@ -104,12 +104,11 @@ public class PigWarcStorage extends StoreFunc {
     	// followed by the WARC content field and the closing dual CRLF:
     	mOut.write(CR);
     	mOut.write(LF);
-    	String theContent = getFieldValue(tuple.get(numCols - 1));
-    	//*****************
-    	FileUtils.write(testResultFile, "Last entry: '" + theContent + "'", true); 
-    	//*****************
+    	//*****String theContent = getFieldValue(tuple.get(numCols - 1));
+    	byte[] theContent = ((byte[]) tuple.get(numCols - 1));
     	if (theContent != null)
-    		mOut.write(theContent.getBytes(UTF8));
+    		//******mOut.write(theContent.getBytes(UTF8));
+    		mOut.write(theContent);
     	// The post-record CRLF CRLF:
     	mOut.write(CR);
     	mOut.write(LF);

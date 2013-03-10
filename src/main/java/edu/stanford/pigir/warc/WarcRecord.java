@@ -390,6 +390,15 @@ public class WarcRecord extends Text implements WarcRecordMap {
 	protected void setRecordContent(byte[] content) {
 		warcContent = content;
 	}
+
+	/**
+	 * Returns content as byte array.
+	 * @return
+	 */
+	public byte[] getContentRaw() {
+		return warcContent;
+	}
+	
 	/**
 	 * Retrieves the bytes content as a UTF-8 string
 	 * @return
