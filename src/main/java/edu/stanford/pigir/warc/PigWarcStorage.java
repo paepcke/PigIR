@@ -114,7 +114,7 @@ public class PigWarcStorage extends StoreFunc {
     	mOut.write(CR);
     	mOut.write(LF);
     	mOut.write(CR);
-    	mOut.write(LF);
+    	//***** PUT BACK mOut.write(LF);
 
     	Text text = new Text(mOut.toByteArray());
         try {
