@@ -1,9 +1,11 @@
 package edu.stanford.pigir.warc;
 
 import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.IOException;
 import java.util.Iterator;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.io.WritableComparable;
@@ -67,12 +69,13 @@ public class PigWarcStorage extends StoreFunc {
     	int i=0;
     	Object tupleField = null;
     	//**************
-    	System.out.println("======== Tuple len: " + numCols);
+    	String msg = ("======== Tuple len: " + numCols + "\n");
     	for (int j=0; j<numCols; j++) {
     		Object fld = tuple.get(j);
     		String str = getFieldValue(fld);
-    		System.out.println("---------Field " + j + str);
+    		msg += "---------Field " + j + str + "\n";
     	}
+    	FileUtils.write(new File("/tmp/test/testResult.txt"), msg, true);
     	//**************    	
     	
     	
