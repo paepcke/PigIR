@@ -50,7 +50,7 @@ public class TestPigWarcStorage {
 		t.set(0, "<recID1>");
 		t.set(1,19);
 		t.set(2,"mar-4-2013");
-		t.set(3,"WARC1/0");
+		t.set(3,"response");
 		
 
 		Tuple attrValTuple1 = TupleFactory.getInstance().newTuple(2);
@@ -72,7 +72,7 @@ public class TestPigWarcStorage {
 		assertEquals("<recID1>", storage.getFieldValue(t.get(0)));
 		assertEquals("19", storage.getFieldValue(t.get(1)));
 		assertEquals("mar-4-2013", storage.getFieldValue(t.get(2)));
-		assertEquals("WARC1/0", storage.getFieldValue(t.get(3)));
+		assertEquals("response", storage.getFieldValue(t.get(3)));
 		
 		String expectedOptionalFields = "tuple1Key1: tuple1Value1\ntuple2Key1: tuple2Value1\n"; 
 		String actualOptionalFields   = storage.getFieldValue(t.get(4));

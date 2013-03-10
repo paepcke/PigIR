@@ -130,10 +130,9 @@ public class WarcRecordReaderTest {
 	@Test
 	public void testWarc1_0() throws IOException {
 		assertTrue(warcReader1_0.nextKeyValue());
-		LongWritable key = warcReader1_0.getCurrentKey();
 		WarcRecord   record = warcReader1_0.getCurrentValue();
-		assertEquals(0, key.get());
 		assertEquals("warcinfo", record.get(WarcRecord.WARC_TYPE));
+		assertEquals("WARC/1.0", record.get(WarcRecord.WARC_VERSION));
 
 		assertTrue(warcReader1_0.nextKeyValue());
 		record = warcReader1_0.getCurrentValue();

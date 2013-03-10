@@ -47,7 +47,6 @@ import org.apache.pig.impl.util.UDFContext;
 
 public class WarcLoader extends FileInputLoadFunc implements LoadPushDown {
 	
-	private final int NUM_OUTPUT_COLUMNS = 5;
 	private final int CONTENT_COL_INDEX = 5;
 	
     protected WarcRecordReader in = null;    
