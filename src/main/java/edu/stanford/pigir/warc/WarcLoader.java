@@ -94,8 +94,10 @@ public class WarcLoader extends FileInputLoadFunc implements LoadPushDown {
                 	//**************
                 	FileUtils.write(testResultFile, "Initializing mRequiredColumns manually.", true);
                 	//**************                	
-                	mRequiredColumns = new boolean[NUM_OUTPUT_COLUMNS];
-                	for (int i=0;i<NUM_OUTPUT_COLUMNS;i++)
+                	//????mRequiredColumns = new boolean[NUM_OUTPUT_COLUMNS];
+                	mRequiredColumns = new boolean[numColsToReturn];
+                	//????for (int i=0;i<NUM_OUTPUT_COLUMNS;i++)
+                	for (int i=0;i<numColsToReturn;i++)
                 		mRequiredColumns[i] = true;
                 }
                 numColsToReturn = mRequiredColumns.length;
