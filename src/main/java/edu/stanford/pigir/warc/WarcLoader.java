@@ -93,7 +93,7 @@ public class WarcLoader extends FileInputLoadFunc implements LoadPushDown {
         try {
         	//***************
         	File testResultFile = new File("/tmp/test/testResult.txt");
-        	FileUtils.write(testResultFile, "mRequiredColumns: [", true);
+        	FileUtils.write(testResultFile, "\nmRequiredColumns: [", true);
         	for (boolean required : mRequiredColumns) {
         		FileUtils.write(testResultFile, "," + required, true);
         	}
@@ -146,6 +146,11 @@ public class WarcLoader extends FileInputLoadFunc implements LoadPushDown {
             }
             // Check whether the WARC record content is wanted wbRecordReader the 
             // result tuple (or is being projected out):
+            
+            //**********
+            FileUtils.write(testResultFile, "resFieldIndex: " + resFieldIndex + "; mRequiredColumns[resFieldIndex]" + mRequiredColumns[resFieldIndex], true); 
+            //**********
+            
             if ((mRequiredColumns != null) && (++resFieldIndex < numColsToReturn)  && mRequiredColumns[resFieldIndex]) { 
             	//**********
             	FileUtils.write(testResultFile, "Content wanted.\n", true);
