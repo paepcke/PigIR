@@ -58,6 +58,7 @@ public class PigWarcStorage extends StoreFunc {
     private static final String UTF8 = "UTF-8";
     private static final char CR = 0x0D;
     private static final char LF = 0x0A;
+    private static final byte[] WARC_OUT_VERSION = "WARC/1.0".getBytes();
     private static final WarcRecord emptyWarcRecord = new WarcRecord();
     private static final String[] mandatoryWarcHeaderFields = emptyWarcRecord.mandatoryKeysHeader();
     private ByteArrayOutputStream mOut = new ByteArrayOutputStream(BUFFER_SIZE);
@@ -82,7 +83,8 @@ public class PigWarcStorage extends StoreFunc {
     	FileUtils.write(testResultFile, msg, true);
     	//**************    	
     	
-    	
+    	mOut.write(WARC_OUT_VERSION);
+    	mOut.write(LF);
     	for (String headerFieldName : mandatoryWarcHeaderFields) {
     		tupleField = tuple.get(i);
     		if (i > 0)
