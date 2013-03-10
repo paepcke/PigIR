@@ -87,16 +87,8 @@ public class WarcLoader extends FileInputLoadFunc implements LoadPushDown {
             if (signature!=null) {
                 Properties p = UDFContext.getUDFContext().getUDFProperties(this.getClass());
                 mRequiredColumns = (boolean[])ObjectSerializer.deserialize(p.getProperty(signature));
-                //**************
-                FileUtils.write(testResultFile, "Returned mRequiredColumns: " + mRequiredColumns + "\n", true);
-                //**************                	
                 if (mRequiredColumns == null) {
-                	//**************
-                	FileUtils.write(testResultFile, "Initializing mRequiredColumns manually.", true);
-                	//**************                	
-                	//????mRequiredColumns = new boolean[NUM_OUTPUT_COLUMNS];
                 	mRequiredColumns = new boolean[numColsToReturn];
-                	//????for (int i=0;i<NUM_OUTPUT_COLUMNS;i++)
                 	for (int i=0;i<numColsToReturn;i++)
                 		mRequiredColumns[i] = true;
                 }
@@ -105,23 +97,10 @@ public class WarcLoader extends FileInputLoadFunc implements LoadPushDown {
             mRequiredColumnsInitialized = true;
         }
         try {
-        	//***************
-        	FileUtils.write(testResultFile, "\nmRequiredColumns: [", true);
-        	for (boolean required : mRequiredColumns) {
-        		FileUtils.write(testResultFile, "," + required, true);
-        	}
-        	FileUtils.write(testResultFile, "]\n", true);
-        	//***************
             boolean done = ! in.nextKeyValue((mRequiredColumns != null) && (CONTENT_COL_INDEX < numColsToReturn) && (mRequiredColumns[CONTENT_COL_INDEX]));
             if (done) {
-            	//**********
-            	FileUtils.write(testResultFile, "Tuple considered done.\n", true);
-            	//**********
                 return null;
             }
-            //**********
-            FileUtils.write(testResultFile, "Tuple not done.\n", true);
-            //**********
             // Get one Warc record:
             warcRec = (WarcRecord) in.getCurrentValue();
             
@@ -160,14 +139,7 @@ public class WarcLoader extends FileInputLoadFunc implements LoadPushDown {
             // Check whether the WARC record content is wanted wbRecordReader the 
             // result tuple (or is being projected out):
             
-            //**********
-            FileUtils.write(testResultFile, "resFieldIndex: " + resFieldIndex + "; mRequiredColumns[resFieldIndex]: " + mRequiredColumns[resFieldIndex], true); 
-            //**********
-            
             if ((mRequiredColumns != null) && (++resFieldIndex < numColsToReturn)  && mRequiredColumns[resFieldIndex]) { 
-            	//**********
-            	FileUtils.write(testResultFile, "Content wanted.\n", true);
-            	//**********
             	mProtoTuple.add(warcRec.get(WarcRecord.CONTENT));
             }
             Tuple t =  mTupleFactory.newTupleNoCopy(mProtoTuple);

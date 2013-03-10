@@ -62,6 +62,10 @@ public class PigWarcStorage extends StoreFunc {
     private static final String[] mandatoryWarcHeaderFields = emptyWarcRecord.mandatoryKeysHeader();
     private ByteArrayOutputStream mOut = new ByteArrayOutputStream(BUFFER_SIZE);
 
+    //*********************
+    File testResultFile = new File("/tmp/test/testResult.txt");
+    //*********************
+
     @Override
     public void putNext(Tuple tuple) throws IOException {
     	
@@ -69,7 +73,6 @@ public class PigWarcStorage extends StoreFunc {
     	int i=0;
     	Object tupleField = null;
     	//**************
-    	File testResultFile = new File("/tmp/test/testResult.txt");
     	String msg = ("======== Tuple len: " + numCols + "\n");
     	for (int j=0; j<numCols; j++) {
     		Object fld = tuple.get(j);
@@ -99,10 +102,13 @@ public class PigWarcStorage extends StoreFunc {
     	// followed by the WARC content field and the closing dual CRLF:
     	mOut.write(CR);
     	mOut.write(LF);
+    	String theContent = getFieldValue(tuple.get(numCols - 1));
     	//*****************
-    	FileUtils.write(testResultFile, "Last entry: '" + getFieldValue(tuple.get(numCols - 1)) + "'", true); 
+    	FileUtils.write(testResultFile, "Last entry: '" + theContent + "'", true); 
     	//*****************
-    	mOut.write(getFieldValue(tuple.get(numCols - 1)).getBytes(UTF8));
+    	if (theContent != null)
+    		mOut.write(theContent.getBytes(UTF8));
+    	// The post-record CRLF CRLF:
     	mOut.write(CR);
     	mOut.write(LF);
     	mOut.write(CR);
@@ -150,6 +156,9 @@ public class PigWarcStorage extends StoreFunc {
     public void setStoreLocation(String location, Job job) throws IOException {
         job.getConfiguration().set("mapred.textoutputformat.separator", "");
         FileOutputFormat.setOutputPath(job, new Path(location));
+        //********************
+        FileUtils.write(testResultFile, "Store file location: " + location + "\n", true);
+        //********************
         if (location.endsWith(".bz2")) {
             FileOutputFormat.setCompressOutput(job, true);
             FileOutputFormat.setOutputCompressorClass(job,  BZip2Codec.class);

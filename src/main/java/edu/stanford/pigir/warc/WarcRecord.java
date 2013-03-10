@@ -63,6 +63,7 @@ public class WarcRecord extends Text implements WarcRecordMap {
 	// Class variables:
 	
 	public static final String CONTENT = "content";
+	public static final String WARC_VERSION = "warc-version";
 
 	// Lookup table for properly capitalized ISO Warc header field
 	// names. Used wbRecordReader toString();
@@ -164,17 +165,19 @@ public class WarcRecord extends Text implements WarcRecordMap {
 	private static HashMap<String,String> tmpHeaderMap = new HashMap<String, String>();
 	private static Long tmpGrandTotalBytesRead = 0L;
 	private static HashSet<String> tmpOptionalHeaderKeys = new HashSet<String>();
+	private static String warcVersionFromStream = null;
 	
 	// Instance variables:
 	private HashMap<String,String> headerMap = null;
 	private Long grandTotalBytesRead;
 	private byte[] warcContent=null;
 	private HashSet<String> optionalHeaderKeysThisRecord;
+	private String warcVersion = null;
 
 	/**
-	 * The actual heavy lifting of reading wbRecordReader the next WARC record. The
+	 * The actual heavy lifting of reading in the next WARC record. The
 	 * readContent parameter is used to support cases when the original
-	 * Pig query project out the content. We save time if we don't need
+	 * Pig query projects out the content. We save time if we don't need
 	 * that content.
 	 * 
 	 * @param warcLineReader a line reader
@@ -194,15 +197,15 @@ public class WarcRecord extends Text implements WarcRecordMap {
 		tmpGrandTotalBytesRead = 0L;
 		tmpHeaderMap.clear();
 		// Find our WARC header
-		boolean foundWARCHeader = scanToRecordStart(warcLineReader, txtBuf);
+		boolean foundHeader = scanToRecordStart(warcLineReader, txtBuf);
 		txtBuf.clear();
 		
 		// No WARC header found?
-		if (!foundWARCHeader) { return null; }
+		if (! foundHeader) { return null; }
 
 		// Read the header (up to the first empty line).
-		// Make sure we get the (mandatory) content length 
-		// is wbRecordReader the header, because we rely on it below. 
+		// Make sure the (mandatory) content length 
+		// is in the header, because we rely on it below. 
 		// We do not check for the other mandatory header fields:
 		int contentLength = pullHeaderFromStream(warcLineReader, 
 												 txtBuf);
@@ -317,6 +320,8 @@ public class WarcRecord extends Text implements WarcRecordMap {
 	}
 
 	/**
+	 * Returns the WARC record's WARC version as a string,
+	 * or null if no WARC header was found. Ex. "WARC/1.0"
 	 * @param warcLineReader
 	 * @param txtBuf
 	 * @return success true/false
@@ -324,7 +329,7 @@ public class WarcRecord extends Text implements WarcRecordMap {
 	 */
 	private static boolean scanToRecordStart(LineAndChunkReader warcLineReader,
 											 Text txtBuf) throws IOException {
-		String line;
+		String line = null;
 		boolean foundMark = false;
 		int bytesRead;
 		while ((!foundMark) && ((bytesRead = warcLineReader.readLine(txtBuf))!=0)) {
@@ -334,6 +339,8 @@ public class WarcRecord extends Text implements WarcRecordMap {
 			for (i=0; i < WARC_VERSIONS.length; i++) {
 				if (line.startsWith(WARC_VERSIONS[i])) {
 					foundMark=true;
+					warcVersionFromStream = line;
+					break;
 				}
 			}
 			txtBuf.clear();
@@ -359,6 +366,7 @@ public class WarcRecord extends Text implements WarcRecordMap {
 		retRecord.headerMap = (HashMap<String, String>) tmpHeaderMap.clone();
 		retRecord.grandTotalBytesRead = tmpGrandTotalBytesRead;
 		retRecord.optionalHeaderKeysThisRecord = (HashSet<String>) tmpOptionalHeaderKeys.clone();
+		retRecord.warcVersion = warcVersionFromStream;
 		retRecord.setRecordContent(recordContent);
 		
 		return retRecord;
@@ -431,7 +439,7 @@ public class WarcRecord extends Text implements WarcRecordMap {
 
 	public boolean containsKey(Object key) {
 		String lowerCaseKey = ((String) key).toLowerCase();
-		return (headerMap.containsKey(lowerCaseKey) || lowerCaseKey.equals(CONTENT));
+		return (headerMap.containsKey(lowerCaseKey) || lowerCaseKey.equals(CONTENT) || lowerCaseKey.equals(WARC_VERSION));
 	}
 
 	public boolean containsValue(Object value) {
@@ -445,6 +453,9 @@ public class WarcRecord extends Text implements WarcRecordMap {
 		if (((String) key).equalsIgnoreCase(CONTENT)) {
 			return getContentUTF8();
 		}
+		if (((String) key).equalsIgnoreCase(WARC_VERSION)) {
+			return warcVersion;
+		}
 		return headerMap.get(((String)key).toLowerCase());
 	}
 
@@ -454,6 +465,11 @@ public class WarcRecord extends Text implements WarcRecordMap {
 		if (lowerCaseKey.equals(CONTENT)) {
 			prevValue = getContentUTF8();
 			warcContent = value.getBytes();
+			return prevValue;
+		}
+		if (lowerCaseKey.equals(WARC_VERSION)) {
+			prevValue = warcVersion;
+			warcVersion = value;
 			return prevValue;
 		}
 		prevValue = headerMap.get(lowerCaseKey);
@@ -469,6 +485,11 @@ public class WarcRecord extends Text implements WarcRecordMap {
 			warcContent = new byte[0];
 			return prevValue;
 		}
+		if (lowerCaseKey.equalsIgnoreCase(WARC_VERSION)) {
+			prevValue = warcVersion;
+			warcVersion = null;
+			return prevValue;
+		}
 		return headerMap.remove(lowerCaseKey);
 	}
 
@@ -481,6 +502,7 @@ public class WarcRecord extends Text implements WarcRecordMap {
 	public Set<String> keySet() {
 		Set<String> res = headerMap.keySet();
 		res.add(CONTENT);
+		res.add(WARC_VERSION);
 		return res;
 	}
 	
@@ -528,7 +550,7 @@ public class WarcRecord extends Text implements WarcRecordMap {
 		if (readContent) {
 			res.add(new Entry<String,String>(CONTENT, getContentUTF8()));
 		}
-			
+		res.add(new Entry<String,String>(WARC_VERSION, warcVersion));
 		return res;
 	}
 	
