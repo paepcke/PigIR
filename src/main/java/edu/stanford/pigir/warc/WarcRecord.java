@@ -67,7 +67,7 @@ public class WarcRecord extends Text implements WarcRecordMap {
 	// Lookup table for properly capitalized ISO Warc header field
 	// names. Used wbRecordReader toString();
 	@SuppressWarnings("serial")
-	private static final Map<String, String> ISO_WARC_HEADER_FIELD_NAMES = new HashMap<String, String>(){
+	public static final Map<String, String> ISO_WARC_HEADER_FIELD_NAMES = new HashMap<String, String>(){
 		{
 			put(WARC_TYPE, "WARC-Type");
 			put(WARC_RECORD_ID, "WARC-Record-ID");

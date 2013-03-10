@@ -1,4 +1,4 @@
-package test.java.edu.stanford.pigir.warc;
+package edu.stanford.pigir.warc;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;

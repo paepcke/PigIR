@@ -1,0 +1,12 @@
+#!/bin/bash
+
+SCRIPT_DIR=`dirname $0`
+EXEC_MODE=mapreduce
+LOCAL_TEST_FILE=${SCRIPT_DIR}/../resources/tinyWarc1_0.warc
+# Will just quietly fail if exists:
+hadoop fs -mkdir /tmp/test
+hadoop fs -copyFromLocal $LOCAL_TEST_FILE /tmp/test
+export TEST_FILE=/tmp/test/tinyWarc1_0.warc
+pigrun -x $EXEC_MODE \
+        WARC_FILE=$TEST_FILE \
+        ${SCRIPT_DIR}/testPigWarcStorage.pig

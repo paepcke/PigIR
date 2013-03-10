@@ -1,4 +1,4 @@
-package test.java.edu.stanford.pigir.warc;
+package edu.stanford.pigir.warc;
 
 import java.io.IOException;
 import java.net.URI;

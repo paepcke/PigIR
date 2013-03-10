@@ -18,3 +18,4 @@ ilc0
 target
 pom.xml
 .externalToolBuilders/
+.project
