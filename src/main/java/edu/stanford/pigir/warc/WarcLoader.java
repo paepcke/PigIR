@@ -40,7 +40,8 @@ import org.apache.pig.impl.util.UDFContext;
  *    (WARC_RECORD_ID:chararray, 
  *     CONTENT_LENGTH:int, 
  *     WARC_DATE:chararray, 
- *     WARC_TYPE, {(<headerFldName>, <headerFldVal>)*}, 
+ *     WARC_TYPE, 
+ *     {(<headerFldName>, <headerFldVal>)*}, 
  *     CONTENT:chararray)
  */
 
@@ -73,6 +74,11 @@ public class WarcLoader extends FileInputLoadFunc implements LoadPushDown {
 
     @Override
     public Tuple getNext() throws IOException {
+
+    	//**************
+    	File testResultFile = new File("/tmp/test/testResult.txt");
+    	//**************    	
+    	
     	int errCode = 6018;
         mProtoTuple = new ArrayList<Object>();
         
@@ -81,7 +87,13 @@ public class WarcLoader extends FileInputLoadFunc implements LoadPushDown {
             if (signature!=null) {
                 Properties p = UDFContext.getUDFContext().getUDFProperties(this.getClass());
                 mRequiredColumns = (boolean[])ObjectSerializer.deserialize(p.getProperty(signature));
+                //**************
+                FileUtils.write(testResultFile, "Returned mRequiredColumns: " + mRequiredColumns + "\n", true);
+                //**************                	
                 if (mRequiredColumns == null) {
+                	//**************
+                	FileUtils.write(testResultFile, "Initializing mRequiredColumns manually.", true);
+                	//**************                	
                 	mRequiredColumns = new boolean[NUM_OUTPUT_COLUMNS];
                 	for (int i=0;i<NUM_OUTPUT_COLUMNS;i++)
                 		mRequiredColumns[i] = true;
@@ -92,7 +104,6 @@ public class WarcLoader extends FileInputLoadFunc implements LoadPushDown {
         }
         try {
         	//***************
-        	File testResultFile = new File("/tmp/test/testResult.txt");
         	FileUtils.write(testResultFile, "\nmRequiredColumns: [", true);
         	for (boolean required : mRequiredColumns) {
         		FileUtils.write(testResultFile, "," + required, true);
@@ -148,7 +159,7 @@ public class WarcLoader extends FileInputLoadFunc implements LoadPushDown {
             // result tuple (or is being projected out):
             
             //**********
-            FileUtils.write(testResultFile, "resFieldIndex: " + resFieldIndex + "; mRequiredColumns[resFieldIndex]" + mRequiredColumns[resFieldIndex], true); 
+            FileUtils.write(testResultFile, "resFieldIndex: " + resFieldIndex + "; mRequiredColumns[resFieldIndex]: " + mRequiredColumns[resFieldIndex], true); 
             //**********
             
             if ((mRequiredColumns != null) && (++resFieldIndex < numColsToReturn)  && mRequiredColumns[resFieldIndex]) { 
