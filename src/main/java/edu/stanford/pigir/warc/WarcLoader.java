@@ -12,6 +12,7 @@ import java.util.Properties;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.hadoop.io.BytesWritable;
 import org.apache.hadoop.mapreduce.InputFormat;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.RecordReader;
@@ -24,6 +25,7 @@ import org.apache.pig.backend.hadoop.executionengine.mapReduceLayer.PigSplit;
 import org.apache.pig.bzip2r.Bzip2TextInputFormat;
 import org.apache.pig.data.BagFactory;
 import org.apache.pig.data.DataBag;
+import org.apache.pig.data.DataByteArray;
 import org.apache.pig.data.DefaultBagFactory;
 import org.apache.pig.data.Tuple;
 import org.apache.pig.data.TupleFactory;
@@ -144,7 +146,8 @@ public class WarcLoader extends FileInputLoadFunc implements LoadPushDown {
             	FileUtils.write(testResultFile, "\nOn read, true len: " + contentField.length, true);
             	//**************            	
             	//*********mProtoTuple.add(warcRec.get(WarcRecord.CONTENT));
-            	mProtoTuple.add(warcRec.getContentRaw());
+            	mProtoTuple.add(new DataByteArray(warcRec.getContentRaw()));
+            	
             }
             Tuple t =  mTupleFactory.newTupleNoCopy(mProtoTuple);
             return t;
