@@ -68,6 +68,13 @@ public class PigWarcStorage extends StoreFunc {
     	int numCols = tuple.size();
     	int i=0;
     	Object tupleField = null;
+    	
+    	// Need at least the required WARC header fields
+    	// in the tuple to make a legal WARC record:
+    	if (tuple.size() < mandatoryWarcHeaderFields.length) {
+    		throw new IOException("Attempt to write tuple without all required WARC header field information to WARC file.");
+    	}
+    	
     	mOut.write(WARC_OUT_VERSION);
     	mOut.write(LF);
     	for (String headerFieldName : mandatoryWarcHeaderFields) {
