@@ -1,10 +1,11 @@
 #!/bin/bash
 
 SCRIPT_DIR=`dirname $0`
-EXEC_MODE=local
-#EXEC_MODE=mapreduce
+RESOURCE_DIR=`dirname $0`/../resources
+#EXEC_MODE=local
+EXEC_MODE=mapreduce
 
-TEST_FILE = mixedContent.warc
+TEST_FILE=mixedContent.warc
 
 # For local or mapreduce mode, make a directory
 # in /tmp, and copy the warc test file there.
@@ -13,16 +14,31 @@ TEST_FILE = mixedContent.warc
 if [ $EXEC_MODE == local ]
 then
   mkdir /tmp/test
-  cp {SCRIPT_DIR}/../resources/$TEST_FILE /tmp/test
+  cp $RESOURCE_DIR/$TEST_FILE /tmp/test
   rm -rf /tmp/test/testPigWarcStorageResult.warc
 else
   # Will just quietly fail if exists:
   hadoop fs -mkdir /tmp/test
-  hadoop fs -copyFromLocal {SCRIPT_DIR}/../resources/$TEST_FILE /tmp/test
-  hadoop fs -rm /tmp/test/testPigWarcStorageResult.warc
+  hadoop fs -copyFromLocal $RESOURCE_DIR/$TEST_FILE /tmp/test
+  hadoop fs -rmr /tmp/test/testPigWarcStorageResult.warc
 fi
 
 export TEST_FILE_PATH=/tmp/test/$TEST_FILE
 pigrun -x $EXEC_MODE \
         WARC_FILE=$TEST_FILE_PATH \
         ${SCRIPT_DIR}/testPigWarcStorage.pig
+
+
+# If ran on mapreduce, then the reference file and
+# the generated file to test are on HDFS. Copy them
+# the same place they would be for EXEC_MODE local.
+# That way Java junit tests can see them:
+
+if [ $EXEC_MODE == mapreduce ]
+then
+  # The reference file:
+  cp $RESOURCE_DIR/$TEST_FILE /tmp/test
+  # rm any old result:
+  rm -rf /tmp/test/testPigWarcStorageResult.warc
+  hadoop fs -copyToLocal /tmp/test/testPigWarcStorageResult.warc /tmp/test
+fi
