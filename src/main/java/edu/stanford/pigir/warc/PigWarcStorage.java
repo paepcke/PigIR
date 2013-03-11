@@ -107,6 +107,9 @@ public class PigWarcStorage extends StoreFunc {
     	
     	if (DataType.findType(tuple.get(numCols - 1)) == DataType.BYTEARRAY) {
     		byte[] theByteContent = ((byte[]) tuple.get(numCols - 1));
+    		//****************
+    		FileUtils.write(testResultFile, "\nOn write, true content len: " + theByteContent.length, true);
+    		//****************    		
     		if (theByteContent != null)
     			mOut.write(theByteContent);
     	} else {
