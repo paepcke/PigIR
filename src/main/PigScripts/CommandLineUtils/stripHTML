@@ -110,7 +110,8 @@ Output file: ${DEST_DIR}/${WARC_NAME}_strippedHTML"
 export PIG_HEAPSIZE=10000
 
 pigrun -x $EXEC_MODE \
-       STRIPPED_DEST=${DEST_DIR}/${WARC_NAME}_strippedHTML.gz \
+       #STRIPPED_DEST=${DEST_DIR}/${WARC_NAME}_strippedHTML.gz \
+       STRIPPED_DEST=${DEST_DIR}.gz \
        WARC_FILE=$WARC_NAME \
        ${SCRIPT_DIR}/stripHTML.pig
 
