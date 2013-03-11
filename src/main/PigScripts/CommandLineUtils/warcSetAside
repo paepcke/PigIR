@@ -1,17 +1,21 @@
 #!/bin/bash
 
-# Script that runs the PigScript stripHTML.pig with
-# command line parameters. Result in target dir, file
-# <sourcFile>_strippedHTML. Error thrown if destination
-# file already exists.
+# Script that runs the PigScript randomSetAside.pig with command line
+# parameters. The script performs sampling without replacement on a
+# WARC archive.  Result in target dir. Two files/dirs are produced
+# <sourceFile>_sample.gz, and <sourceFile>_main.gz. The main WARC will
+# have the samples removed. Error thrown if destination file already
+# exists.
 
-
-USAGE="Usage: stripHTML   [{-h | --help}] \n
+USAGE="Usage: warcSetAside   [{-h | --help}] \n
                            \t\t\t [{-v | --version}] \n
                            \t\t\t [{-x | --execmode] {local | mapreduce}] \n
                            \t\t\t [{-d | --destdir} <destinationDirectory>] (default: pwd if execmode==local; else '/user/<username>') \n
                            \t\t\t <warcFilePathOnHDFS> \n
-    \tExample: stripHTML -d /user/doe/mycounts Dataset/gov-04-2007.warc \n"
+                           \t\t\t percentage \n
+
+    \tExample: warcSetAside -d /user/doe/mycounts Dataset/gov-04-2007.warc 10.0 \n
+    \t         Sets aside 10%, creating two new archives."
 
 PROGVERSION=1.0
 EXEC_MODE=mapreduce
@@ -71,13 +75,14 @@ fi
 # echo "destDir   : '$DEST_DIR'"
 # echo "warcSource: '$1'"
 
-if [ $# == 0 ] 
+if [ $# != 2 ] 
 then
-    echo "Missing WARC source. An individual file, or directory is required."
+    echo "Missing WARC source or percentage."
     echo -e $USAGE
     exit -1
 else
     WARC_NAME=$1
+    PERCENTAGE=$2
 fi
 
 # If we are running in cygwin, we have to convert the 
@@ -93,26 +98,34 @@ fi
 # If so, Pig would run for a long time, and then die. Make
 # this more fail-fast:
 
-EXISTENCE=`hadoop fs -stat ${DEST_DIR}/${WARC_NAME}_strippedHTML 2> /dev/null` 
+EXISTENCE=`hadoop fs -stat ${DEST_DIR}/${WARC_NAME}_sample.gz 2> /dev/null` 
 if [ -n "$EXISTENCE" ]
 then
-    echo "File ${DEST_DIR}/${WARC_NAME}_strippedHTML already exists. Quitting."
+    echo "File ${DEST_DIR}/${WARC_NAME}_sample.gz already exists. Quitting."
+    exit -1
+fi
+EXISTENCE=`hadoop fs -stat ${DEST_DIR}/${WARC_NAME}_main.gz 2> /dev/null` 
+if [ -n "$EXISTENCE" ]
+then
+    echo "File ${DEST_DIR}/${WARC_NAME}_main.gz already exists. Quitting."
     exit -1
 fi
 
 echo "Starting ngrams:
 Exec mode: -x $EXEC_MODE
 Input file : $WARC_NAME
-Output file: ${DEST_DIR}/${WARC_NAME}_strippedHTML"
+Percentage : $PERCENTAGE
+Output file: ${DEST_DIR}/${WARC_NAME}_sample.gz and ${DEST_DIR}/${WARC_NAME}_main.gz"
 
 # Units her are in MB. Default is 1000MB=1GB
 # Increase that for this run to 10GB:
 export PIG_HEAPSIZE=10000
 
 pigrun -x $EXEC_MODE \
-       STRIPPED_DEST=${DEST_DIR}.gz \
+       DEST=${DEST_DIR}.gz \
        WARC_FILE=$WARC_NAME \
-       ${SCRIPT_DIR}/stripHTML.pig
+       PERCENTAGE=$PERCENTAGE \
+       ${SCRIPT_DIR}/warcSetAside.pig
 
 exit 0
 

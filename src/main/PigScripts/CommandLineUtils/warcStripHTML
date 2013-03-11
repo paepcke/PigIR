@@ -1,0 +1,118 @@
+#!/bin/bash
+
+# Script that runs the PigScript stripHTML.pig with
+# command line parameters. Result in target dir, file
+# <sourcFile>_strippedHTML. Error thrown if destination
+# file already exists.
+
+
+USAGE="Usage: warcStripHTML   [{-h | --help}] \n
+                           \t\t\t [{-v | --version}] \n
+                           \t\t\t [{-x | --execmode] {local | mapreduce}] \n
+                           \t\t\t [{-d | --destdir} <destinationDirectory>] (default: pwd if execmode==local; else '/user/<username>') \n
+                           \t\t\t <warcFilePathOnHDFS> \n
+    \tExample: warcStripHTML -d /user/doe/mycounts Dataset/gov-04-2007.warc \n"
+
+PROGVERSION=1.0
+EXEC_MODE=mapreduce
+
+SHORTOPTS="hvx:d:"
+LONGOPTS="help,version,execmode:,destdir:"
+
+ARGS=`getopt -s bash --options=$SHORTOPTS  \
+  --longoptions=$LONGOPTS --name=$PROGNAME -- "$@"`
+
+eval set -- "$ARGS"
+
+while true; do
+   case $1 in
+      -h|--help)
+         echo -e $USAGE
+         exit 0
+         ;;
+      -v|--version)
+         echo "$PROGVERSION"
+	 exit 0
+         ;;
+      -x|--execmode)
+         shift
+         EXEC_MODE=$1
+         ;;
+      -d|--destdir)
+         shift
+         DEST_DIR=$1
+         ;;
+      --)
+         shift
+         break
+         ;;
+      *)
+         shift
+         break
+         ;;
+   esac
+   # Throw away the '--' that's added by getopt.
+   # The -- case above doesn't get hit when user
+   # forgets to put in any required args.
+   shift
+done
+
+if [ -z $DEST_DIR ]
+then    
+    if [ $EXEC_MODE == local ] 
+    	then
+    	    DEST_DIR=`pwd`
+    	else
+    	    DEST_DIR='/user/'`whoami`
+    fi     
+fi    
+
+# echo "execMode  : '$EXEC_MODE'"
+# echo "destDir   : '$DEST_DIR'"
+# echo "warcSource: '$1'"
+
+if [ $# == 0 ] 
+then
+    echo "Missing WARC source. An individual file, or directory is required."
+    echo -e $USAGE
+    exit -1
+else
+    WARC_NAME=$1
+fi
+
+# If we are running in cygwin, we have to convert the 
+# path to the Pig script into a Windows path:
+
+export SCRIPT_DIR=`dirname $0`
+if [[ `uname` == *CYGWIN* ]]
+then 
+  export SCRIPT_DIR=`cygpath --mixed ${SCRIPT_DIR}`
+fi
+
+# Check whether the word count target file exists.
+# If so, Pig would run for a long time, and then die. Make
+# this more fail-fast:
+
+EXISTENCE=`hadoop fs -stat ${DEST_DIR}/${WARC_NAME}_strippedHTML 2> /dev/null` 
+if [ -n "$EXISTENCE" ]
+then
+    echo "File ${DEST_DIR}/${WARC_NAME}_strippedHTML already exists. Quitting."
+    exit -1
+fi
+
+echo "Starting ngrams:
+Exec mode: -x $EXEC_MODE
+Input file : $WARC_NAME
+Output file: ${DEST_DIR}/${WARC_NAME}_strippedHTML"
+
+# Units her are in MB. Default is 1000MB=1GB
+# Increase that for this run to 10GB:
+export PIG_HEAPSIZE=10000
+
+pigrun -x $EXEC_MODE \
+       STRIPPED_DEST=${DEST_DIR}.gz \
+       WARC_FILE=$WARC_NAME \
+       ${SCRIPT_DIR}/warcStripHTML.pig
+
+exit 0
+

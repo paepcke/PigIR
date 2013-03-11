@@ -1,12 +1,12 @@
 /* 
-   Given one or more WARC file(s) (including a directory of compressed
-   or non-compressed WARC files), extract the contained Web pages, and
+   Given a WARC file  or a directory of compressed
+   or non-compressed WARC files, extract the contained Web pages, and
    remove their HTML tags. Write the result to a target directory, 
 
    Documents longer than 700000 are skipped.
 
-   Start this Pig script via the stripHTML bash script, like this:
-      stripHTML [options] <warcSourceFilePathOnHDFS>
+   Start this Pig script via the warcStripHTML bash script, like this:
+      warcStripHTML [options] <warcSourceFilePathOnHDFS>
    where options are:
 
 	 [{-h | --help}]
@@ -18,6 +18,7 @@
       * $USER_CONTRIB  points to location of piggybank.jar and jsoup-1.5.2.jar
       * $PIGIR_HOME    points to location project root (above target dir)
       * $STRIPPED_HTML destination WARC name (directory if source is a directory, else dest file name).
+      * $WARC_FILE     the WARC file or directory to strip
 */       
 
 REGISTER $USER_CONTRIB/piggybank.jar;
