@@ -98,7 +98,10 @@ public class TestPigWarcStorage {
 	}
 	
 	@Test
+	@Ignore
 	public void testTrueLoadThenStore() throws IOException {
+		// Ignored because it takes a number of seconds to complete.
+		// Run for thorough testing.
 		
 		String[] cmd = new String[1];
 		cmd[0] = "src/test/PigScripts/testPigWarcStorage";
