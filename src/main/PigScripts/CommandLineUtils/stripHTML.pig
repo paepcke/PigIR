@@ -20,9 +20,6 @@
       * $STRIPPED_HTML destination WARC name (directory if source is a directory, else dest file name).
 */       
 
--- STORE command for the final output:
-%declare STRIPPED_STORE_COMMAND "STORE strippedWarc INTO '$STRIPPED_DEST' USING PigWarcStorage();";
-
 REGISTER $USER_CONTRIB/piggybank.jar;
 REGISTER $PIGIR_HOME/target/pigir.jar;
 REGISTER $USER_CONTRIB/jsoup.jar;
@@ -30,10 +27,10 @@ REGISTER $USER_CONTRIB/jsoup.jar;
 docs = LOAD '$WARC_FILE'
        USING edu.stanford.pigir.warc.WarcLoader
        AS (warcRecordId:chararray, contentLength:int, date:chararray, warc_type:chararray,
-           optionalHeaderFlds:bytearray, content:chararray);
+           optionalHeaderFlds:bytearray, content:bytearray);
 
 docsLenFiltered = FILTER docs BY SIZE(content) < 700000;
 strippedWarc = FOREACH docsLenFiltered GENERATE edu.stanford.pigir.pigudf.StripHTML(content);
 
+STORE strippedWarc INTO '$STRIPPED_DEST' USING edu.stanford.pigir.warc.PigWarcStorage();
 
-$STRIPPED_STORE_COMMAND;
