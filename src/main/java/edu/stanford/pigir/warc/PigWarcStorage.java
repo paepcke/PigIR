@@ -105,15 +105,26 @@ public class PigWarcStorage extends StoreFunc {
     	mOut.write(CR);
     	mOut.write(LF);
     	
+    	//****************
+    	FileUtils.write(testResultFile, "Last field type: " + DataType.findType(tuple.get(numCols - 1)), true);
+    	FileUtils.write(testResultFile, "\nBYTEARRAY field type: " + DataType.BYTEARRAY, true);
+    	FileUtils.write(testResultFile, "\nCHARARRAY field type: " + DataType.CHARARRAY, true);
+
+    	//****************    		
+    	
     	if (DataType.findType(tuple.get(numCols - 1)) == DataType.BYTEARRAY) {
     		byte[] theByteContent = ((byte[]) tuple.get(numCols - 1));
     		//****************
-    		FileUtils.write(testResultFile, "\nOn write, true content len: " + theByteContent.length, true);
+    		FileUtils.write(testResultFile, "\nOn write, true byte array content len: " + theByteContent.length, true);
     		//****************    		
-    		if (theByteContent != null)
+    		if (theByteContent != null) {
     			mOut.write(theByteContent);
+    		}
     	} else {
     		String theStringContent = getFieldValue(tuple.get(numCols - 1));
+    		//****************
+    		FileUtils.write(testResultFile, "\nOn write, true string content len: " + theStringContent.length(), true);
+    		//****************    		
     		if (theStringContent != null)
     			mOut.write(theStringContent.getBytes(UTF8));
     	}
