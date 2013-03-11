@@ -3,15 +3,26 @@
 SCRIPT_DIR=`dirname $0`
 EXEC_MODE=local
 #EXEC_MODE=mapreduce
-LOCAL_TEST_FILE=/tmp/test/smallOrig.warc
-####LOCAL_TEST_FILE=${SCRIPT_DIR}/../resources/tinyWarc0_18.warc
-####LOCAL_TEST_FILE=${SCRIPT_DIR}/../resources/tinyWarc1_0.warc
-# Will just quietly fail if exists:
-hadoop fs -mkdir /tmp/test
-hadoop fs -copyFromLocal $LOCAL_TEST_FILE /tmp/test
-export TEST_FILE=/tmp/test/smallOrig.warc
-####export TEST_FILE=/tmp/test/tinyWarc0_18.warc
-####export TEST_FILE=/tmp/test/tinyWarc1_0.warc
+
+TEST_FILE = mixedContent.warc
+
+# For local or mapreduce mode, make a directory
+# in /tmp, and copy the warc test file there.
+# Remove possibly left over result from previous run:
+
+if [ $EXEC_MODE == local ]
+then
+  mkdir /tmp/test
+  cp {SCRIPT_DIR}/../resources/$TEST_FILE /tmp/test
+  rm -rf /tmp/test/testPigWarcStorageResult.warc
+else
+  # Will just quietly fail if exists:
+  hadoop fs -mkdir /tmp/test
+  hadoop fs -copyFromLocal {SCRIPT_DIR}/../resources/$TEST_FILE /tmp/test
+  hadoop fs -rm /tmp/test/testPigWarcStorageResult.warc
+fi
+
+export TEST_FILE_PATH=/tmp/test/$TEST_FILE
 pigrun -x $EXEC_MODE \
-        WARC_FILE=$TEST_FILE \
+        WARC_FILE=$TEST_FILE_PATH \
         ${SCRIPT_DIR}/testPigWarcStorage.pig

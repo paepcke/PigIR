@@ -1,6 +1,5 @@
 package edu.stanford.pigir.warc;
 
-import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
@@ -9,10 +8,8 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Properties;
 
-import org.apache.commons.io.FileUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.hadoop.io.BytesWritable;
 import org.apache.hadoop.mapreduce.InputFormat;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.RecordReader;
@@ -76,10 +73,6 @@ public class WarcLoader extends FileInputLoadFunc implements LoadPushDown {
     @Override
     public Tuple getNext() throws IOException {
 
-    	//**************
-    	File testResultFile = new File("/tmp/test/testResult.txt");
-    	//**************    	
-    	
     	int errCode = 6018;
         mProtoTuple = new ArrayList<Object>();
         
@@ -141,11 +134,7 @@ public class WarcLoader extends FileInputLoadFunc implements LoadPushDown {
             // result tuple (or is being projected out):
             
             if ((mRequiredColumns != null) && (++resFieldIndex < numColsToReturn)  && mRequiredColumns[resFieldIndex]) {
-            	//**************
-            	byte[] contentField = warcRec.getContentRaw();
-            	FileUtils.write(testResultFile, "\nOn read, true len: " + contentField.length, true);
-            	//**************            	
-            	//*********mProtoTuple.add(warcRec.get(WarcRecord.CONTENT));
+            	// DataByteArray will show up as a Pig bytearray type:
             	mProtoTuple.add(new DataByteArray(warcRec.getContentRaw()));
             	
             }

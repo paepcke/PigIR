@@ -1,11 +1,9 @@
 package edu.stanford.pigir.warc;
 
 import java.io.ByteArrayOutputStream;
-import java.io.File;
 import java.io.IOException;
 import java.util.Iterator;
 
-import org.apache.commons.io.FileUtils;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.io.WritableComparable;
@@ -64,26 +62,12 @@ public class PigWarcStorage extends StoreFunc {
     private static final String[] mandatoryWarcHeaderFields = emptyWarcRecord.mandatoryKeysHeader();
     private ByteArrayOutputStream mOut = new ByteArrayOutputStream(BUFFER_SIZE);
 
-    //*********************
-    File testResultFile = new File("/tmp/test/testResult.txt");
-    //*********************
-
     @Override
     public void putNext(Tuple tuple) throws IOException {
     	
     	int numCols = tuple.size();
     	int i=0;
     	Object tupleField = null;
-    	//**************
-    	String msg = ("======== Tuple len: " + numCols + "\n");
-    	for (int j=0; j<numCols; j++) {
-    		Object fld = tuple.get(j);
-    		String str = getFieldValue(fld);
-    		msg += "---------Field " + j + str + "\n";
-    	}
-    	FileUtils.write(testResultFile, msg, true);
-    	//**************    	
-    	
     	mOut.write(WARC_OUT_VERSION);
     	mOut.write(LF);
     	for (String headerFieldName : mandatoryWarcHeaderFields) {
@@ -106,30 +90,13 @@ public class PigWarcStorage extends StoreFunc {
     	mOut.write(CR);
     	mOut.write(LF);
     	
-    	//****************
-    	FileUtils.write(testResultFile, "Last field type: " + DataType.findType(tuple.get(numCols - 1)), true);
-    	FileUtils.write(testResultFile, "\nBYTEARRAY field type: " + DataType.BYTEARRAY, true);
-    	FileUtils.write(testResultFile, "\nCHARARRAY field type: " + DataType.CHARARRAY, true);
-
-    	//****************    		
-    	
     	if (DataType.findType(tuple.get(numCols - 1)) == DataType.BYTEARRAY) {
     		byte[] theByteContent = ((DataByteArray) tuple.get(numCols - 1)).get();
-    		//****************
-    		FileUtils.write(testResultFile, "\nOn write, true byte array content len: " + theByteContent.length, true);
-    		//****************    		
     		if (theByteContent != null) {
     			mOut.write(theByteContent);
     		}
     	} else {
     		String theStringContent = getFieldValue(tuple.get(numCols - 1));
-    		//****************
-    		if (theStringContent != null) {
-    			FileUtils.write(testResultFile, "\nOn write, true string content len: " + theStringContent.length(), true);
-    		} else {
-    			FileUtils.write(testResultFile, "\nOn write, true string content len: (string is null)", true);
-    		}
-    		//****************    		
     		if (theStringContent != null)
     			mOut.write(theStringContent.getBytes(UTF8));
     	}
@@ -184,9 +151,6 @@ public class PigWarcStorage extends StoreFunc {
     public void setStoreLocation(String location, Job job) throws IOException {
         job.getConfiguration().set("mapred.textoutputformat.separator", "");
         FileOutputFormat.setOutputPath(job, new Path(location));
-        //********************
-        FileUtils.write(testResultFile, "Store file location: " + location + "\n", true);
-        //********************
         if (location.endsWith(".bz2")) {
             FileOutputFormat.setCompressOutput(job, true);
             FileOutputFormat.setOutputCompressorClass(job,  BZip2Codec.class);

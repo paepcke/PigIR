@@ -1,5 +1,6 @@
 /* 
-      
+Loads one WARC file, and writes it out again. Test file contains
+both string and binary content blocks.
 */       
 
 -- STORE command for the word count:
