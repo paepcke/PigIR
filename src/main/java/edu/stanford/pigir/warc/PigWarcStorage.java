@@ -18,6 +18,7 @@ import org.apache.hadoop.mapreduce.lib.output.TextOutputFormat;
 import org.apache.pig.StoreFunc;
 import org.apache.pig.backend.executionengine.ExecException;
 import org.apache.pig.data.DataBag;
+import org.apache.pig.data.DataByteArray;
 import org.apache.pig.data.DataType;
 import org.apache.pig.data.Tuple;
 
@@ -113,7 +114,7 @@ public class PigWarcStorage extends StoreFunc {
     	//****************    		
     	
     	if (DataType.findType(tuple.get(numCols - 1)) == DataType.BYTEARRAY) {
-    		byte[] theByteContent = ((byte[]) tuple.get(numCols - 1));
+    		byte[] theByteContent = ((DataByteArray) tuple.get(numCols - 1)).get();
     		//****************
     		FileUtils.write(testResultFile, "\nOn write, true byte array content len: " + theByteContent.length, true);
     		//****************    		
