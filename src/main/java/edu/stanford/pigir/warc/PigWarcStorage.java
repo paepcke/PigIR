@@ -123,7 +123,11 @@ public class PigWarcStorage extends StoreFunc {
     	} else {
     		String theStringContent = getFieldValue(tuple.get(numCols - 1));
     		//****************
-    		FileUtils.write(testResultFile, "\nOn write, true string content len: " + theStringContent.length(), true);
+    		if (theStringContent != null) {
+    			FileUtils.write(testResultFile, "\nOn write, true string content len: " + theStringContent.length(), true);
+    		} else {
+    			FileUtils.write(testResultFile, "\nOn write, true string content len: (string is null)", true);
+    		}
     		//****************    		
     		if (theStringContent != null)
     			mOut.write(theStringContent.getBytes(UTF8));
