@@ -140,10 +140,11 @@ public class WarcLoader extends FileInputLoadFunc implements LoadPushDown {
             
             if ((mRequiredColumns != null) && (++resFieldIndex < numColsToReturn)  && mRequiredColumns[resFieldIndex]) {
             	//**************
-            	String contentField = warcRec.get(WarcRecord.CONTENT);
-            	FileUtils.write(testResultFile, "\nOn read, true len: " + contentField.length(), true);
+            	byte[] contentField = warcRec.getContentRaw();
+            	FileUtils.write(testResultFile, "\nOn read, true len: " + contentField.length, true);
             	//**************            	
-            	mProtoTuple.add(warcRec.get(WarcRecord.CONTENT));
+            	//*********mProtoTuple.add(warcRec.get(WarcRecord.CONTENT));
+            	mProtoTuple.add(warcRec.getContentRaw());
             }
             Tuple t =  mTupleFactory.newTupleNoCopy(mProtoTuple);
             return t;
