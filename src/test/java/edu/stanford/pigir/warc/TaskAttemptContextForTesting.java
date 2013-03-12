@@ -16,7 +16,9 @@ import org.apache.hadoop.mapreduce.TaskAttemptContext;
 import org.apache.hadoop.mapreduce.TaskAttemptID;
 import org.apache.hadoop.security.Credentials;
 
-public class TaskAttemptContextForTesting implements TaskAttemptContext {
+// Cloudera Hadoop has TaskAttemptContext be an Interface,
+// while Apache had it as a class:
+public class TaskAttemptContextForTesting extends TaskAttemptContext {
 
 	public TaskAttemptContextForTesting(Configuration conf, TaskAttemptID taskId) {
 		super();
