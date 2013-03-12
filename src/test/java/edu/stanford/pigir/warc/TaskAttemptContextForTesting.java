@@ -21,7 +21,7 @@ import org.apache.hadoop.security.Credentials;
 public class TaskAttemptContextForTesting extends TaskAttemptContext {
 
 	public TaskAttemptContextForTesting(Configuration conf, TaskAttemptID taskId) {
-		super(new Configuration(), null);
+		super(new Configuration(), new TaskAttemptID());
 	}
 
 	public TaskAttemptContextForTesting() {
