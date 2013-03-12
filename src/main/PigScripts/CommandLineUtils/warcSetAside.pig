@@ -19,7 +19,8 @@
    Environment assumptions:
       * $USER_CONTRIB  points to location of piggybank.jar and jsoup-1.5.2.jar
       * $PIGIR_HOME    points to location project root (above target dir)
-      * $DEST          destination WARC name (directory if source is a directory, else dest file name).
+      * $DEST_SAMPLE   destination of sample file
+      * $DEST_MAIN     destination of the archive copy with sample removed
       * $WARC_FILE     archive to take sample from
       * $PERCENTAGE    sample size as percentage (may be real number or int)
 */       
@@ -36,14 +37,22 @@ docs = LOAD '$WARC_FILE'
 docsLenFiltered = FILTER docs BY SIZE(content) < 700000;
 theSample = SAMPLE docsLenFiltered $PERCENTAGE/100.0;
 
-DUMP theSample;
+-- Create this tuples of structure (the Group: chararray being one warcRecordId):
+-- co_group: {group: chararray,
+--            docsLenFiltered: {(warcRecordId: chararray,contentLength: int,date: chararray,warc_type: chararray,optionalHeaderFlds: bytearray,content: bytearray)},              
+--            theSample:       {(warcRecordId: chararray,contentLength: int,date: chararray,warc_type: chararray,optionalHeaderFlds: bytearray,content: bytearray)}
+--           }
 
+co_group = COGROUP docsLenFiltered BY warcRecordId, theSample BY warcRecordId;
 
+-- Keep from original only tuples that were NOT selected into the sample:
+origMinusSampleCoGroup = FILTER co_group BY IsEmpty(theSample);
 
-/*
-strippedWarc = FOREACH docsLenFiltered GENERATE 
-	     warcRecordId,contentLength,date,warc_type,
-	     optionalHeaderFlds, edu.stanford.pigir.pigudf.StripHTML(content);
+origMinusSample = FOREACH origMinusSampleCoGroup GENERATE FLATTEN(docsLenFiltered);
 
-STORE strippedWarc INTO '$STRIPPED_DEST' USING edu.stanford.pigir.warc.PigWarcStorage();
-*/
+DESCRIBE origMinusSample;
+DESCRIBE theSample;
+
+STORE origMinusSample INTO '$DEST_MAIN' USING edu.stanford.pigir.warc.PigWarcStorage();
+STORE theSample INTO '$DEST_SAMPLE' USING edu.stanford.pigir.warc.PigWarcStorage();
+
