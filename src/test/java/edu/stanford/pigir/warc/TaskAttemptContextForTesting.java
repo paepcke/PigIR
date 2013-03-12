@@ -26,61 +26,51 @@ public class TaskAttemptContextForTesting implements TaskAttemptContext {
 		this(null, null);
 	}	
 	
-	@Override
 	public Configuration getConfiguration() {
 		// TODO Auto-generated method stub
 		return new Configuration();
 	}
 
-	@Override
 	public Credentials getCredentials() {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
-	@Override
 	public JobID getJobID() {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
-	@Override
 	public int getNumReduceTasks() {
 		// TODO Auto-generated method stub
 		return 0;
 	}
 
-	@Override
 	public Path getWorkingDirectory() throws IOException {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
-	@Override
 	public Class<?> getOutputKeyClass() {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
-	@Override
 	public Class<?> getOutputValueClass() {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
-	@Override
 	public Class<?> getMapOutputKeyClass() {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
-	@Override
 	public Class<?> getMapOutputValueClass() {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
-	@Override
 	public String getJobName() {
 		// TODO Auto-generated method stub
 		return null;
@@ -91,61 +81,52 @@ public class TaskAttemptContextForTesting implements TaskAttemptContext {
 		return false;
 	}
 
-	@Override
 	public Class<? extends InputFormat<?, ?>> getInputFormatClass()
 			throws ClassNotFoundException {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
-	@Override
 	public Class<? extends Mapper<?, ?, ?, ?>> getMapperClass()
 			throws ClassNotFoundException {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
-	@Override
 	public Class<? extends Reducer<?, ?, ?, ?>> getCombinerClass()
 			throws ClassNotFoundException {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
-	@Override
 	public Class<? extends Reducer<?, ?, ?, ?>> getReducerClass()
 			throws ClassNotFoundException {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
-	@Override
 	public Class<? extends OutputFormat<?, ?>> getOutputFormatClass()
 			throws ClassNotFoundException {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
-	@Override
 	public Class<? extends Partitioner<?, ?>> getPartitionerClass()
 			throws ClassNotFoundException {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
-	@Override
 	public RawComparator<?> getSortComparator() {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
-	@Override
 	public String getJar() {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
-	@Override
 	public RawComparator<?> getGroupingComparator() {
 		// TODO Auto-generated method stub
 		return null;
@@ -226,25 +207,21 @@ public class TaskAttemptContextForTesting implements TaskAttemptContext {
 		return 0;
 	}
 
-	@Override
 	public void progress() {
 		// TODO Auto-generated method stub
 		
 	}
 
-	@Override
 	public TaskAttemptID getTaskAttemptID() {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
-	@Override
 	public void setStatus(String msg) {
 		// TODO Auto-generated method stub
 		
 	}
 
-	@Override
 	public String getStatus() {
 		// TODO Auto-generated method stub
 		return null;
