@@ -16,10 +16,10 @@ import org.apache.hadoop.mapreduce.TaskAttemptContext;
 import org.apache.hadoop.mapreduce.TaskAttemptID;
 import org.apache.hadoop.security.Credentials;
 
-public class TaskAttemptContextForTesting extends TaskAttemptContext {
+public class TaskAttemptContextForTesting implements TaskAttemptContext {
 
 	public TaskAttemptContextForTesting(Configuration conf, TaskAttemptID taskId) {
-		super(new Configuration(), new TaskAttemptID());
+		super();
 	}
 
 	public TaskAttemptContextForTesting() {
