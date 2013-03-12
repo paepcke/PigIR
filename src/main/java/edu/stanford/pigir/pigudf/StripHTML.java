@@ -92,6 +92,7 @@ public class StripHTML extends EvalFunc<String> {
     	return funcList; 
     }	
     
+	@SuppressWarnings("unused")
 	private String extractText(Reader reader) throws IOException {
 		StringBuilder sb = new StringBuilder();
 		BufferedReader br = new BufferedReader(reader);
@@ -104,7 +105,8 @@ public class StripHTML extends EvalFunc<String> {
 	}
 	
 	private String extractText(String webPage) throws IOException {
-		return extractText(new StringReader(webPage));
+		String cleanText = Jsoup.clean(webPage, Whitelist.none());		
+		return cleanText;
 	}
     /* ---------------------------------   T E S T I N G ------------------------------*/
 

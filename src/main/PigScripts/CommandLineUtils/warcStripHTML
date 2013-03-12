@@ -1,22 +1,20 @@
 #!/bin/bash
 
-# Script that runs the PigScript ngrams.pig with
-# command line parameters. Output will be at
-# ${DEST_DIR}/${WARC_NAME}_ngrams.csv. It is an 
-# error if that file already exists.
+# Script that runs the PigScript stripHTML.pig with
+# command line parameters. Result in target dir, file
+# <sourcFile>_strippedHTML. Error thrown if destination
+# file already exists.
 
-USAGE="Usage: ngrams              [{-h | --help}] \n
+
+USAGE="Usage: warcStripHTML   [{-h | --help}] \n
                            \t\t\t [{-v | --version}] \n
                            \t\t\t [{-x | --execmode] {local | mapreduce}] \n
                            \t\t\t [{-d | --destdir} <destinationDirectory>] (default: pwd if execmode==local; else '/user/<username>') \n
                            \t\t\t <warcFilePathOnHDFS> \n
-    \tExample: ngrams -d /user/doe/myngrams Dataset/gov-04-2007.warc \n"
+    \tExample: warcStripHTML -d /user/doe/mycounts Dataset/gov-04-2007.warc \n"
 
 PROGVERSION=1.0
 EXEC_MODE=mapreduce
-NUM_PAGES=""
-START_SITE=""
-END_SITE=""
 
 SHORTOPTS="hvx:d:"
 LONGOPTS="help,version,execmode:,destdir:"
@@ -44,18 +42,6 @@ while true; do
          shift
          DEST_DIR=$1
          ;;
-      -n|--numpages)
-         shift
-         NUM_PAGES=$1
-         ;;
-      -s|--startsite)
-         shift
-         START_SITE=$1
-         ;;
-      -e|--endsite)
-         shift
-         END_SITE=$1
-         ;;
       --)
          shift
          break
@@ -81,16 +67,13 @@ then
     fi     
 fi    
 
-# echo "execMode : '$EXEC_MODE'"
-# echo "destDir  : '$DEST_DIR'"
-# echo "numPages : '$NUM_PAGES'"
-# echo "startSite: '$START_SITE'"
-# echo "endSite  : '$END_SITE'"
-# echo "crawl: '$1'"
+# echo "execMode  : '$EXEC_MODE'"
+# echo "destDir   : '$DEST_DIR'"
+# echo "warcSource: '$1'"
 
 if [ $# == 0 ] 
 then
-    echo "Missing crawl name."
+    echo "Missing WARC source. An individual file, or directory is required."
     echo -e $USAGE
     exit -1
 else
@@ -110,30 +93,26 @@ fi
 # If so, Pig would run for a long time, and then die. Make
 # this more fail-fast:
 
-#***************
-echo "DEST_DIR: $DEST_DIR. WARC_NAME: $WARC_NAME"
-#***************
-
-EXISTENCE=`hadoop fs -stat ${DEST_DIR}/${WARC_NAME}_ngrams.csv 2> /dev/null` 
+EXISTENCE=`hadoop fs -stat ${DEST_DIR}/${WARC_NAME}_strippedHTML 2> /dev/null` 
 if [ -n "$EXISTENCE" ]
 then
-    echo "File ${DEST_DIR}/${WARC_NAME}_ngrams.csv already exists. Quitting."
+    echo "File ${DEST_DIR}/${WARC_NAME}_strippedHTML already exists. Quitting."
     exit -1
 fi
 
 echo "Starting ngrams:
 Exec mode: -x $EXEC_MODE
 Input file : $WARC_NAME
-Output file: ${DEST_DIR}/${WARC_NAME}_ngrams.csv"
+Output file: ${DEST_DIR}/${WARC_NAME}_strippedHTML"
 
 # Units her are in MB. Default is 1000MB=1GB
 # Increase that for this run to 10GB:
 export PIG_HEAPSIZE=10000
 
 pigrun -x $EXEC_MODE \
-       NGRAM_DEST=${DEST_DIR}/${WARC_NAME}_ngrams.csv \
+       STRIPPED_DEST=${DEST_DIR}.gz \
        WARC_FILE=$WARC_NAME \
-       ${SCRIPT_DIR}/ngrams.pig
+       ${SCRIPT_DIR}/warcStripHTML.pig
 
 exit 0
 

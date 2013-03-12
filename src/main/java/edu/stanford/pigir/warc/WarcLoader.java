@@ -22,6 +22,7 @@ import org.apache.pig.backend.hadoop.executionengine.mapReduceLayer.PigSplit;
 import org.apache.pig.bzip2r.Bzip2TextInputFormat;
 import org.apache.pig.data.BagFactory;
 import org.apache.pig.data.DataBag;
+import org.apache.pig.data.DataByteArray;
 import org.apache.pig.data.DefaultBagFactory;
 import org.apache.pig.data.Tuple;
 import org.apache.pig.data.TupleFactory;
@@ -38,13 +39,13 @@ import org.apache.pig.impl.util.UDFContext;
  *    (WARC_RECORD_ID:chararray, 
  *     CONTENT_LENGTH:int, 
  *     WARC_DATE:chararray, 
- *     WARC_TYPE, {(<headerFldName>, <headerFldVal>)*}, 
+ *     WARC_TYPE, 
+ *     {(<headerFldName>, <headerFldVal>)*}, 
  *     CONTENT:chararray)
  */
 
 public class WarcLoader extends FileInputLoadFunc implements LoadPushDown {
 	
-	private final int NUM_OUTPUT_COLUMNS = 5;
 	private final int CONTENT_COL_INDEX = 5;
 	
     protected WarcRecordReader in = null;    
@@ -71,6 +72,7 @@ public class WarcLoader extends FileInputLoadFunc implements LoadPushDown {
 
     @Override
     public Tuple getNext() throws IOException {
+
     	int errCode = 6018;
         mProtoTuple = new ArrayList<Object>();
         
@@ -80,8 +82,8 @@ public class WarcLoader extends FileInputLoadFunc implements LoadPushDown {
                 Properties p = UDFContext.getUDFContext().getUDFProperties(this.getClass());
                 mRequiredColumns = (boolean[])ObjectSerializer.deserialize(p.getProperty(signature));
                 if (mRequiredColumns == null) {
-                	mRequiredColumns = new boolean[NUM_OUTPUT_COLUMNS];
-                	for (int i=0;i<NUM_OUTPUT_COLUMNS;i++)
+                	mRequiredColumns = new boolean[numColsToReturn];
+                	for (int i=0;i<numColsToReturn;i++)
                 		mRequiredColumns[i] = true;
                 }
                 numColsToReturn = mRequiredColumns.length;
@@ -130,8 +132,11 @@ public class WarcLoader extends FileInputLoadFunc implements LoadPushDown {
             }
             // Check whether the WARC record content is wanted wbRecordReader the 
             // result tuple (or is being projected out):
-            if ((mRequiredColumns != null) && (++resFieldIndex < numColsToReturn)  && mRequiredColumns[resFieldIndex]) { 
-            	mProtoTuple.add(warcRec.get(WarcRecord.CONTENT));
+            
+            if ((mRequiredColumns != null) && (++resFieldIndex < numColsToReturn)  && mRequiredColumns[resFieldIndex]) {
+            	// DataByteArray will show up as a Pig bytearray type:
+            	mProtoTuple.add(new DataByteArray(warcRec.getContentRaw()));
+            	
             }
             Tuple t =  mTupleFactory.newTupleNoCopy(mProtoTuple);
             return t;

@@ -1,10 +1,13 @@
 package edu.stanford.pigir.warc;
 
-import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import java.io.File;
 import java.io.IOException;
+
+import edu.stanford.pigir.warc.WarcRecord;
+import edu.stanford.pigir.warc.WarcRecordReader;
 
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.LongWritable;
@@ -127,10 +130,9 @@ public class WarcRecordReaderTest {
 	@Test
 	public void testWarc1_0() throws IOException {
 		assertTrue(warcReader1_0.nextKeyValue());
-		LongWritable key = warcReader1_0.getCurrentKey();
 		WarcRecord   record = warcReader1_0.getCurrentValue();
-		assertEquals(0, key.get());
 		assertEquals("warcinfo", record.get(WarcRecord.WARC_TYPE));
+		assertEquals("WARC/1.0", record.get(WarcRecord.WARC_VERSION));
 
 		assertTrue(warcReader1_0.nextKeyValue());
 		record = warcReader1_0.getCurrentValue();
