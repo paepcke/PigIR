@@ -25,7 +25,7 @@ import org.apache.pig.impl.util.ObjectSerializer;
 import org.apache.pig.impl.util.UDFContext;
 
 import edu.stanford.pigir.pigudf.MultiTypeProperties;
-import edu.stanford.pigir.warc.WarcRecord;
+import edu.stanford.pigir.warc.PigWarcRecord;
 
 public class WebBaseLoader extends LoadFunc implements LoadPushDown {
 
@@ -174,7 +174,7 @@ public class WebBaseLoader extends LoadFunc implements LoadPushDown {
 			throw new ExecException(errMsg, errCode, PigException.REMOTE_ENVIRONMENT, e);
 		} catch (InvocationTargetException e) {
         	String errMsg = "Error creating WebBase header tuple field for record:\n" + 
-        					wbRec.toString(WarcRecord.DONT_INCLUDE_CONTENT) +
+        					wbRec.toString(PigWarcRecord.DONT_INCLUDE_CONTENT) +
         					e.getCause().getMessage();
 			throw new ExecException(errMsg, errCode, PigException.REMOTE_ENVIRONMENT, e);
 		}

@@ -68,7 +68,7 @@ public class WarcLoader extends FileInputLoadFunc implements LoadPushDown {
     private boolean[] mRequiredColumns = null;
     
     private boolean mRequiredColumnsInitialized = false;
-    private WarcRecord warcRec = null;
+    private PigWarcRecord warcRec = null;
 
     @Override
     public Tuple getNext() throws IOException {
@@ -96,7 +96,7 @@ public class WarcLoader extends FileInputLoadFunc implements LoadPushDown {
                 return null;
             }
             // Get one Warc record:
-            warcRec = (WarcRecord) in.getCurrentValue();
+            warcRec = (PigWarcRecord) in.getCurrentValue();
             
             // Create separate columns from the header information,
             // followed by the content field.
@@ -141,17 +141,17 @@ public class WarcLoader extends FileInputLoadFunc implements LoadPushDown {
             Tuple t =  mTupleFactory.newTupleNoCopy(mProtoTuple);
             return t;
         } catch (IllegalArgumentException e) {
-        	String errMsg = "Error creating WARC header tuple field for record:\n" + warcRec.toString(WarcRecord.DONT_INCLUDE_CONTENT);
+        	String errMsg = "Error creating WARC header tuple field for record:\n" + warcRec.toString(PigWarcRecord.DONT_INCLUDE_CONTENT);
 			throw new ExecException(errMsg, errCode, PigException.REMOTE_ENVIRONMENT, e);
 		} catch (InstantiationException e) {
-        	String errMsg = "Error creating WARC header tuple field for record:\n" + warcRec.toString(WarcRecord.DONT_INCLUDE_CONTENT);
+        	String errMsg = "Error creating WARC header tuple field for record:\n" + warcRec.toString(PigWarcRecord.DONT_INCLUDE_CONTENT);
 			throw new ExecException(errMsg, errCode, PigException.REMOTE_ENVIRONMENT, e);
 		} catch (IllegalAccessException e) {
-        	String errMsg = "Error creating WARC header tuple field for record:\n" + warcRec.toString(WarcRecord.DONT_INCLUDE_CONTENT);
+        	String errMsg = "Error creating WARC header tuple field for record:\n" + warcRec.toString(PigWarcRecord.DONT_INCLUDE_CONTENT);
 			throw new ExecException(errMsg, errCode, PigException.REMOTE_ENVIRONMENT, e);
 		} catch (InvocationTargetException e) {
         	String errMsg = "Error creating WARC header tuple field for record:\n" + 
-        					warcRec.toString(WarcRecord.DONT_INCLUDE_CONTENT) +
+        					warcRec.toString(PigWarcRecord.DONT_INCLUDE_CONTENT) +
         					e.getCause().getMessage();
 			throw new ExecException(errMsg, errCode, PigException.REMOTE_ENVIRONMENT, e);
 		}

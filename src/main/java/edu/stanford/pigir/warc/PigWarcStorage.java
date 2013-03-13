@@ -58,8 +58,6 @@ public class PigWarcStorage extends StoreFunc {
     private static final char CR = 0x0D;
     private static final char LF = 0x0A;
     private static final byte[] WARC_OUT_VERSION = "WARC/1.0".getBytes();
-    private static final WarcRecord emptyWarcRecord = new WarcRecord();
-    private static final String[] mandatoryWarcHeaderFields = emptyWarcRecord.mandatoryKeysHeader();
     private ByteArrayOutputStream mOut = new ByteArrayOutputStream(BUFFER_SIZE);
 
     @Override
@@ -71,23 +69,23 @@ public class PigWarcStorage extends StoreFunc {
     	
     	// Need at least the required WARC header fields
     	// in the tuple to make a legal WARC record:
-    	if (tuple.size() < mandatoryWarcHeaderFields.length) {
+    	if (tuple.size() < PigWarcRecord.mandatoryHeaderFields.length) {
     		throw new IOException("Attempt to write tuple without all required WARC header field information to WARC file.");
     	}
     	
     	mOut.write(WARC_OUT_VERSION);
     	mOut.write(LF);
-    	for (String headerFieldName : mandatoryWarcHeaderFields) {
+    	for (String headerFieldName : PigWarcRecord.mandatoryHeaderFields) {
     		tupleField = tuple.get(i);
     		if (i > 0)
     			mOut.write(LF);
-    		String isoFieldName = WarcRecord.ISO_WARC_HEADER_FIELD_NAMES.get(headerFieldName);
+    		String isoFieldName = PigWarcRecord.ISO_WARC_HEADER_FIELD_NAMES.get(headerFieldName);
     		mOut.write((isoFieldName + ": " + getFieldValue(tupleField)).getBytes(UTF8));
     		i++;
     	}
     	// Now the bag of optional warc headers, if they are part of the 
     	// tuple. They would be second to last (just before the HTML content):
-    	if (numCols > mandatoryWarcHeaderFields.length + 1) {
+    	if (numCols > PigWarcRecord.mandatoryHeaderFields.length + 1) {
     		tupleField = tuple.get(numCols - 2);
     		mOut.write(LF);
     		mOut.write((getFieldValue(tupleField)).getBytes(UTF8));
