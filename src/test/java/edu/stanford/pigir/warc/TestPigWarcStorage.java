@@ -104,6 +104,7 @@ public class TestPigWarcStorage {
 	// Do run for thorough testing!
 
 	@Test
+	@Ignore
 	public void testTrueLoadThenStore() throws IOException, InterruptedException {
 		
 		System.out.println("Reading WARC records via Hadoop, then writing them back, and checking result ...please wait...");
