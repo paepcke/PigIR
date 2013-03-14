@@ -1,7 +1,9 @@
 package edu.stanford.pigir.warc;
 
+// Only used for debugging. Use TestPigWarcStorage.java 
+// for testing Pig WARC storage.
+
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
 
 import java.io.File;
 import java.io.IOException;
@@ -13,6 +15,7 @@ import org.apache.pig.ExecType;
 import org.apache.pig.PigServer;
 import org.junit.Before;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import edu.stanford.pigir.Common;
@@ -38,6 +41,7 @@ public class TestPigWarcStorageViaPigserver {
 	}
 	
 	@Test
+	@Ignore
 	public void testTrueLoadThenStore() throws IOException {
 		
 		System.out.println("Reading WARC records via Hadoop, then writing them back, and checking result ...please wait...");
