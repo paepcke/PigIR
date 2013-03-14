@@ -71,6 +71,7 @@ public class TestPigWarcStorage {
 	}
 
 	@Test
+	@Ignore
 	public void testGetFieldValue() throws ExecException {
 		assertEquals("<recID1>", storage.getFieldValue(t.get(0)));
 		assertEquals("19", storage.getFieldValue(t.get(1)));
@@ -84,6 +85,7 @@ public class TestPigWarcStorage {
 		assertEquals("This is the content", storage.getFieldValue(t.get(5)));
 	}
 	
+	//Keep ignored
 	@Test
 	@Ignore
 	public void testGetOutputFormat() {
@@ -92,16 +94,19 @@ public class TestPigWarcStorage {
 	}
 	
 	@Test
+	@Ignore
 	public void testWriteTuple() throws IOException {
 		storage.prepareToWrite(new TestRecordWriter<Object, Text>());
 		storage.putNext(t);
 	}
-	
+
+	// Ignored because it takes a number of seconds to complete.
+	// Do run for thorough testing!
+
 	@Test
-	@Ignore
 	public void testTrueLoadThenStore() throws IOException {
-		// Ignored because it takes a number of seconds to complete.
-		// Run for thorough testing.
+		
+		System.out.println("Reading WARC records via Hadoop, then writing them back, and checking result ...please wait...");
 		
 		String[] cmd = new String[1];
 		cmd[0] = "src/test/PigScripts/testPigWarcStorage";

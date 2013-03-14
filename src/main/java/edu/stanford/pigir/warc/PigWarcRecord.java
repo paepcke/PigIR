@@ -56,6 +56,7 @@ import java.util.Set;
 
 import org.apache.hadoop.io.Text;
 import org.apache.pig.data.DataBag;
+import org.apache.pig.data.DataByteArray;
 import org.apache.pig.data.Tuple;
 
 
@@ -157,7 +158,7 @@ public class PigWarcRecord extends Text implements WarcRecordMap {
 	// Instance variables:
 	protected HashMap<String,String> headerMap = null;
 	protected byte[] warcContent=new byte[0];
-	protected HashSet<String> optionalHeaderKeysThisRecord;
+	protected HashSet<String> optionalHeaderKeysThisRecord = new HashSet<String>();
 	protected String warcVersion = null;
 
 
@@ -176,7 +177,11 @@ public class PigWarcRecord extends Text implements WarcRecordMap {
 		headerMap = new LinkedHashMap<String, String>();
 		try {			
 			this.put(WARC_RECORD_ID, (String) warcTuple.get(0));
-			this.put(CONTENT_LENGTH, (String) warcTuple.get(1));
+			Object contentLength = warcTuple.get(1);
+			if (contentLength instanceof Integer)
+				this.put(CONTENT_LENGTH, Integer.toString((Integer)contentLength));
+			else if (contentLength instanceof String)
+				this.put(CONTENT_LENGTH, (String)contentLength);
 			this.put(WARC_DATE, (String) warcTuple.get(2));
 			this.put(WARC_TYPE, (String) warcTuple.get(3));
 			
@@ -200,10 +205,21 @@ public class PigWarcRecord extends Text implements WarcRecordMap {
 					this.put(headFldName, headFldVal);
 				}
 			}
+			//****************
+			//Too late here: no content in tuple
+			//System.out.println("Reading tuple: " + warcTuple);
+			//****************
+			
 			// If tuple also has content field, get it into the new WarcRecord as well:
 			if (warcTuple.size() > mandatoryWarcHeaderFldTypes.size() + 1) {
 				try {
-					String content = (String)warcTuple.get(5);
+					Object rawContent = warcTuple.get(5);
+					//****************
+					//System.out.println("Reading content: " + rawContent);
+					//****************
+					if (! (rawContent instanceof DataByteArray))
+						throw new IOException("WARC file content fields must be declared as 'bytearray' in Pig scripts. Otherwise binary content, like images get destroyed.");
+					String content = rawContent.toString();
 					this.put(CONTENT, content);
 				} catch (Exception e) {
 					throw new IOException("Error during reading of content field from WARC tuple '" + warcTuple.toString() + "':" +
@@ -241,7 +257,11 @@ public class PigWarcRecord extends Text implements WarcRecordMap {
 		StringBuffer retBuffer=new StringBuffer();
 		String headerVal;
 		for (String headerFldNm : headerMap.keySet()) {
-			retBuffer.append(ISO_WARC_HEADER_FIELD_NAMES.get(headerFldNm) + ":" + 
+			String officialName = ISO_WARC_HEADER_FIELD_NAMES.get(headerFldNm);
+			if (officialName == null)
+				// Non-official WARC header name: just use it directly:
+				officialName = headerFldNm;
+			retBuffer.append(officialName + ":" + 
 							 ((headerVal = headerMap.get(headerFldNm)) == null ? "" : headerVal) + "\n");
 		}
 		if (shouldIncludeContent) {

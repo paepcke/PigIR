@@ -95,6 +95,10 @@ public class WarcRecordReader extends RecordReader<LongWritable, Text> {
   }
   
   public boolean nextKeyValue(boolean readContents) throws IOException {
+	  
+	//**************
+	System.out.println("In nextKeyValue(): readContents is " + readContents);
+	//**************
     if (keyWarcStreamPos == null) {
       keyWarcStreamPos = new LongWritable();
     }

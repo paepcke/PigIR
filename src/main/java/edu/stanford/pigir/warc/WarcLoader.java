@@ -48,7 +48,7 @@ public class WarcLoader extends FileInputLoadFunc implements LoadPushDown {
 	
 	private final int CONTENT_COL_INDEX = 5;
 	
-    protected WarcRecordReader in = null;    
+    protected WarcRecordReader warcRecordReader = null;    
     protected final Log mLog = LogFactory.getLog(getClass());
     private String signature;
         
@@ -91,12 +91,12 @@ public class WarcLoader extends FileInputLoadFunc implements LoadPushDown {
             mRequiredColumnsInitialized = true;
         }
         try {
-            boolean done = ! in.nextKeyValue((mRequiredColumns != null) && (CONTENT_COL_INDEX < numColsToReturn) && (mRequiredColumns[CONTENT_COL_INDEX]));
+            boolean done = ! warcRecordReader.nextKeyValue((mRequiredColumns != null) && (CONTENT_COL_INDEX < numColsToReturn) && (mRequiredColumns[CONTENT_COL_INDEX]));
             if (done) {
                 return null;
             }
             // Get one Warc record:
-            warcRec = (PigWarcRecord) in.getCurrentValue();
+            warcRec = (PigWarcRecord) warcRecordReader.getCurrentValue();
             
             // Create separate columns from the header information,
             // followed by the content field.
@@ -133,8 +133,17 @@ public class WarcLoader extends FileInputLoadFunc implements LoadPushDown {
             // Check whether the WARC record content is wanted wbRecordReader the 
             // result tuple (or is being projected out):
             
+            //********************
+            System.out.print("------mRequiredColumns: ");
+            for (boolean colBool : mRequiredColumns)
+            	System.out.print(colBool + ",");
+            System.out.println("; resFieldIndex before inc: " + resFieldIndex + "; numColsToReturn: " + numColsToReturn);
+            //********************
             if ((mRequiredColumns != null) && (++resFieldIndex < numColsToReturn)  && mRequiredColumns[resFieldIndex]) {
             	// DataByteArray will show up as a Pig bytearray type:
+            	//***************
+            	System.out.println("warcContent: " + new String(warcRec.getContentRaw()));
+            	//***************            	
             	mProtoTuple.add(new DataByteArray(warcRec.getContentRaw()));
             	
             }
@@ -216,7 +225,7 @@ public class WarcLoader extends FileInputLoadFunc implements LoadPushDown {
     @SuppressWarnings("rawtypes")
 	@Override
     public void prepareToRead(RecordReader reader, PigSplit split) {
-        in = (WarcRecordReader) reader;
+        warcRecordReader = (WarcRecordReader) reader;
     }
 
     @Override

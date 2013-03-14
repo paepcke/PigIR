@@ -73,6 +73,10 @@ public class PigWarcStorage extends StoreFunc {
     		throw new IOException("Attempt to write tuple without all required WARC header field information to WARC file.");
     	}
     	
+    	//*******************
+    	//System.out.println(tuple);
+    	//*******************
+    	
     	mOut.write(WARC_OUT_VERSION);
     	mOut.write(LF);
     	for (String headerFieldName : PigWarcRecord.mandatoryHeaderFields) {

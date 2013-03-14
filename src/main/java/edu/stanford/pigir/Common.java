@@ -10,6 +10,7 @@ import java.net.UnknownHostException;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.mapreduce.TaskAttemptID;
 import org.apache.log4j.Logger;
@@ -43,6 +44,20 @@ public final class Common {
 			e.printStackTrace();
 		}
 	}
+	
+	public static void print(PigServer pserver, String token, File outFile) {
+		Iterator<Tuple> res;
+		try {
+			res = pserver.openIterator(token);
+			while (res.hasNext()) {
+				// Append next tuple to file:
+				FileUtils.write(outFile, res.next().toString(), true);
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+	
 	
 	/**
 	 * Print all elements of a tuple

@@ -2,8 +2,8 @@
 
 SCRIPT_DIR=`dirname $0`
 RESOURCE_DIR=`dirname $0`/../resources
-#EXEC_MODE=local
-EXEC_MODE=mapreduce
+EXEC_MODE=local
+#EXEC_MODE=mapreduce
 
 TEST_FILE=mixedContent.warc
 
@@ -11,9 +11,9 @@ TEST_FILE=mixedContent.warc
 # in /tmp, and copy the warc test file there.
 # Remove possibly left over result from previous run:
 
+mkdir /tmp/test
 if [ $EXEC_MODE == local ]
 then
-  mkdir /tmp/test
   cp $RESOURCE_DIR/$TEST_FILE /tmp/test
   rm -rf /tmp/test/testPigWarcStorageResult.warc
 else
