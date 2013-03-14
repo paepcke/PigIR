@@ -205,18 +205,10 @@ public class PigWarcRecord extends Text implements WarcRecordMap {
 					this.put(headFldName, headFldVal);
 				}
 			}
-			//****************
-			//Too late here: no content in tuple
-			//System.out.println("Reading tuple: " + warcTuple);
-			//****************
-			
 			// If tuple also has content field, get it into the new WarcRecord as well:
 			if (warcTuple.size() > mandatoryWarcHeaderFldTypes.size() + 1) {
 				try {
 					Object rawContent = warcTuple.get(5);
-					//****************
-					//System.out.println("Reading content: " + rawContent);
-					//****************
 					if (! (rawContent instanceof DataByteArray))
 						throw new IOException("WARC file content fields must be declared as 'bytearray' in Pig scripts. Otherwise binary content, like images get destroyed.");
 					String content = rawContent.toString();

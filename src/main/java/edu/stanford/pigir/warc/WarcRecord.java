@@ -166,7 +166,6 @@ public class WarcRecord extends PigWarcRecord {
 
 	// Instance variables:
 	private Long grandTotalBytesRead;
-	private byte[] warcContent=null;
 	private String versionLine = null;
 
 	/**
@@ -353,17 +352,10 @@ public class WarcRecord extends PigWarcRecord {
 
 		// The following call also sets the static tmpVersionLine to 
 		// the warc record's version line (e.g. "WARC/1.0"):
-		//***********************
-		System.out.println("readNextRecord readContent: " + readContent);
-		//***********************
 		byte[] recordContent=readNextRecord(warcInLineReader, readContent);
 		if (recordContent==null) { 
 			return null; 
 		}
-
-		//******************
-		System.out.println("After readNextRecord, recordContent(" + recordContent.length + "): " + new String(recordContent));
-		//*******************
 		
 		WarcRecord retRecord=new WarcRecord();
 		retRecord.versionLine = tmpVersionLine;

@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 
 import org.apache.pig.data.DataBag;
+import org.apache.pig.data.DataByteArray;
 import org.apache.pig.data.DefaultDataBag;
 import org.apache.pig.data.Tuple;
 import org.apache.pig.data.TupleFactory;
@@ -28,22 +29,22 @@ public class TestKeepWarcIf {
 	@Before
 	public void setUp() throws Exception {
 		// Min record has: WARC_RECORD_ID, CONTENT_LENGTH, WARC_DATE, WARC_TYPE:
-		minTuple             = makeTuple("rec1", "10", "jan-1-1970", "response");
+		minTuple             = makeStringTuple("rec1", "10", "jan-1-1970", "response");
 		
-		oneOptionalHeaderFldTuple = makeTuple("rec2", "10", "jan-1-1970", "response");
-		Tuple targetURIHeader      		= makeTuple("warc-target-uri", "http://good.luck");
+		oneOptionalHeaderFldTuple = makeStringTuple("rec2", "10", "jan-1-1970", "response");
+		Tuple targetURIHeader      		= makeStringTuple("warc-target-uri", "http://good.luck");
 		oneOptionalHeaderFldTuple.append(makeBag(targetURIHeader));
 		
-		fullTuple = makeTuple("rec3", "10", "jan-1-1970", "response");
-		Tuple warcTruncatedFld = makeTuple("warc-truncated", "yes");
-		Tuple warcFilenameFld  = makeTuple("warc-filename", "/foo/bar.warc");
-		Tuple warcTargetFld    = makeTuple("warc-target-urn", "http://foo.dmoz.org/bar");
-		Tuple warcTargetFld1   = makeTuple("warc-target-urn1", "http://foo.bar.org/fum.txt");
+		fullTuple = makeStringTuple("rec3", "10", "jan-1-1970", "response");
+		Tuple warcTruncatedFld = makeStringTuple("warc-truncated", "yes");
+		Tuple warcFilenameFld  = makeStringTuple("warc-filename", "/foo/bar.warc");
+		Tuple warcTargetFld    = makeStringTuple("warc-target-urn", "http://foo.dmoz.org/bar");
+		Tuple warcTargetFld1   = makeStringTuple("warc-target-urn1", "http://foo.bar.org/fum.txt");
 		fullTuple.append(makeBag(warcTruncatedFld, warcFilenameFld, warcTargetFld, warcTargetFld1));
-		fullTuple.append("This is the content.");
+		fullTuple.append(new DataByteArray("This is the content.".getBytes()));
 	}
 
-	private Tuple makeTuple(String... vals) {
+	private Tuple makeStringTuple(String... vals) {
 		ArrayList<String> tupleFlds = new ArrayList<String>();
 		for (String str : vals) 
 			tupleFlds.add(str);

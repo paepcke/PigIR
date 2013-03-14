@@ -2,8 +2,8 @@
 
 SCRIPT_DIR=`dirname $0`
 RESOURCE_DIR=`dirname $0`/../resources
-EXEC_MODE=local
-#EXEC_MODE=mapreduce
+#EXEC_MODE=local
+EXEC_MODE=mapreduce
 
 TEST_FILE=mixedContent.warc
 

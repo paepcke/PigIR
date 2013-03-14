@@ -133,19 +133,9 @@ public class WarcLoader extends FileInputLoadFunc implements LoadPushDown {
             // Check whether the WARC record content is wanted wbRecordReader the 
             // result tuple (or is being projected out):
             
-            //********************
-            System.out.print("------mRequiredColumns: ");
-            for (boolean colBool : mRequiredColumns)
-            	System.out.print(colBool + ",");
-            System.out.println("; resFieldIndex before inc: " + resFieldIndex + "; numColsToReturn: " + numColsToReturn);
-            //********************
             if ((mRequiredColumns != null) && (++resFieldIndex < numColsToReturn)  && mRequiredColumns[resFieldIndex]) {
             	// DataByteArray will show up as a Pig bytearray type:
-            	//***************
-            	System.out.println("warcContent: " + new String(warcRec.getContentRaw()));
-            	//***************            	
             	mProtoTuple.add(new DataByteArray(warcRec.getContentRaw()));
-            	
             }
             Tuple t =  mTupleFactory.newTupleNoCopy(mProtoTuple);
             return t;
