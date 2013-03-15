@@ -45,5 +45,5 @@ keepers = FILTER extended BY edu.stanford.pigir.pigudf.KeepWarcIf(*);
 
 --DUMP keepers;
 
-STORE keepers INTO '$FILTERED_DEST' USING edu.stanford.pigir.warc.PigWarcStorage() AS warcRecordId,contentLength,date,warc_type,optionalHeaderFlds,content;
+STORE keepers INTO '$FILTERED_DEST' USING edu.stanford.pigir.warc.PigWarcStorage();
 

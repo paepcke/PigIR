@@ -25,6 +25,7 @@ else
   hadoop fs -mkdir /tmp/test
   hadoop fs -copyFromLocal $RESOURCE_DIR/$TEST_FILE $DEST_DIR
   hadoop fs -rmr ${DEST_DIR}/${TEST_FILE}_onlyOne.gz
+  hadoop fs -rmr ${DEST_DIR}/${TEST_FILE}_noSomething.gz
 fi
 
 # Field name of warc type:
