@@ -107,6 +107,8 @@ public class TestPigWarcStorage {
 		
 		System.out.println("Reading WARC records via Hadoop, then writing them back, and checking result ...please wait...");
 		
+		// The Pig script is driven by a shell script that we
+		// now invoke:
 		String[] cmd = new String[1];
 		cmd[0] = "src/test/PigScripts/testPigWarcStorage";
 		Process proc = null;

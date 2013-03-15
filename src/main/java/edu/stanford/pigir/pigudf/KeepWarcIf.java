@@ -19,7 +19,27 @@ import edu.stanford.pigir.warc.PigWarcRecord;
  *	Filter UDF for Pig. Takes a WARC tuple, a WARC header field name,
  *	and a regex. Returns true if the respective header field's value
  *	matches the regex, else returns false.
+ *
+ * Assuming that $WARC_FIELD holds the name of the WARC field
+ * to be filtered on, that $REGEX contains the (Java) regular
+ * expression, and that the WARC file was loaded in your Pig
+ * script via:
+ * 
+ * docs = LOAD '$WARC_FILE'
+ *        USING edu.stanford.pigir.warc.WarcLoader
+ *        AS (warcRecordId:chararray, contentLength:int, date:chararray, warc_type:chararray,
+ *            optionalHeaderFlds:bag{fldNameVal:tuple(fldName:chararray,fldVal:chararray)}, content:bytearray);
+ *            
+ * -- Create new tuples from these old ones that have a WARC field name, and a regular expression
+ * -- appended:
+ * 
+ * extended = FOREACH docsLenFiltered GENERATE                                     
+ *              warcRecordId,contentLength,date,warc_type,optionalHeaderFlds,content,'$WARC_FIELD','$REGEX';                                                      
+ * 
+ * -- Finally, do the filtering:                                                                              
+ * keepers = FILTER extended BY edu.stanford.pigir.pigudf.KeepWarcIf(*);
  */
+
 public class KeepWarcIf extends FilterFunc {
 
     /* (non-Javadoc)
