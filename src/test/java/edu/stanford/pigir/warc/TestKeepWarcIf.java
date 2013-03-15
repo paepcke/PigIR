@@ -47,11 +47,12 @@ public class TestKeepWarcIf {
 
 		// Check the result files against what we know they
 		// should be:
-		long oneRecordRemaining = 10l;
-		long oneRecordFilteredOut = 11l;
-		long sizeOneRecordRemaining = FileUtils.sizeOf(new File("/tmp/test/.....gz/part-m-00000"));
-		long sizeOneRecordFilteredOut = FileUtils.sizeOf(new File("/tmp/test/.....gz/part-m-00000"));
-		assertEquals(refSize, newSize);
+		long oneRecordRemaining = 660l;
+		long oneRecordFilteredOut = 5217l;
+		long sizeOneRecordRemaining = FileUtils.sizeOf(new File("/tmp/test/mixedContent.warc_onlyOne.gz/part-m-00000"));
+		long sizeOneRecordFilteredOut = FileUtils.sizeOf(new File("/tmp/test/mixedContent.warc_noSomething.gz/part-m-00000"));
+		assertEquals(oneRecordRemaining, sizeOneRecordRemaining);
+		assertEquals(oneRecordFilteredOut, sizeOneRecordFilteredOut);
 		
 		//long csumOrigFile = FileUtils.checksumCRC32(new File("/tmp/test/mixedContent.warc"));
 		//long csumNewFile  = FileUtils.checksumCRC32(new File("/tmp/test/testPigWarcStorageResult.warc/part-m-00000"));
