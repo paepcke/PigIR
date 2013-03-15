@@ -17,6 +17,7 @@ USAGE="Usage: warcFilter   [{-h | --help}] \n
 
 PROGVERSION=1.0
 EXEC_MODE=mapreduce
+#EXEC_MODE=local
 
 SHORTOPTS="hvx:d:"
 LONGOPTS="help,version,execmode:,destdir:"

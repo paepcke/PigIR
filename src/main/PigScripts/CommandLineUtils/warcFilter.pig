@@ -34,7 +34,7 @@ REGISTER $USER_CONTRIB/jsoup.jar;
 docs = LOAD '$WARC_FILE'
        USING edu.stanford.pigir.warc.WarcLoader
        AS (warcRecordId:chararray, contentLength:int, date:chararray, warc_type:chararray,
-           optionalHeaderFlds:bytearray, content:bytearray);
+           optionalHeaderFlds:bag{fldNameVal:tuple(fldName:chararray,fldVal:chararray)}, content:bytearray);
 
 docsLenFiltered = FILTER docs BY SIZE(content) < 700000;
 
