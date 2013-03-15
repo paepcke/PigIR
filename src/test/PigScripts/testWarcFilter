@@ -2,6 +2,7 @@
 
 SCRIPT_DIR=`dirname $0`/../../main/PigScripts/CommandLineUtils
 RESOURCE_DIR=`dirname $0`/../resources
+DEST_DIR=/tmp/test
 #EXEC_MODE=local
 EXEC_MODE=mapreduce
 
@@ -12,15 +13,18 @@ TEST_FILE=mixedContent.warc
 # Remove possibly left over result from previous run:
 
 mkdir /tmp/test
+
+# Place the test file into the expected directory,
+# and remove old result files: 
 if [ $EXEC_MODE == local ]
 then
-  cp $RESOURCE_DIR/$TEST_FILE /tmp/test
-  rm -rf /tmp/test/testWarcFilterResult.warc
+  cp $RESOURCE_DIR/$TEST_FILE $DEST_DIR
+  rm -rf ${DEST_DIR}/${TEST_FILE}_onlyOne.gz
 else
   # Will just quietly fail if exists:
   hadoop fs -mkdir /tmp/test
-  hadoop fs -copyFromLocal $RESOURCE_DIR/$TEST_FILE /tmp/test
-  hadoop fs -rmr /tmp/test/testWarcFilterResult.warc
+  hadoop fs -copyFromLocal $RESOURCE_DIR/$TEST_FILE $DEST_DIR
+  hadoop fs -rmr ${DEST_DIR}/${TEST_FILE}_onlyOne.gz
 fi
 
 # Field name of warc type:
@@ -29,20 +33,20 @@ FIELD_NAME_ONLY_ONE_RECORD="WARC-TYPE"
 REGEX_ONLY_ONE_RECORD=warcinfo
 
 # Field name for content:
-FILE_NAME_CONTENT=content
+FIELD_NAME_CONTENT=content
 REGEX_NO_SOMETHING="(?!frankbeecostume).*"
 
 
 export TEST_FILE_PATH=/tmp/test/$TEST_FILE
 pigrun -x $EXEC_MODE \
-        FILTERED_DEST=${DEST_DIR}_onlyOne.gz \
+        FILTERED_DEST=${DEST_DIR}/${TEST_FILE}_onlyOne.gz \
         WARC_FILE=$TEST_FILE_PATH \
         WARC_FIELD=$FIELD_NAME_ONLY_ONE_RECORD \
         REGEX=$REGEX_ONLY_ONE_RECORD \
         ${SCRIPT_DIR}/warcFilter.pig
 
 pigrun -x $EXEC_MODE \
-        FILTERED_DEST=${DEST_DIR}noSomething.gz \
+        FILTERED_DEST=${DEST_DIR}/${TEST_FILE}_noSomething.gz \
         WARC_FILE=$TEST_FILE_PATH \
         WARC_FIELD=$FIELD_NAME_CONTENT \
         REGEX=$REGEX_NO_SOMETHING \
@@ -55,9 +59,11 @@ pigrun -x $EXEC_MODE \
 
 if [ $EXEC_MODE == mapreduce ]
 then
-  # The reference file:
-  cp $RESOURCE_DIR/$TEST_FILE /tmp/test
+  # The reference file :
+  cp $RESOURCE_DIR/$TEST_FILE $DEST_DIR
   # rm any old result:
-  rm -rf /tmp/test/testWarcFilterResult.warc
-  hadoop fs -copyToLocal /tmp/test/testWarcFilterResult.warc /tmp/test
+  rm -rf ${DEST_DIR}/${TEST_FILE}_onlyOne.gz
+  rm -rf ${DEST_DIR}/${TEST_FILE}_noSomething.gz
+  hadoop fs -copyToLocal ${DEST_DIR}/${TEST_FILE}_onlyOne.gz $DEST_DIR
+  hadoop fs -copyToLocal ${DEST_DIR}/${TEST_FILE}_noSomething.gz $DEST_DIR
 fi
