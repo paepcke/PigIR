@@ -30,7 +30,7 @@ public class KeepWarcIf extends FilterFunc {
         if (input == null || input.size() == 0)
             return null;
         if (input.size() != 8) {
-        	throw new IOException("Warc filters require eight arguments: all six WARC tuple fields, a WARC field identifier, and a regular expression.");
+        	throw new IOException("Warc filters require eight arguments: all six WARC tuple fields, a WARC field identifier, and a regular expression. Got: " + input.toString());
         }
         String recID             = null;
         int contentLength	     = -1;
