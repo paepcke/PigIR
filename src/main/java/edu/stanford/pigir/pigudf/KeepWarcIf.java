@@ -5,10 +5,10 @@ import java.util.Iterator;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.apache.commons.collections.Bag;
 import org.apache.pig.FilterFunc;
 import org.apache.pig.backend.executionengine.ExecException;
 import org.apache.pig.data.DataByteArray;
+import org.apache.pig.data.DefaultDataBag;
 import org.apache.pig.data.Tuple;
 
 import edu.stanford.pigir.warc.PigWarcRecord;
@@ -36,7 +36,7 @@ public class KeepWarcIf extends FilterFunc {
         int contentLength	     = -1;
         String date              = null;
         String warcType          = null;
-        Bag optionalWarcFlds     = null;
+        DefaultDataBag optionalWarcFlds     = null;
         DataByteArray content    = null;
         String warcFldNameToTest = null;
         String regex             = null;
@@ -46,7 +46,7 @@ public class KeepWarcIf extends FilterFunc {
             contentLength     = (Integer)input.get(1);
             date			  = (String) input.get(2);
             warcType		  = (String) input.get(3);
-            optionalWarcFlds  = (Bag) input.get(4);
+            optionalWarcFlds  = (DefaultDataBag) input.get(4);
             content	   		  = (DataByteArray) input.get(5);
             warcFldNameToTest = (String) input.get(6); 
             regex             = (String) input.get(7); 
