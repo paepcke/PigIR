@@ -23,17 +23,30 @@ else
   hadoop fs -rmr /tmp/test/testWarcFilterResult.warc
 fi
 
-FIELD_NAME="WARC-TYPE"
-REGEX=warcinfo
+# Field name of warc type:
+FIELD_NAME_ONLY_ONE_RECORD="WARC-TYPE"
+# Regex to keep just one record: the one with warc type 'warcinfo'
+REGEX_ONLY_ONE_RECORD=warcinfo
+
+# Field name for content:
+FILE_NAME_CONTENT=content
+REGEX_NO_SOMETHING="(?!frankbeecostume).*"
+
 
 export TEST_FILE_PATH=/tmp/test/$TEST_FILE
 pigrun -x $EXEC_MODE \
-        FILTERED_DEST=${DEST_DIR}.gz \
+        FILTERED_DEST=${DEST_DIR}_onlyOne.gz \
         WARC_FILE=$TEST_FILE_PATH \
-        WARC_FIELD=$FIELD_NAME \
-        REGEX=$REGEX \
+        WARC_FIELD=$FIELD_NAME_ONLY_ONE_RECORD \
+        REGEX=$REGEX_ONLY_ONE_RECORD \
         ${SCRIPT_DIR}/warcFilter.pig
 
+pigrun -x $EXEC_MODE \
+        FILTERED_DEST=${DEST_DIR}noSomething.gz \
+        WARC_FILE=$TEST_FILE_PATH \
+        WARC_FIELD=$FIELD_NAME_CONTENT \
+        REGEX=$REGEX_NO_SOMETHING \
+        ${SCRIPT_DIR}/warcFilter.pig
 
 # If ran on mapreduce, then the reference file and
 # the generated file to test are on HDFS. Copy them

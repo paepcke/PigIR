@@ -43,13 +43,6 @@ extended = FOREACH docsLenFiltered GENERATE
 
 keepers = FILTER extended BY edu.stanford.pigir.pigudf.KeepWarcIf(*);
 
---keepers = FOREACH docsLenFiltered {
---	    arg = warcRecordId,contentLength,date,warc_type,optionalHeaderFlds,content,$WARC_FIELD,$REGEX;
---	    keeper = FILTER arg BY edu.stanford.pigir.pigudf.KeepWarcIf(arg);
---	    GENERATE keeper;
---}
-
-
 DUMP keepers;
 
 --STORE docsFiltered INTO '$FILTERED_DEST' USING edu.stanford.pigir.warc.PigWarcStorage();
