@@ -1,0 +1,50 @@
+#!/bin/bash
+
+SCRIPT_DIR=`dirname $0`/../../main/PigScripts/CommandLineUtils
+RESOURCE_DIR=`dirname $0`/../resources
+#EXEC_MODE=local
+EXEC_MODE=mapreduce
+
+TEST_FILE=mixedContent.warc
+
+# For local or mapreduce mode, make a directory
+# in /tmp, and copy the warc test file there.
+# Remove possibly left over result from previous run:
+
+mkdir /tmp/test
+if [ $EXEC_MODE == local ]
+then
+  cp $RESOURCE_DIR/$TEST_FILE /tmp/test
+  rm -rf /tmp/test/testWarcFilterResult.warc
+else
+  # Will just quietly fail if exists:
+  hadoop fs -mkdir /tmp/test
+  hadoop fs -copyFromLocal $RESOURCE_DIR/$TEST_FILE /tmp/test
+  hadoop fs -rmr /tmp/test/testWarcFilterResult.warc
+fi
+
+FIELD_NAME="WARC-TYPE"
+REGEX=warcinfo
+
+export TEST_FILE_PATH=/tmp/test/$TEST_FILE
+pigrun -x $EXEC_MODE \
+        FILTERED_DEST=${DEST_DIR}.gz \
+        WARC_FILE=$TEST_FILE_PATH \
+        WARC_FIELD=$FIELD_NAME \
+        REGEX=$REGEX \
+        ${SCRIPT_DIR}/warcFilter.pig
+
+
+# If ran on mapreduce, then the reference file and
+# the generated file to test are on HDFS. Copy them
+# the same place they would be for EXEC_MODE local.
+# That way Java junit tests can see them:
+
+if [ $EXEC_MODE == mapreduce ]
+then
+  # The reference file:
+  cp $RESOURCE_DIR/$TEST_FILE /tmp/test
+  # rm any old result:
+  rm -rf /tmp/test/testWarcFilterResult.warc
+  hadoop fs -copyToLocal /tmp/test/testWarcFilterResult.warc /tmp/test
+fi

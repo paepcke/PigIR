@@ -71,7 +71,6 @@ public class TestPigWarcStorage {
 	}
 
 	@Test
-	@Ignore
 	public void testGetFieldValue() throws ExecException {
 		assertEquals("<recID1>", storage.getFieldValue(t.get(0)));
 		assertEquals("19", storage.getFieldValue(t.get(1)));
@@ -94,7 +93,6 @@ public class TestPigWarcStorage {
 	}
 	
 	@Test
-	@Ignore
 	public void testWriteTuple() throws IOException {
 		storage.prepareToWrite(new TestRecordWriter<Object, Text>());
 		storage.putNext(t);

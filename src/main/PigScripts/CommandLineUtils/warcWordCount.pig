@@ -62,7 +62,7 @@ REGISTER $USER_CONTRIB/jsoup.jar
 docs = LOAD '$WARC_FILE'
 		USING edu.stanford.pigir.warc.WarcLoader
        AS (warcRecordId:chararray, contentLength:int, date:chararray, warc_type:chararray,
-           optionalHeaderFlds:bytearray, content:chararray);
+           optionalHeaderFlds:bytearray, content:bytearray);
 
 strippedDocs = FOREACH docs GENERATE edu.stanford.pigir.pigudf.StripHTML(content);
 
