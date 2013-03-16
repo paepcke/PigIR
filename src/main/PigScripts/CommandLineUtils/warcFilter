@@ -94,11 +94,11 @@ then
   export SCRIPT_DIR=`cygpath --mixed ${SCRIPT_DIR}`
 fi
 
-# Check whether the word count target file exists.
+# Check whether the target file exists.
 # If so, Pig would run for a long time, and then die. Make
 # this more fail-fast:
 
-EXISTENCE=`hadoop fs -stat ${DEST_DIR}/${WARC_NAME}_filtered 2> /dev/null` 
+EXISTENCE=`hadoop fs -stat ${DEST_DIR}/${WARC_NAME}_filtered.gz 2> /dev/null` 
 if [ -n "$EXISTENCE" ]
 then
     echo "File ${DEST_DIR}/${WARC_NAME}_filtered already exists. Quitting."
