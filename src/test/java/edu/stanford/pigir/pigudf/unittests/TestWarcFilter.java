@@ -43,8 +43,8 @@ public class TestWarcFilter {
 		
 		long newOnlyOneSize = FileUtils.sizeOf(new File("/tmp/test/mixedContent_onlyOne.gz/part-m-00000.gz"));
 		long newNoSomethingSize = FileUtils.sizeOf(new File("/tmp/test/mixedContent_notSomething.gz/part-m-00000.gz"));
-		assertEquals(660, newOnlyOneSize);
-		assertEquals(5244, newNoSomethingSize);
+		assertEquals(478, newOnlyOneSize);
+		assertEquals(3919, newNoSomethingSize);
 		
 		//long csumOrigFile = FileUtils.checksumCRC32(new File("/tmp/test/mixedContent.warc"));
 		//long csumNewFile  = FileUtils.checksumCRC32(new File("/tmp/test/testPigWarcStorageResult.warc/part-m-00000"));

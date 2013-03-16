@@ -70,5 +70,5 @@ then
   rm -rf #{TEST_FILE_PATH}_noSomething.gz
   echo "Copying new test results from HDFS to local $DEST_DIR..."
   hadoop fs -copyToLocal ${TEST_FILE_PATH}_onlyOne.gz $DEST_DIR
-  hadoop fs -copyToLocal {TEST_FILE_PATH}_noSomething.gz $DEST_DIR
+  hadoop fs -copyToLocal ${TEST_FILE_PATH}_noSomething.gz $DEST_DIR
 fi
