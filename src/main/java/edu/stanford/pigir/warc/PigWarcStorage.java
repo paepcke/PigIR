@@ -20,9 +20,6 @@ import org.apache.pig.data.DataByteArray;
 import org.apache.pig.data.DataType;
 import org.apache.pig.data.Tuple;
 
-
-
-
 /**
  * @author paepcke
  * 

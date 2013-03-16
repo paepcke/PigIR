@@ -10,6 +10,7 @@ import org.apache.pig.backend.executionengine.ExecException;
 import org.apache.pig.data.DataByteArray;
 import org.apache.pig.data.DefaultDataBag;
 import org.apache.pig.data.Tuple;
+import org.jsoup.select.Evaluator.Matches;
 
 import edu.stanford.pigir.warc.PigWarcRecord;
 
@@ -95,7 +96,13 @@ public class KeepWarcIf extends FilterFunc {
         	foundFld = true;
         }
         else if (warcFldNameToTest.compareToIgnoreCase(PigWarcRecord.CONTENT) == 0) {
+        	//******************
+        	String contentStr = new String(content.get());
+        	//******************
         	m = regexPattern.matcher(new String(content.get()));
+        	//******************
+        	boolean doesMatch = m.matches();
+        	//******************
         	foundFld = true;
         }
         else {
