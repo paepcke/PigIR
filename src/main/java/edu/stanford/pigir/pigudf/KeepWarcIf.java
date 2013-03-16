@@ -10,7 +10,6 @@ import org.apache.pig.backend.executionengine.ExecException;
 import org.apache.pig.data.DataByteArray;
 import org.apache.pig.data.DefaultDataBag;
 import org.apache.pig.data.Tuple;
-import org.jsoup.select.Evaluator.Matches;
 
 import edu.stanford.pigir.warc.PigWarcRecord;
 

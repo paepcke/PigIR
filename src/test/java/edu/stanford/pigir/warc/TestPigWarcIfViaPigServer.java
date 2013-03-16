@@ -47,19 +47,25 @@ public class TestPigWarcIfViaPigServer {
 						"           optionalHeaderFlds:bytearray, content:bytearray);"
 				);
 		pserver.registerQuery(
-				"docsLenFiltered = FILTER docs BY SIZE(content) < 700000; "
+				"docsLenFiltered = FILTER docs BY SIZE(content) < 700000; " 
 				);
 		pserver.registerQuery(
                 "extended = FOREACH docsLenFiltered GENERATE " +
-                "     warcRecordId,contentLength,date,warc_type,optionalHeaderFlds,content,'content','(?!frankbeecostume).*';"
+                "     warcRecordId,contentLength,date,warc_type,optionalHeaderFlds,content,'content','(?s)(?!.*frankbeecostume).*';"
                 );
 		
 		pserver.registerQuery(
                 "keepers = FILTER extended BY edu.stanford.pigir.pigudf.KeepWarcIf(*);"
 				);
+
+		pserver.registerQuery(
+                "finalKeepers = FOREACH keepers GENERATE" +
+                "     warcRecordId,contentLength,date,warc_type,optionalHeaderFlds,content;"                			
+				);
+		
 		
 		//pserver.registerQuery("DUMP keepers;");
-		pserver.registerQuery("STORE keepers INTO '/tmp/test/foo.warc' USING edu.stanford.pigir.warc.PigWarcStorage();");
+		pserver.registerQuery("STORE finalKeepers INTO '/tmp/test/foo.warc' USING edu.stanford.pigir.warc.PigWarcStorage();");
 	}
 
 }

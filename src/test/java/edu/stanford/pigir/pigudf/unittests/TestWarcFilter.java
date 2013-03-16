@@ -22,12 +22,12 @@ public class TestWarcFilter {
 	}
 
 	@Test
-	public void testTrueLoadThenStore() throws IOException, InterruptedException {
+	public void testWarcFilter() throws IOException, InterruptedException {
 		
-		System.out.println("Reading WARC records via Hadoop, then writing them back, and checking result ...please wait...");
+		System.out.println("Reading WARC records via Hadoop, then writing some of them back, and checking result ...please wait...");
 		
 		String[] cmd = new String[1];
-		cmd[0] = "src/test/PigScripts/testPigWarcStorage";
+		cmd[0] = "src/test/PigScripts/testWarcFilter";
 		Process proc = null;
 		try {
             proc = Runtime.getRuntime().exec(cmd);
@@ -42,8 +42,10 @@ public class TestWarcFilter {
 		// should match:
 		
 		long refSize = FileUtils.sizeOf(new File("/tmp/test/mixedContent.warc"));
-		long newSize = FileUtils.sizeOf(new File("/tmp/test/testPigWarcStorageResult.warc/part-m-00000"));
-		assertEquals(refSize, newSize);
+		long newOnlyOneSize = FileUtils.sizeOf(new File("/tmp/test/mixedContent_onlyOne.gz/part-m-00000"));
+		long newNoSomethingSize = FileUtils.sizeOf(new File("/tmp/test/mixedContent_notSomething.gz/part-m-00000"));
+		assertEquals(, newOnlyOneSize);
+		assertEquals(5244, newNoSomethingSize);
 		
 		//long csumOrigFile = FileUtils.checksumCRC32(new File("/tmp/test/mixedContent.warc"));
 		//long csumNewFile  = FileUtils.checksumCRC32(new File("/tmp/test/testPigWarcStorageResult.warc/part-m-00000"));
