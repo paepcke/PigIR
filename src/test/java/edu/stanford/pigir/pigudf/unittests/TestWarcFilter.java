@@ -44,7 +44,7 @@ public class TestWarcFilter {
 		long refSize = FileUtils.sizeOf(new File("/tmp/test/mixedContent.warc"));
 		long newOnlyOneSize = FileUtils.sizeOf(new File("/tmp/test/mixedContent_onlyOne.gz/part-m-00000"));
 		long newNoSomethingSize = FileUtils.sizeOf(new File("/tmp/test/mixedContent_notSomething.gz/part-m-00000"));
-		assertEquals(, newOnlyOneSize);
+		assertEquals(660, newOnlyOneSize);
 		assertEquals(5244, newNoSomethingSize);
 		
 		//long csumOrigFile = FileUtils.checksumCRC32(new File("/tmp/test/mixedContent.warc"));
