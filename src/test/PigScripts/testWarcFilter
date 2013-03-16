@@ -7,6 +7,7 @@ DEST_DIR=/tmp/test
 EXEC_MODE=mapreduce
 
 TEST_FILE=mixedContent.warc
+export TEST_FILE_PATH=$DEST_DIR/$TEST_FILE
 
 # For local or mapreduce mode, make a directory
 # in /tmp, and copy the warc test file there.
@@ -19,8 +20,8 @@ mkdir /tmp/test
 if [ $EXEC_MODE == local ]
 then
   cp $RESOURCE_DIR/$TEST_FILE $DEST_DIR
-  rm -rf ${DEST_DIR}/${TEST_FILE}_onlyOne.gz
-  rm -rf ${DEST_DIR}/${TEST_FILE}_noSomething.gz
+  rm -rf ${TEST_FILE_PATH}_onlyOne.gz
+  rm -rf ${TEST_FILE_PATH}_noSomething.gz
 else
   # Will just quietly fail if exists:
   hadoop fs -mkdir /tmp/test
@@ -40,16 +41,15 @@ FIELD_NAME_CONTENT=content
 REGEX_NO_SOMETHING="(?s)(?!.*frankbeecostume).*"
 
 
-export TEST_FILE_PATH=$DEST_DIR/$TEST_FILE
 pigrun -x $EXEC_MODE \
-        FILTERED_DEST=${TEST_FILE_PATH}._onlyOne.gz \
+        FILTERED_DEST=${TEST_FILE_PATH}_onlyOne.gz \
         WARC_FILE=$TEST_FILE_PATH \
         WARC_FIELD=$FIELD_NAME_ONLY_ONE_RECORD \
         REGEX=$REGEX_ONLY_ONE_RECORD \
         ${SCRIPT_DIR}/warcFilter.pig
 
 pigrun -x $EXEC_MODE \
-        FILTERED_DEST=${TEST_FILE_PATH}._noSomething.gz \
+        FILTERED_DEST=${TEST_FILE_PATH}_noSomething.gz \
         WARC_FILE=$TEST_FILE_PATH \
         WARC_FIELD=$FIELD_NAME_CONTENT \
         REGEX=$REGEX_NO_SOMETHING \
@@ -66,9 +66,9 @@ then
   # The reference file :
   cp $RESOURCE_DIR/$TEST_FILE $DEST_DIR
   # rm any old result:
-  rm -rf ${TEST_FILE_PATH}._onlyOne.gz
-  rm -rf #{TEST_FILE_PATH}._noSomething.gz
+  rm -rf ${TEST_FILE_PATH}_onlyOne.gz
+  rm -rf #{TEST_FILE_PATH}_noSomething.gz
   echo "Copying new test results from HDFS to local $DEST_DIR..."
-  hadoop fs -copyToLocal ${TEST_FILE_PATH}._onlyOne.gz $DEST_DIR
-  hadoop fs -copyToLocal {TEST_FILE_PATH}._noSomething.gz $DEST_DIR
+  hadoop fs -copyToLocal ${TEST_FILE_PATH}_onlyOne.gz $DEST_DIR
+  hadoop fs -copyToLocal {TEST_FILE_PATH}_noSomething.gz $DEST_DIR
 fi
