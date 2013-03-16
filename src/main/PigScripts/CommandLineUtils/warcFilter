@@ -115,7 +115,7 @@ Output file: ${DEST_DIR}/${WARC_NAME}_filtered"
 export PIG_HEAPSIZE=10000
 
 pigrun -x $EXEC_MODE \
-       FILTERED_DEST=${DEST_DIR}.gz \
+       FILTERED_DEST=${DEST_DIR}/${WARC_NAME}_filtered.gz \
        WARC_FILE=$WARC_NAME \
        WARC_FIELD=$FIELD_NAME \
        REGEX=$REGEX \

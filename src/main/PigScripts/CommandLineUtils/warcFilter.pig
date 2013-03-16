@@ -43,7 +43,12 @@ extended = FOREACH docsLenFiltered GENERATE
 
 keepers = FILTER extended BY edu.stanford.pigir.pigudf.KeepWarcIf(*);
 
+-- Get the original tuples back, eliminating the WARC
+-- field and regex:
+finalKeepers = FOREACH keepers GENERATE
+                  warcRecordId,contentLength,date,warc_type,optionalHeaderFlds,content;
+
 --DUMP keepers;
 
-STORE keepers INTO '$FILTERED_DEST' USING edu.stanford.pigir.warc.PigWarcStorage();
+STORE finalKeepers INTO '$FILTERED_DEST' USING edu.stanford.pigir.warc.PigWarcStorage();
 

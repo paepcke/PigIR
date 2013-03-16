@@ -10,6 +10,7 @@ import org.apache.pig.PigServer;
 import org.apache.pig.backend.executionengine.ExecException;
 import org.junit.Before;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import edu.stanford.pigir.Common;
@@ -38,7 +39,13 @@ public class TestPigWarcIfViaPigServer {
 	public void setUp() throws Exception {
 	}
 
+	// The following test tests the same as
+	// TestWarcFilter.java. The latter calls a shell script
+	// do drive the Pig warcFilter.pig script. This method
+	// instead uses PigServer. It was only used for debugging
+	// the unit test. Use TestWarcFilter.java.
 	@Test
+	@Ignore
 	public void test() throws IOException {
 		pserver.registerQuery(
 				"docs = LOAD 'src/test/resources/mixedContent.warc' " +

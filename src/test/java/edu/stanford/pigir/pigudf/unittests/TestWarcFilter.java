@@ -41,9 +41,8 @@ public class TestWarcFilter {
 		// The order of the header fields will differ, but the lengths
 		// should match:
 		
-		long refSize = FileUtils.sizeOf(new File("/tmp/test/mixedContent.warc"));
-		long newOnlyOneSize = FileUtils.sizeOf(new File("/tmp/test/mixedContent_onlyOne.gz/part-m-00000"));
-		long newNoSomethingSize = FileUtils.sizeOf(new File("/tmp/test/mixedContent_notSomething.gz/part-m-00000"));
+		long newOnlyOneSize = FileUtils.sizeOf(new File("/tmp/test/mixedContent_onlyOne.gz/part-m-00000.gz"));
+		long newNoSomethingSize = FileUtils.sizeOf(new File("/tmp/test/mixedContent_notSomething.gz/part-m-00000.gz"));
 		assertEquals(660, newOnlyOneSize);
 		assertEquals(5244, newNoSomethingSize);
 		

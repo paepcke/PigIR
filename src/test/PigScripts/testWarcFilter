@@ -49,7 +49,7 @@ pigrun -x $EXEC_MODE \
         ${SCRIPT_DIR}/warcFilter.pig
 
 pigrun -x $EXEC_MODE \
-        FILTERED_DEST={TEST_FILE_PATH}._noSomething.gz \
+        FILTERED_DEST=${TEST_FILE_PATH}._noSomething.gz \
         WARC_FILE=$TEST_FILE_PATH \
         WARC_FIELD=$FIELD_NAME_CONTENT \
         REGEX=$REGEX_NO_SOMETHING \
@@ -62,11 +62,13 @@ pigrun -x $EXEC_MODE \
 
 if [ $EXEC_MODE == mapreduce ]
 then
+  echo "Removing old test results from local $DEST_DIR..."
   # The reference file :
   cp $RESOURCE_DIR/$TEST_FILE $DEST_DIR
   # rm any old result:
-  rm -rf ${DEST_DIR}/${TEST_FILE}_onlyOne.gz
-  rm -rf ${DEST_DIR}/${TEST_FILE}_noSomething.gz
-  hadoop fs -copyToLocal ${DEST_DIR}/${TEST_FILE}_onlyOne.gz $DEST_DIR
-  hadoop fs -copyToLocal ${DEST_DIR}/${TEST_FILE}_noSomething.gz $DEST_DIR
+  rm -rf ${TEST_FILE_PATH}._onlyOne.gz
+  rm -rf #{TEST_FILE_PATH}._noSomething.gz
+  echo "Copying new test results from HDFS to local $DEST_DIR..."
+  hadoop fs -copyToLocal ${TEST_FILE_PATH}._onlyOne.gz $DEST_DIR
+  hadoop fs -copyToLocal {TEST_FILE_PATH}._noSomething.gz $DEST_DIR
 fi
