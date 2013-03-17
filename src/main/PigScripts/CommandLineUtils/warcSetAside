@@ -86,9 +86,6 @@ else
     PERCENTAGE=$2
 fi
 
-# Get just the filename with extension:
-WARC_NAME_BASENAME=${WARC_NAME##*/}
-
 # If we are running in cygwin, we have to convert the 
 # path to the Pig script into a Windows path:
 
@@ -102,32 +99,32 @@ fi
 # If so, Pig would run for a long time, and then die. Make
 # this more fail-fast:
 
-EXISTENCE=`hadoop fs -stat ${DEST_DIR}/${WARC_NAME_BASENAME}_sample.gz 2> /dev/null` 
+EXISTENCE=`hadoop fs -stat ${DEST_DIR}/${WARC_NAME}_sample.gz 2> /dev/null` 
 if [ -n "$EXISTENCE" ]
 then
-    echo "File ${DEST_DIR}/${WARC_NAME}/${WARC_NAME_BASENAME}_sample.gz already exists. Quitting."
+    echo "File ${DEST_DIR}/${WARC_NAME}_sample.gz already exists. Quitting."
     exit -1
 fi
-EXISTENCE=`hadoop fs -stat ${DEST_DIR}/${WARC_NAME_BASENAME}_main.gz 2> /dev/null` 
+EXISTENCE=`hadoop fs -stat ${DEST_DIR}/${WARC_NAME}_main.gz 2> /dev/null` 
 if [ -n "$EXISTENCE" ]
 then
-    echo "File ${DEST_DIR}/${WARC_NAME}${WARC_NAME_BASENAME}_main.gz already exists. Quitting."
+    echo "File ${DEST_DIR}/${WARC_NAME}_main.gz already exists. Quitting."
     exit -1
 fi
 
-echo "Starting ngrams:
+echo "Starting warcSetAside:
 Exec mode: -x $EXEC_MODE
 Input file  : $WARC_NAME
 Percentage  : $PERCENTAGE
-Output files: ${DEST_DIR}/${WARC_NAME_BASENAME}_sample.gz and ${DEST_DIR}/${WARC_NAME_BASENAME}_main.gz"
+Output files: ${DEST_DIR}/${WARC_NAME}_sample.gz and ${DEST_DIR}/${WARC_NAME}_main.gz"
 
 # Units her are in MB. Default is 1000MB=1GB
 # Increase that for this run to 10GB:
 export PIG_HEAPSIZE=10000
 
 pigrun -x $EXEC_MODE \
-       DEST_SAMPLE=${DEST_DIR}/${WARC_NAME_BASENAME}_sample.gz \
-       DEST_MAIN=${DEST_DIR}/${WARC_NAME_BASENAME}_main.gz \
+       DEST_SAMPLE=${DEST_DIR}/${WARC_NAME}_sample.gz \
+       DEST_MAIN=${DEST_DIR}/${WARC_NAME}_main.gz \
        WARC_FILE=$WARC_NAME \
        PERCENTAGE=$PERCENTAGE \
        ${SCRIPT_DIR}/warcSetAside.pig

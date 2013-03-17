@@ -100,7 +100,7 @@ then
     exit -1
 fi
 
-echo "Starting ngrams:
+echo "Starting warcstripHTML:
 Exec mode: -x $EXEC_MODE
 Input file : $WARC_NAME
 Output file: ${DEST_DIR}/${WARC_NAME}_strippedHTML"
