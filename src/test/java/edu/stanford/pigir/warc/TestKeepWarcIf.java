@@ -138,7 +138,7 @@ public class TestKeepWarcIf {
 		// should match:
 		
 		long newOnlyOneSize = FileUtils.sizeOf(new File("/tmp/test/mixedContent.warc_onlyOne.gz/part-m-00000.gz"));
-		long newNoSomethingSize = FileUtils.sizeOf(new File("/tmp/test/mixedContent.warc_notSomething.gz/part-m-00000.gz"));
+		long newNoSomethingSize = FileUtils.sizeOf(new File("/tmp/test/mixedContent.warc_noSomething.gz/part-m-00000.gz"));
 		assertEquals(478, newOnlyOneSize);
 		assertEquals(3919, newNoSomethingSize);
 		
