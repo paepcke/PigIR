@@ -38,6 +38,9 @@ import edu.stanford.pigir.warc.PigWarcRecord;
  * 
  * -- Finally, do the filtering:                                                                              
  * keepers = FILTER extended BY edu.stanford.pigir.pigudf.KeepWarcIf(*);
+ * 
+ * This filter returns "true" if the specified WARC field name does
+ * not exist in the given tuple.
  */
 
 public class KeepWarcIf extends FilterFunc {
@@ -123,7 +126,8 @@ public class KeepWarcIf extends FilterFunc {
         		}
         	}
         	if (! foundFld)
-        		throw new IOException("Attempt to match non-existent WARC field name '" + warcFldNameToTest + "' against regex '" + regex + "'");
+        		return true;
+        		//throw new IOException("Attempt to match non-existent WARC field name '" + warcFldNameToTest + "' against regex '" + regex + "'");
         }
         return (m.matches());
     }
