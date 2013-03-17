@@ -49,8 +49,11 @@ public class KeepWarcIf extends FilterFunc {
     public Boolean exec(Tuple input) throws IOException {
         if (input == null || input.size() == 0)
             return null;
-        if (input.size() != 8) {
-        	throw new IOException("Warc filters require eight arguments: all six WARC tuple fields, a WARC field identifier, and a regular expression. Got: " + input.toString());
+        if (input.size() < 6) {
+        	String errMsg = "Warc filters require between six and eight arguments: \n";
+        	errMsg += "recID, contentLen, date, warcType, [optionalWarcFieldBag, [content]], WARCFieldNameToFilterOn, regex.\n";
+        	errMsg += "Instead: " + input.toString();
+        	throw new IOException(errMsg);
         }
         String recID             = null;
         int contentLength	     = -1;
@@ -63,13 +66,18 @@ public class KeepWarcIf extends FilterFunc {
         
         try {
             recID             = (String) input.get(0);
-            contentLength     = (Integer)input.get(1);
+            if (input.get(1) instanceof String)
+            	contentLength = Integer.parseInt((String) input.get(1));
+            else
+            	contentLength = (Integer)input.get(1);
             date			  = (String) input.get(2);
             warcType		  = (String) input.get(3);
-            optionalWarcFlds  = (DefaultDataBag) input.get(4);
-            content	   		  = (DataByteArray) input.get(5);
-            warcFldNameToTest = (String) input.get(6); 
-            regex             = (String) input.get(7); 
+            if (input.size() > 6)
+            	optionalWarcFlds  = (DefaultDataBag) input.get(4);
+            if (input.size() > 7)
+            	content	   		  = (DataByteArray) input.get(5);
+            warcFldNameToTest = (String) input.get(input.size()-2); 
+            regex             = (String) input.get(input.size()-1); 
         } catch (ExecException ee) {
             throw new IOException("Caught exception processing input row ", ee);
         }
@@ -95,28 +103,23 @@ public class KeepWarcIf extends FilterFunc {
         	foundFld = true;
         }
         else if (warcFldNameToTest.compareToIgnoreCase(PigWarcRecord.CONTENT) == 0) {
-        	//******************
-        	String contentStr = new String(content.get());
-        	//******************
         	m = regexPattern.matcher(new String(content.get()));
-        	//******************
-        	boolean doesMatch = m.matches();
-        	//******************
         	foundFld = true;
         }
         else {
         	// Header field to match is either part of the catch-all optionalWarcFlds bag of two-tuples,
         	// or it does not exist:
-        	@SuppressWarnings("unchecked")
-			Iterator<Tuple> fldIt = (Iterator<Tuple>) optionalWarcFlds.iterator();
-        	while (fldIt.hasNext()) {
-        		Tuple fldNameValPair = fldIt.next();
-        		String fldName = (String)fldNameValPair.get(0);
-        		String fldVal  = (String)fldNameValPair.get(1);
-        		if (fldName.compareToIgnoreCase(warcFldNameToTest) == 0) {
-        			m = regexPattern.matcher(fldVal);
-        			foundFld = true;
-        			break;
+        	if (optionalWarcFlds != null) {
+        		Iterator<Tuple> fldIt = (Iterator<Tuple>) optionalWarcFlds.iterator();
+        		while (fldIt.hasNext()) {
+        			Tuple fldNameValPair = fldIt.next();
+        			String fldName = (String)fldNameValPair.get(0);
+        			String fldVal  = (String)fldNameValPair.get(1);
+        			if (fldName.compareToIgnoreCase(warcFldNameToTest) == 0) {
+        				m = regexPattern.matcher(fldVal);
+        				foundFld = true;
+        				break;
+        			}
         		}
         	}
         	if (! foundFld)
