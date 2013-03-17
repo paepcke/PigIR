@@ -26,8 +26,8 @@ else
   # Will just quietly fail if exists:
   hadoop fs -mkdir /tmp/test
   hadoop fs -copyFromLocal $RESOURCE_DIR/$TEST_FILE $DEST_DIR
-  hadoop fs -rmr ${DEST_DIR}/${TEST_FILE}_onlyOne.gz
-  hadoop fs -rmr ${DEST_DIR}/${TEST_FILE}_noSomething.gz
+  hadoop fs -rmr ${TEST_FILE_PATH_onlyOne.gz
+  hadoop fs -rmr ${TEST_FILE_PATH}_noSomething.gz
 fi
 
 # Field name of warc type:

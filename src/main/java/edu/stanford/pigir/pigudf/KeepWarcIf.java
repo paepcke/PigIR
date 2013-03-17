@@ -50,8 +50,8 @@ public class KeepWarcIf extends FilterFunc {
         if (input == null || input.size() == 0)
             return null;
         if (input.size() < 6) {
-        	String errMsg = "Warc filters require between six and eight arguments: \n";
-        	errMsg += "recID, contentLen, date, warcType, [optionalWarcFieldBag, [content]], WARCFieldNameToFilterOn, regex.\n";
+        	String errMsg = "Warc filters require between six and eight arguments: ";
+        	errMsg += "recID, contentLen, date, warcType, [optionalWarcFieldBag, [content]], WARCFieldNameToFilterOn, regex.";
         	errMsg += "Instead: " + input.toString();
         	throw new IOException(errMsg);
         }
