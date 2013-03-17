@@ -5,12 +5,12 @@
 # ${DEST_DIR}/${WARC_NAME}_ngrams.csv. It is an 
 # error if that file already exists.
 
-USAGE="Usage: ngrams              [{-h | --help}] \n
+USAGE="Usage: warcNgrams  [{-h | --help}] \n
                            \t\t\t [{-v | --version}] \n
                            \t\t\t [{-x | --execmode] {local | mapreduce}] \n
                            \t\t\t [{-d | --destdir} <destinationDirectory>] (default: pwd if execmode==local; else '/user/<username>') \n
                            \t\t\t <warcFilePathOnHDFS> \n
-    \tExample: ngrams -d /user/doe/myngrams Dataset/gov-04-2007.warc \n"
+    \tExample: warcNgrams -d /user/doe/myngrams Dataset/gov-04-2007.warc \n"
 
 PROGVERSION=1.0
 EXEC_MODE=mapreduce
@@ -121,7 +121,7 @@ then
     exit -1
 fi
 
-echo "Starting ngrams:
+echo "Starting warcNgrams:
 Exec mode: -x $EXEC_MODE
 Input file : $WARC_NAME
 Output file: ${DEST_DIR}/${WARC_NAME}_ngrams.csv"
@@ -133,7 +133,7 @@ export PIG_HEAPSIZE=10000
 pigrun -x $EXEC_MODE \
        NGRAM_DEST=${DEST_DIR}/${WARC_NAME}_ngrams.csv \
        WARC_FILE=$WARC_NAME \
-       ${SCRIPT_DIR}/ngrams.pig
+       ${SCRIPT_DIR}/warcNgrams.pig
 
 exit 0
 

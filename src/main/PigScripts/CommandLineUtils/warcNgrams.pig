@@ -1,7 +1,16 @@
 /* 
-   Given one or more WARC file(s), extract the contained Web pages,
-   remove their HTML tags. Output is a CSV file of bigram counts:
+   Given one or more WARC file(s), extract the contained Web pages.
+   In the current form, it is assumed that the HTML tags have been
+   removed earlier. 
+
+   Output is a CSV file of bigram counts:
    	  (word1,word2,count)
+
+  To do the stripping inside this script instead:
+     1. Uncomment 
+          --ngrams = FOREACH strippedDocs GENERATE FLATTEN(edu.stanford.pigir.pigudf.NGramGenerator(content));
+     2.   Comment the line following the above commented line.
+
 
    Start this Pig script via the ngrams bash script, like this:
       ngrams [options] <warcSourceFilePathOnHDFS>
@@ -28,10 +37,10 @@ REGISTER $USER_CONTRIB/jsoup.jar;
 docs = LOAD '$WARC_FILE'
        USING edu.stanford.pigir.warc.WarcLoader
        AS (warcRecordId:chararray, contentLength:int, date:chararray, warc_type:chararray,
-           optionalHeaderFlds:bytearray, content:chararray);
+           optionalHeaderFlds:bytearray, content:bytearray);
 
 docsLenFiltered = FILTER docs BY SIZE(content) < 700000;
-strippedDocs = FOREACH docsLenFiltered GENERATE edu.stanford.pigir.pigudf.StripHTML(content);
+--strippedDocs = FOREACH docsLenFiltered GENERATE edu.stanford.pigir.pigudf.StripHTML(content);
 
 /*
    Get this data structure:
@@ -40,7 +49,8 @@ strippedDocs = FOREACH docsLenFiltered GENERATE edu.stanford.pigir.pigudf.StripH
    foo,bar
    1,4
 */
-ngrams = FOREACH strippedDocs GENERATE FLATTEN(edu.stanford.pigir.pigudf.NGramGenerator(content));
+--ngrams = FOREACH strippedDocs GENERATE FLATTEN(edu.stanford.pigir.pigudf.NGramGenerator(content));
+ngrams = FOREACH docsLenFiltered GENERATE FLATTEN(edu.stanford.pigir.pigudf.NGramGenerator(content));
 
 -- Keep only ngrams with alpha chars...no numbers:
 ngramsAlphaFiltered = FILTER ngrams by edu.stanford.pigir.pigudf.CSVOnlyLetters($0);
