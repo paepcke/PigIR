@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Script that runs the PigScript warcRecordCount.pig with
-# command line paramters.
+# command line paramters. Result is echoed to the console.
 
 USAGE="Usage: warcRecordCount [{-h | --help}] \n
                            \t\t\t [{-x | --execmode] {local | mapreduce}] \n
@@ -70,8 +70,8 @@ echo "Starting warcRecordCount:
 Exec mode: -x $EXEC_MODE
 Input file : $WARC_NAME"
 
-# pigrun -x $EXEC_MODE \
-#         WARC_FILE=$WARC_NAME \
-#         ${SCRIPT_DIR}/warcRecordCount.pig
+ pigrun -x $EXEC_MODE \
+         WARC_FILE=$WARC_NAME \
+         ${SCRIPT_DIR}/warcRecordCount.pig
 
 exit 0
