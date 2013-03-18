@@ -2,7 +2,7 @@
 
 # Script that runs the PigScript ngrams.pig with
 # command line parameters. Output will be at
-# ${DEST_DIR}/${WARC_NAME}_ngrams.csv. It is an 
+# ${DEST_DIR}/${WARC_NAME}_ngrams.csv.gz. It is an 
 # error if that file already exists.
 
 USAGE="Usage: warcNgrams  [{-h | --help}] \n
@@ -114,24 +114,24 @@ fi
 echo "DEST_DIR: $DEST_DIR. WARC_NAME: $WARC_NAME"
 #***************
 
-EXISTENCE=`hadoop fs -stat ${DEST_DIR}/${WARC_NAME}_ngrams.csv 2> /dev/null` 
+EXISTENCE=`hadoop fs -stat ${DEST_DIR}/${WARC_NAME}_ngrams.csv.gz 2> /dev/null` 
 if [ -n "$EXISTENCE" ]
 then
-    echo "File ${DEST_DIR}/${WARC_NAME}_ngrams.csv already exists. Quitting."
+    echo "File ${DEST_DIR}/${WARC_NAME}_ngrams.csv.gz already exists. Quitting."
     exit -1
 fi
 
 echo "Starting warcNgrams:
 Exec mode: -x $EXEC_MODE
 Input file : $WARC_NAME
-Output file: ${DEST_DIR}/${WARC_NAME}_ngrams.csv"
+Output file: ${DEST_DIR}/${WARC_NAME}_ngrams.csv.gz"
 
 # Units her are in MB. Default is 1000MB=1GB
 # Increase that for this run to 10GB:
 export PIG_HEAPSIZE=10000
 
 pigrun -x $EXEC_MODE \
-       NGRAM_DEST=${DEST_DIR}/${WARC_NAME}_ngrams.csv \
+       NGRAM_DEST=${DEST_DIR}/${WARC_NAME}_ngrams.csv.gz \
        WARC_FILE=$WARC_NAME \
        ${SCRIPT_DIR}/warcNgrams.pig
 

@@ -2,7 +2,7 @@
 
 # Script that runs the PigScript stripHTML.pig with
 # command line parameters. Result in target dir, file
-# <sourcFile>_strippedHTML. Error thrown if destination
+# <sourcFile>_strippedHTML.gz. Error thrown if destination
 # file already exists.
 
 
@@ -93,24 +93,24 @@ fi
 # If so, Pig would run for a long time, and then die. Make
 # this more fail-fast:
 
-EXISTENCE=`hadoop fs -stat ${DEST_DIR}/${WARC_NAME}_strippedHTML 2> /dev/null` 
+EXISTENCE=`hadoop fs -stat ${DEST_DIR}/${WARC_NAME}_strippedHTML.gz 2> /dev/null` 
 if [ -n "$EXISTENCE" ]
 then
-    echo "File ${DEST_DIR}/${WARC_NAME}_strippedHTML already exists. Quitting."
+    echo "File ${DEST_DIR}/${WARC_NAME}_strippedHTML.gz already exists. Quitting."
     exit -1
 fi
 
 echo "Starting warcstripHTML:
 Exec mode: -x $EXEC_MODE
 Input file : $WARC_NAME
-Output file: ${DEST_DIR}/${WARC_NAME}_strippedHTML"
+Output file: ${DEST_DIR}/${WARC_NAME}_strippedHTML.gz"
 
 # Units her are in MB. Default is 1000MB=1GB
 # Increase that for this run to 10GB:
 export PIG_HEAPSIZE=10000
 
 pigrun -x $EXEC_MODE \
-       STRIPPED_DEST=${DEST_DIR}/${WARC_NAME}_strippedHTML \
+       STRIPPED_DEST=${DEST_DIR}/${WARC_NAME}_strippedHTML.gz \
        WARC_FILE=$WARC_NAME \
        ${SCRIPT_DIR}/warcStripHTML.pig
 
