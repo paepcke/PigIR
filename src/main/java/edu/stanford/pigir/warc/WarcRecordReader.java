@@ -100,7 +100,12 @@ public class WarcRecordReader extends RecordReader<LongWritable, Text> {
       keyWarcStreamPos = new LongWritable();
     }
     keyWarcStreamPos.set(pos);
-    valueWarcRecord = WarcRecord.readNextWarcRecord(warcLineReader, readContents);
+    try {
+    	valueWarcRecord = WarcRecord.readNextWarcRecord(warcLineReader, readContents);
+    } catch (IOException e) {
+    	logger.error("Skipping one WARC record because: " + e.getMessage());
+    	valueWarcRecord = null;
+    }
     if (valueWarcRecord == null) {
     	keyWarcStreamPos = null;
     	return false;

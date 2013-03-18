@@ -211,10 +211,20 @@ public class WarcRecord extends PigWarcRecord {
 			return null;
 		}
 
+		Integer totalRead = 0;
 		if (readContent) {
 			// Pull the bytes of the content from the stream:
 			retContent=new byte[contentLength];
-			Integer totalRead = pullContent(warcLineReader, retContent, contentLength);
+			try {
+				totalRead = pullContent(warcLineReader, retContent, contentLength);
+			} catch (IOException e) {
+				throw new IOException("Could not read content from WARC record ID: " +
+						tmpHeaderMap.get(WARC_RECORD_ID) + 
+						" of supposed content length " +
+						tmpHeaderMap.get(CONTENT_LENGTH) +
+						". Maybe incorrect length spec in WARC header? " +
+						"Original IOException: " + e.getMessage());
+			}
 			if (totalRead == null)
 				throw new IOException("Could not read content from WARC record ID: " +
 						tmpHeaderMap.get(WARC_RECORD_ID) + 
