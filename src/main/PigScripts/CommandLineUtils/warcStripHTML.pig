@@ -31,9 +31,14 @@ docs = LOAD '$WARC_FILE'
            optionalHeaderFlds:bytearray, content:bytearray);
 
 docsLenFiltered = FILTER docs BY SIZE(content) < 700000;
-strippedWarc = FOREACH docsLenFiltered GENERATE 
-	     warcRecordId,contentLength,date,warc_type,
-	     optionalHeaderFlds, edu.stanford.pigir.pigudf.StripHTML(content);
+
+strippedWarc = FOREACH docsLenFiltered {
+	          stripped = edu.stanford.pigir.pigudf.StripHTML(content) AS
+		  		  strippedContent:bytearray, newContentLength:int;
+		  GENERATE
+		     warcRecordId,newContentLength,date,warc_type,
+ 		     optionalHeaderFlds, strippedContent;
+	       }
 
 STORE strippedWarc INTO '$STRIPPED_DEST' USING edu.stanford.pigir.warc.PigWarcStorage();
 

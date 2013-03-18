@@ -8,6 +8,8 @@ import java.util.List;
 
 import org.apache.pig.EvalFunc;
 import org.apache.pig.FuncSpec;
+import org.apache.pig.backend.executionengine.ExecException;
+import org.apache.pig.data.DataByteArray;
 import org.apache.pig.data.DataType;
 import org.apache.pig.data.Tuple;
 import org.apache.pig.data.TupleFactory;
@@ -20,26 +22,27 @@ import edu.stanford.pigir.Common;
 
  /**
   *	 Given tuple whose first element contains
-  *  a string, return a new tuple, which is a copy of the
-  *  input, with an appended new field 'noTagContent'. This
-  *  new field contains a copy the first column's content,
-  *  with any HTML tags, and JavaScript removed.
+  *  a string, return a new tuple with two fields.
+  *  The first is the string stripped of all HTML tags
+  *  and JavaScript. The second is that string's length.
   *   
   *  Input:
   *     webTuple:     a tuple that contains the html text to be
   *     	          processed. Other parts of the tuple are
   *     			  ignored.
-  *  Output: new tuple with added field 'noTagContent'
+  *  Output: new tuple: (strippedStr:chararray, strLen:int);
   * 
  * @author paepcke
  *
  */
-public class StripHTML extends EvalFunc<String> {
+public class StripHTML extends EvalFunc<Tuple> {
 	
+	final int RESULT_CONTENT_POSITION = 0;
+	final int RESULT_CONTENT_LENGTH_POSITION = 1;
 	final int COL_PT_ARG_INDEX = 0;
 	final int HTML_CONTENT_ARG_INDEX = 1;
     	
-    public String exec(Tuple input) throws IOException {
+    public Tuple exec(Tuple input) throws IOException {
     	
     	String htmlString = null;
     	
@@ -47,19 +50,36 @@ public class StripHTML extends EvalFunc<String> {
     		// Ensure presence of one parameter (the string):
     		if (input == null || 
     			input.size() < 1) {
-    			getLogger().warn("StripHTML() encountered mal-formed input. Fewer than 2 arguments. " +
+    			getLogger().warn("StripHTML() encountered mal-formed input. Fewer than 1 argument. " +
     							 "Expecting HTML string, but called with: " + input);
     			return null;
     		}
     		
-    		htmlString = (String) input.get(0);
-
+    		if (input.get(0) instanceof DataByteArray)
+    			htmlString = ((DataByteArray)input.get(0)).toString();
+    		else if (input.get(0) instanceof String)
+    			htmlString = (String) input.get(0);
+    		else {
+    			getLogger().warn("StripHTML() encountered mal-formed input. Argument is not " +
+    							 "String or bytearray. Input is: " + input);
+    			return null;
+    		}
     	} catch (ClassCastException e) {
     		getLogger().warn("StripHTML() encountered mal-formed input; expecting a string, but called with: " + 
     					input);
     		return null;
     	}
-    	return extractText(htmlString);
+    	Tuple res = TupleFactory.getInstance().newTuple(2);
+    	String strippedContent = extractText(htmlString);
+    	
+    	if (input.get(0) instanceof DataByteArray)
+    		res.set(RESULT_CONTENT_POSITION, new DataByteArray(strippedContent.getBytes()));
+    	else 
+    		// Content to strip was passed in as a String:
+    		res.set(RESULT_CONTENT_POSITION, strippedContent);
+    	
+    	res.set(RESULT_CONTENT_LENGTH_POSITION, strippedContent.length());
+    	return res;
     }
     
 	/* (non-Javadoc)
@@ -73,11 +93,17 @@ public class StripHTML extends EvalFunc<String> {
 	 *       But that is just defined as Tuple. It would be like this:
 	 *       resSchema.add(inputSchema.getField(HTML_CONTENT_ARG_INDEX));
 	 */
-    
-	public Schema outputSchema(Schema inputSchema) {
-		// We return a string, just as we were given:
-		return inputSchema;
-    }    
+        public Schema outputSchema(Schema input) {
+        try{
+            Schema tupleSchema = new Schema();
+            tupleSchema.add(input.getField(0));
+            tupleSchema.add(new Schema.FieldSchema("content-length", DataType.INTEGER));
+            return new Schema(new Schema.FieldSchema(getSchemaName(this.getClass().getName().toLowerCase(), input),
+                                                                              tupleSchema, DataType.TUPLE));
+        }catch (Exception e){
+                return null;
+        }
+    }
 	
     @Override
     public List<FuncSpec> getArgToFuncMapping() throws FrontendException {
@@ -107,30 +133,4 @@ public class StripHTML extends EvalFunc<String> {
 		String cleanText = Jsoup.clean(webPage, Whitelist.none());		
 		return cleanText;
 	}
-    /* ---------------------------------   T E S T I N G ------------------------------*/
-
-    private boolean doTests() {
-    	
-    	String htmlStr = "<head><html>This is <b>bold</b> and a <a href='http://test.com'>link anchor</a></html></head>";
-    	//Tuple webPage = TupleFactory.getInstance().newTuple(htmlStr);
-    	//Tuple input = TupleFactory.getInstance().newTuple(1);
-    	Tuple input = TupleFactory.getInstance().newTuple(htmlStr);
-    	String res;
-
-    	try {
-    		res = exec(input);
-    		System.out.println(res);
-    		System.out.println(outputSchema(Common.getTupleSchema(input)));
-    		System.out.println(getArgToFuncMapping());
-    	} catch (Exception e) {
-    		System.out.println(e.getMessage());
-    		return false;
-    	}
-    	System.out.println("All Good.");
-    	return true;
-    }
-    
-    public static void main(String[] args) {
-    	new StripHTML().doTests();
-    };
 }
