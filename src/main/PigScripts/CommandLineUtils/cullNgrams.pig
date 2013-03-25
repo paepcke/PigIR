@@ -1,12 +1,12 @@
 /* 
-   Given a WARC file  or a directory of compressed
-   or non-compressed WARC files, extract the contained Web pages, and
-   remove their HTML tags. Write the result to a target directory, 
+   Given a bigram file or a directory of compressed
+   or non-compressed ngram files, filter the file(s)
+   such that stopwords are removed from both ngram
+   columns. Also, ngrams with constituent words of
+   length less than two are removed.
 
-   Documents longer than 700000 are skipped.
-
-   Start this Pig script via the warcStripHTML bash script, like this:
-      warcStripHTML [options] <warcSourceFilePathOnHDFS>
+   Start this Pig script via the cullNgrams bash script, like this:
+      cullNgrams [options] <ngramFile>
    where options are:
 
 	 [{-h | --help}]
@@ -17,27 +17,21 @@
    Environment assumptions:
       * $USER_CONTRIB  points to location of piggybank.jar and jsoup-1.5.2.jar
       * $PIGIR_HOME    points to location project root (above target dir)
-      * $STRIPPED_HTML destination WARC name (directory if source is a directory, else dest file name).
-      * $WARC_FILE     the WARC file or directory to strip
+      * CULLED_DEST    destination WARC name (directory if source is a directory, else dest file name).
+      * NGRAM_FILE     the ngram file or directory to strip
 */       
 
 REGISTER $USER_CONTRIB/piggybank.jar;
 REGISTER $PIGIR_HOME/target/pigir.jar;
 REGISTER $USER_CONTRIB/jsoup.jar;
 
-docs = LOAD '$WARC_FILE'
-       USING edu.stanford.pigir.warc.WarcLoader
-       AS (warcRecordId:chararray, contentLength:int, date:chararray, warc_type:chararray,
-           optionalHeaderFlds:bytearray, content:bytearray);
+ngrams = LOAD '$NGRAM_FILE'
+       USING USING PigStorage() AS (word:chararray, follower:chararray, followerCount:int);
 
-docsLenFiltered = FILTER docs BY SIZE(content) < 700000;
+ngramsNoStopWords = FILTER ngrams BY (edu.stanford.pigir.pigudf.IsStopword(word)) OR
+		    	   	     (edu.stanford.pigir.pigudf.IsStopword(follower)) OR
+				     (SIZE(word) < 2) OR
+				     (SIZE(follower) < 2);
 
-strippedWarc = FOREACH docsLenFiltered {
-	          stripped = edu.stanford.pigir.pigudf.StripHTML(content);
-		  GENERATE
-		     warcRecordId,stripped.$1,date,warc_type,
- 		     optionalHeaderFlds, stripped.$0;
-	       }
-
-STORE strippedWarc INTO '$STRIPPED_DEST' USING edu.stanford.pigir.warc.PigWarcStorage();
+STORE ngramsNoStopWords INTO '$CULLED_DEST' USING PigStorage();
 
