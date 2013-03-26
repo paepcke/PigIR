@@ -1,0 +1,31 @@
+WARC/1.0
+WARC-Type: request
+WARC-Target-URI: http://frankbeecostume.com.p10.hostingprod.com/ystore/images/qty-input-bg.jpg
+WARC-Date: 2012-12-14T17:57:26Z
+WARC-Concurrent-To: <urn:uuid:f3b2ead6-72f4-4cd1-a6c3-4abb895450ca>
+WARC-Record-ID: <urn:uuid:28f3eb77-05e9-4647-8017-dd265634f479>
+Content-Type: application/http; msgtype=request
+Content-Length: 357
+
+GET /ystore/images/qty-input-bg.jpg HTTP/1.0
+User-Agent: Mozilla/5.0 (compatible; heritrix/3.1.0 +http://infolab.stanford.edu/~paepcke)
+Connection: close
+Referer: http://frankbeecostume.com.p10.hostingprod.com/ystore/css/style.css
+Accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8
+Host: frankbeecostume.com.p10.hostingprod.com
+
+
+
+WARC/1.0
+WARC-Type: metadata
+WARC-Target-URI: http://frankbeecostume.com.p10.hostingprod.com/ystore/images/qty-input-bg.jpg
+WARC-Date: 2012-12-14T17:57:26Z
+WARC-Concurrent-To: <urn:uuid:f3b2ead6-72f4-4cd1-a6c3-4abb895450ca>
+WARC-Record-ID: <urn:uuid:9d5546ac-dee7-4ccd-9429-17e38aca789b>
+Content-Type: application/warc-fields
+Content-Length: 32
+
+This is a test. A little test.
+
+
+
