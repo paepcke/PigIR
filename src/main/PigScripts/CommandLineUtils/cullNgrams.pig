@@ -26,12 +26,12 @@ REGISTER $PIGIR_HOME/target/pigir.jar;
 REGISTER $USER_CONTRIB/jsoup.jar;
 
 ngrams = LOAD '$NGRAM_FILE'
-       USING USING PigStorage() AS (word:chararray, follower:chararray, followerCount:int);
+   USING PigStorage(',') AS (word:chararray, follower:chararray, followerCount:int);
 
-ngramsNoStopWords = FILTER ngrams BY (edu.stanford.pigir.pigudf.IsStopword(word)) OR
-		    	   	     (edu.stanford.pigir.pigudf.IsStopword(follower)) OR
-				     (SIZE(word) < 2) OR
-				     (SIZE(follower) < 2);
-
-STORE ngramsNoStopWords INTO '$CULLED_DEST' USING PigStorage();
+-- IsStopword(word) returns True if word is *not* a stopword (unfortunate choice of mine):
+ngramsNoStopWords = FILTER ngrams BY (edu.stanford.pigir.pigudf.IsStopword(word)) AND
+		    	   	     (edu.stanford.pigir.pigudf.IsStopword(follower)) AND
+				     (SIZE(word) >= 2) AND
+				     (SIZE(follower) >= 2);
+STORE ngramsNoStopWords INTO '$CULLED_DEST' USING PigStorage(',');
 
