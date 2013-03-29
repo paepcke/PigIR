@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Script that runs the PigScript randomSetAside.pig with command line
+# Script that runs the PigScript warcSetAside.pig with command line
 # parameters. The script performs sampling without replacement on a
 # WARC archive.  Result in target dir. Two files/dirs are produced
 # <sourceFile>_sample.gz, and <sourceFile>_main.gz. The main WARC will
