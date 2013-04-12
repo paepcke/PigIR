@@ -33,15 +33,37 @@ ngrams = LOAD '$NGRAM_FILE'
    USING PigStorage(',') AS (word:chararray, follower:chararray, followerCount:int);
 
 freqs = LOAD '$FREQS_FILE'
-   USING PigStorage(',') AS (freq:int, freqOfFreqs:double);
+   USING PigStorage(',') AS (freq:int, probability:double);
 
 -- Get word,follower,freq,freq,freqOfFreqs
-ngramPlusFreqOfFreqs = JOIN ngrams BY followerCount FULL, freqs BY freq;
+ngramPlusProbability = JOIN ngrams BY followerCount, freqs BY freq;
 
 -- Project out the FREQS_FILE's 'freq' column, and the NGRAM_FILE's followerCount
 -- to be left with word,follower,probability:
 
-ngramPlusProbs = FOREACH ngramPlusFreqOfFreqs GENERATE word,follower,freqOfFreqs;
+ngramPlusProbsOnly = FOREACH ngramPlusProbability GENERATE word, follower, probability;
 
-DUMP ngramPlusFreqOfFreqs;
-DUMP ngramPlusProbs;
+-- Create: 
+--    wordGroups: {group: chararray,ngramPlusProbsOnly: {(ngrams::word: chararray,
+--                                                        ngrams::follower: chararray,
+--                                                        freqs::probability: double)}}
+-- Example: (six,{(six,seven,0.056),(six,apples,0.056),(six,pairs,0.1234)})
+--          (one,{(one,brown,2.4E-5),(one,blue,0.056),(one,two,0.1234),(one,red,0.1234),(one,yellow,0.1234)})
+
+wordGroups = GROUP ngramPlusProbsOnly BY word;
+
+-- Isolate the bags of tuples (see Example above).
+-- Each bag contains all ngrams with one particular word
+-- as the starting word:
+ngramBags = FOREACH wordGroups GENERATE ngramPlusProbsOnly;
+
+-- Within each bag of Ngrams with the same start word,
+-- find the tuples with the top-n probability fields.
+-- If no 'n' was specified in the command line ($LIMIT==-1),
+-- all ngrams are retained:
+topKNgrams = FOREACH ngramBags {
+                       result = ($LIMIT == -1 ? $0 : TOP($LIMIT, 2, $0));
+		       GENERATE FLATTEN(result);
+             }
+	        
+STORE topKNgrams INTO '$DEST_SMOOTH_NGRAMS' USING PigStorage(',');
