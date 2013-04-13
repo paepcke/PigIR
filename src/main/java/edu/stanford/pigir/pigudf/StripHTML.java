@@ -6,9 +6,9 @@ import java.io.Reader;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.commons.lang.StringEscapeUtils;
 import org.apache.pig.EvalFunc;
 import org.apache.pig.FuncSpec;
-import org.apache.pig.backend.executionengine.ExecException;
 import org.apache.pig.data.DataByteArray;
 import org.apache.pig.data.DataType;
 import org.apache.pig.data.Tuple;
@@ -16,9 +16,8 @@ import org.apache.pig.data.TupleFactory;
 import org.apache.pig.impl.logicalLayer.FrontendException;
 import org.apache.pig.impl.logicalLayer.schema.Schema;
 import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
 import org.jsoup.safety.Whitelist;
-
-import edu.stanford.pigir.Common;
 
  /**
   *	 Given tuple whose first element contains
@@ -130,7 +129,22 @@ public class StripHTML extends EvalFunc<Tuple> {
 	}
 	
 	private String extractText(String webPage) throws IOException {
-		String cleanText = Jsoup.clean(webPage, Whitelist.none());		
+		//******String cleanText = Jsoup.clean(webPage, Whitelist.none());
+
+	    Document doc = Jsoup.parse( webPage );
+	    doc.outputSettings().charset("UTF-8");
+	    String htmlText = Jsoup.clean( doc.body().html(), Whitelist.simpleText() );
+	    htmlText = StringEscapeUtils.unescapeHtml(htmlText);
+	    return htmlText;		
+		
+/*		// Parse str into a Document
+		Document doc = Jsoup.parse(webPage);
+		// Clean the document.
+		doc = new Cleaner(Whitelist.simpleText()).clean(doc);
+		// Adjust escape mode
+		doc.outputSettings().escapeMode(EscapeMode.xhtml);
+		// Get back the string of the body.
+		String cleanText = doc.body().html();		
 		return cleanText;
-	}
+*/	}
 }

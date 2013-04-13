@@ -51,6 +51,13 @@ public class NGramUtil {
 	protected static void makeNGram(String[] words, Set<String> ngrams, int ngramSize) {
 		NGramUtil.makeNGram(words, ngrams, ngramSize, NGramUtil.NOT_ALL_NGRAMS);
 	}
+	/**
+	 * Heavy lifting for ngram computation
+	 * @param words array of the words in order
+	 * @param ngrams place to put the result, a set
+	 * @param maxN the n of ngrams
+	 * @param doAllNgrams if true, computes ngrams from 1 to n. If false, only computes the ngrams for the given n
+	 */
 	protected static void makeNGram(String[] words, Set<String> ngrams, int maxN, boolean doAllNgrams) {
 		if (maxN == -1)
 			maxN = 2;
@@ -76,12 +83,28 @@ public class NGramUtil {
 	public static void main(String[] args) {
 		String content = "This is a nice juicy test";
 		String[] words = NGramUtil.splitToWords(content);
+		System.out.println("------------- The Words -----------");		
 		for (String word : words) {
 			System.out.println(word);
 		}
 		Set<String> ngrams = new HashSet<String>();
 		int ngramSize = 2;
-		NGramUtil.makeNGram(words, ngrams, ngramSize);
+		
+		System.out.println("------------- DO_ALL_NGRAMS -----------");		
+		NGramUtil.makeNGram(words, ngrams, ngramSize, DO_ALL_NGRAMS);
 		System.out.println(ngrams);
+		
+		System.out.println("------------- NOT_ALL_NGRAMS -----------");
+		ngrams = new HashSet<String>();
+		ngramSize = 2;
+		NGramUtil.makeNGram(words, ngrams, ngramSize, NOT_ALL_NGRAMS);
+		System.out.println(ngrams);
+		
+		System.out.println("------------- Trigrams -----------");		
+		ngrams = new HashSet<String>();
+		ngramSize = 3;
+		NGramUtil.makeNGram(words, ngrams, ngramSize, NOT_ALL_NGRAMS);
+		System.out.println(ngrams);
+
 	}
 }

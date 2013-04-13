@@ -27,6 +27,7 @@ import java.util.Set;
 
 import org.apache.pig.EvalFunc;
 import org.apache.pig.FuncSpec;
+import org.apache.pig.backend.executionengine.ExecException;
 import org.apache.pig.data.DataBag;
 import org.apache.pig.data.DataType;
 import org.apache.pig.data.DefaultBagFactory;
@@ -36,7 +37,7 @@ import org.apache.pig.impl.logicalLayer.FrontendException;
 import org.apache.pig.impl.logicalLayer.schema.Schema;
 
 /**
- * This function divides a search query string into wrods and extracts
+ * This function divides a search query string into words and extracts
  * n-grams with up to _ngramSizeLimit length.
  * Example 1: if query = "a real nice query" and _ngramSizeLimit = 2,
  * the query is split into: a real, real nice, nice query
@@ -45,11 +46,20 @@ import org.apache.pig.impl.logicalLayer.schema.Schema;
  */
 public class NGramGenerator extends EvalFunc<DataBag> {
 
-    private static final int _ngramSizeLimit = 2;
+    private int _ngramSizeLimit = 2;
   
     public DataBag exec(Tuple input) throws IOException {
         if (input == null || input.size() == 0)
             return null;
+        // Check whether 'n' is provided:
+        if (input.size() == 2) {
+        	try {
+        		_ngramSizeLimit = (int) input.get(1);
+        	} catch(ExecException ee) {
+        		throw new IOException("Could not obtain 'n' from input[1] in call to NGramGenerator.", ee);
+        	}
+        }
+        	
         try{
             DataBag output = DefaultBagFactory.getInstance().newDefaultBag();
             String query = (String)input.get(0);
