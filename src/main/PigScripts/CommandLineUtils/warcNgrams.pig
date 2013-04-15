@@ -24,6 +24,7 @@
    Environment assumptions:
       * $USER_CONTRIB points to location of piggybank.jar and jsoup-1.5.2.jar
       * $PIGIR_HOME   points to location project root (above target dir)
+      * $ARITY        is the value of 'n' in ngrams
 */       
 
 -- STORE command for the final output:
@@ -49,8 +50,8 @@ docsLenFiltered = FILTER docs BY SIZE(content) < 700000;
    foo,bar
    1,4
 */
---ngrams = FOREACH strippedDocs GENERATE FLATTEN(edu.stanford.pigir.pigudf.NGramGenerator(content));
-ngrams = FOREACH docsLenFiltered GENERATE FLATTEN(edu.stanford.pigir.pigudf.NGramGenerator(content));
+--ngrams = FOREACH strippedDocs GENERATE FLATTEN(edu.stanford.pigir.pigudf.NGramGenerator(content,$ARITY));
+ngrams = FOREACH docsLenFiltered GENERATE FLATTEN(edu.stanford.pigir.pigudf.NGramGenerator(content,$ARITY));
 
 -- Keep only ngrams with alpha chars...no numbers:
 ngramsAlphaFiltered = FILTER ngrams by edu.stanford.pigir.pigudf.CSVOnlyLetters($0);
@@ -81,5 +82,6 @@ countedNgrams = FOREACH groupedNgrams GENERATE group AS wordPair:chararray, SIZE
 ngramsGreaterOne = FILTER countedNgrams by $1>1;
 
 sortedNgrams  = ORDER ngramsGreaterOne BY wordPair PARALLEL 5;
+
 
 $NGRAM_STORE_COMMAND;

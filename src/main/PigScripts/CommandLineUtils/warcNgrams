@@ -132,6 +132,7 @@ export PIG_HEAPSIZE=10000
 
 pigrun -x $EXEC_MODE \
        NGRAM_DEST=${DEST_DIR}/${WARC_NAME}_ngrams.csv.gz \
+       ARITY=3 \
        WARC_FILE=$WARC_NAME \
        ${SCRIPT_DIR}/warcNgrams.pig
 

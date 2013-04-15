@@ -1,14 +1,16 @@
 /* 
-   Given a WARC file or a directory of compressed
-   or non-compressed WARC files, create two new archives:
-   one containing a sample of the given archive, and another
-   of the original archive with the samples removed.
-   Write the result to a target directory, 
+   Given:
+   1. An ngrams file of format: word,follower,followerCount
+   2. A GoodTuring result file of format: frequency,probability
+
+   output: word,follower,probability
+
+   Where probability is the smoothed version of the input.
 
    Documents longer than 700000 are skipped.
 
-   Start this Pig script via the stripHTML bash script, like this:
-      stripHTML [options] <warcSourceFilePathOnHDFS>
+   Start this Pig script via the smoothNgrams, like this:
+      smoothNgrams [options] <ngramSourceFile> <freqProbabilitiesFile>
    where options are:
 
 	 [{-h | --help}]
@@ -17,12 +19,12 @@
 	 [{-d | --destdir} <destinationDirectory>] (default: pwd if execmode==local; 
 	      		   			   	     else '/user/<username>')
    Environment assumptions:
-      * $USER_CONTRIB  points to location of piggybank.jar and jsoup-1.5.2.jar
-      * $PIGIR_HOME    points to location project root (above target dir)
-      * $DEST_SAMPLE   destination of sample file
-      * $DEST_MAIN     destination of the archive copy with sample removed
-      * $WARC_FILE     archive to take sample from
-      * $PERCENTAGE    sample size as percentage (may be real number or int)
+      * $USER_CONTRIB  	   points to location of piggybank.jar and jsoup-1.5.2.jar
+      * $PIGIR_HOME    	   points to location project root (above target dir)
+      * DEST_SMOOTH_NGRAMS Where to put the result
+      * NGRAM_FILE     	   HDFS location of ngrams
+      * FREQS_FILE     	   HDFS location of frequency file
+      * LIMIT 	       	   -1 if all output requested, else k of top-k probably for each root.
 */       
 
 REGISTER $USER_CONTRIB/piggybank.jar;

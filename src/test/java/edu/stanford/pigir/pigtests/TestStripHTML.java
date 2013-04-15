@@ -61,9 +61,8 @@ public class TestStripHTML{
 			pserver.registerJar("target/pigir.jar");
 			
 			pserver.registerQuery(
-					//"docs = LOAD 'Datasets/ClueWeb09_English_Sample.warc' " +
 					"docs = LOAD 'src/test/resources/oneRecord.warc' " +
-					"		USING edu.stanford.pigir.warc.WarcLoader" +
+					"       USING edu.stanford.pigir.warc.WarcLoader" +
 					"       AS (warcRecordId:chararray, contentLength:int, date:chararray, warc_type:chararray," +
 					"           optionalHeaderFlds:bytearray, content:bytearray);"
 			);

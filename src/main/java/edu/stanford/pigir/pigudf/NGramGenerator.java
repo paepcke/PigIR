@@ -54,7 +54,7 @@ public class NGramGenerator extends EvalFunc<DataBag> {
         // Check whether 'n' is provided:
         if (input.size() == 2) {
         	try {
-        		_ngramSizeLimit = (int) input.get(1);
+        		_ngramSizeLimit = (Integer) input.get(1);
         	} catch(ExecException ee) {
         		throw new IOException("Could not obtain 'n' from input[1] in call to NGramGenerator.", ee);
         	}
@@ -102,9 +102,16 @@ public class NGramGenerator extends EvalFunc<DataBag> {
     @Override
     public List<FuncSpec> getArgToFuncMapping() throws FrontendException {
         List<FuncSpec> funcList = new ArrayList<FuncSpec>();
-        funcList.add(new FuncSpec(this.getClass().getName(), new Schema(new Schema.FieldSchema(null, DataType.CHARARRAY))));
+	Schema s = new Schema();
+	s.add(new Schema.FieldSchema(null, DataType.CHARARRAY));
+	funcList.add(new FuncSpec(this.getClass().getName(), s));
 
-        return funcList;
+	Schema s1 = new Schema();
+	s1.add(new Schema.FieldSchema(null, DataType.CHARARRAY));
+	s1.add(new Schema.FieldSchema(null, DataType.INTEGER));
+	funcList.add(new FuncSpec(this.getClass().getName(), s1));
+
+	return funcList;
     }
 
 
@@ -115,6 +122,7 @@ public class NGramGenerator extends EvalFunc<DataBag> {
 	public static void main(String[] args) throws IOException {
 		ArrayList<String> input = new ArrayList<String>();
 		input.add("Here is my great test");
+		input.add("2"); // 2-grams
 		Tuple testTuple = TupleFactory.getInstance().newTuple(input);
 		NGramGenerator generator = new NGramGenerator();
 		DataBag ngrams = generator.exec(testTuple);
