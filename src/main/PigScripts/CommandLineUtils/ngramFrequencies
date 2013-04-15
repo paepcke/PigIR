@@ -6,10 +6,11 @@
 USAGE="Usage: ngramFrequencies   [{-h | --help}] \n
                            \t\t\t [{-x | --execmode] {local | mapreduce}] \n
                            \t\t\t <ngramFilePathOrDirOnHDFS> \n
+    \tArity \n
     \tOutput to <inputFile_freqs> \n
-    \tExample: ngramFrequencies Dataset/dmozNgrams.csv.gz \n
-    \tExample: ngramFrequencies Dataset/myNgramDir \n
-    \tExample: ngramFrequencies -d /user/doe/mycounts Dataset/googleNgrams.csv.gz \n"
+    \tExample: ngramFrequencies Dataset/dmozNgrams.csv.gz 2\n
+    \tExample: ngramFrequencies Dataset/myNgramDir 2 \n
+    \tExample: ngramFrequencies -d /user/doe/mycounts Dataset/googleNgrams.csv.gz 3\n"
 
 EXEC_MODE=mapreduce
 
@@ -60,13 +61,14 @@ then
     fi     
 fi    
 
-if [ $# == 0 ] 
+if [ $# != 2 ] 
 then
-    echo "Missing path to ngram file or directory."
+    echo "Missing path to ngram file or directory, or arity."
     echo -e $USAGE
     exit -1
 else
     NGRAM_NAME=$1
+    ARITY=$2
 fi
 
 # If we are running in cygwin, we have to convert the 
@@ -89,14 +91,16 @@ then
     exit -1
 fi
 
-echo "Starting cullNgrams:
+echo "Starting ngramFrequencies:
 Exec mode: -x $EXEC_MODE
+NGram arity: $ARITY
 Input file : $NGRAM_NAME
 Output file: ${DEST_DIR}/${NGRAM_NAME}_freqs.gz"
 
  pigrun -x $EXEC_MODE \
          FREQS_DEST=${DEST_DIR}/${NGRAM_NAME}_freqs.gz \
          NGRAM_FILE=$NGRAM_NAME \
+         ARITY=$ARITY \
          ${SCRIPT_DIR}/ngramFrequencies.pig
 
 

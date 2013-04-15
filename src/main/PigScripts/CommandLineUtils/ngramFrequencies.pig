@@ -28,20 +28,26 @@
       * $USER_CONTRIB  points to location of piggybank.jar and jsoup-1.5.2.jar
       * $PIGIR_HOME    points to location project root (above target dir)
       * $FREQS_DEST    destination of output: directory if source is a directory, else dest file name.
-      * NGRAM_FILE     the ngram file or directory to analyze
+      * $NGRAM_FILE    the ngram file or directory to analyze
+      * $ARITY         the arity of the ngrams
 */       
 
 REGISTER $USER_CONTRIB/piggybank.jar;
 REGISTER $PIGIR_HOME/target/pigir.jar;
 REGISTER $USER_CONTRIB/jsoup.jar;
 
+-- We cannot define a schema, because we can't build a dynamic
+-- schema from the arity. We only know that the last field of
+-- each tuple is a count. For bigrams the schema would look like:
+-- (word:chararray, follower:chararray, followerCount:int);
+-- The arity would be 2.
+
 ngrams = LOAD '$NGRAM_FILE'
-   USING PigStorage(',') AS (word:chararray, follower:chararray, followerCount:int);
+   USING PigStorage(',');
 
 -- Create intermediate result of the form:
---    freqGroups: {group: int,ngrams: {(word: chararray,follower: chararray,followerCount: int)}}
 
-freqGroups = GROUP ngrams BY followerCount PARALLEL 5;
+freqGroups = GROUP ngrams BY (int)$$ARITY PARALLEL 5;
 
 -- Generate relation of form (freq, freqOfFreq):
 freqOfFreqs = FOREACH freqGroups GENERATE group AS freq:int, COUNT(ngrams) as freqOfFreq:int;
