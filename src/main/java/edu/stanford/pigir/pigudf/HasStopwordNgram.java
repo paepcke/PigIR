@@ -26,54 +26,33 @@ import edu.stanford.pigir.pigudf.IsStopword;
 
 public class HasStopwordNgram extends FilterFunc {
 	
+	// This constant is merely informational. The only limitation
+	// to the ngram arity is the method getArgToFuncMapping(), which
+	// must define an overload for each ngram length:
 	static int MAX_ARITY = 5;
 
 	/* (non-Javadoc)
 	 * @see org.apache.pig.EvalFunc#exec(org.apache.pig.data.Tuple)
+	 * @see edu.stanford.pigir.pigudf.IsStopword#exec(org.apache.pig.data.Tuple)
 	 * Expecting a tuple of BYTEARRAY or CHARARRAY. The tuple represents
 	 * an ngram. The arity of the ngram may be 1 to MAX_ARITY.
+	 * Run through the input tuple of words. Return true if any of the words is a
+	 * stopword. Else return false. This method uses the single-word stopword determinator
+	 * IsStopword.isStopword(). See that method for the list of words that are considered
+	 * stopwords.
 	 * 
+	 * The number of words in the ngram is actually not limited by the code in
+	 * this method. The only limitation lies in the getArgToFuncMapping() method that
+	 * defines overloads.
+	 *  
+	 * @param input The Pig tuple containing all the words.
+	 * @return true if any of the words is a stopword.
+	 * @throws IOException
 	 */
 	@Override
 	public Boolean exec(Tuple input) throws IOException {
         if (input == null || input.size() == 0)
             return null;
-        
-        // Find the ngram's arity:
-        int ngramArity = input.size();
-        // Enforce the limit on the arity:
-        if (ngramArity > HasStopwordNgram.MAX_ARITY) {
-        	// Build an error msg that contains the legal number of words,
-        	// plus the first offending one:
-        	String theLegalWords = "";
-        	for (int i=0; i<=HasStopwordNgram.MAX_ARITY; i++) {
-        		try {
-        			theLegalWords += (String) input.get(i);
-        			if (i < HasStopwordNgram.MAX_ARITY) {
-        				theLegalWords += ", ";
-        			}
-        		} catch (Exception e) {
-        			// Don't make a fuss if we can't build the ngram part of the error msg:
-        			break;
-        		}
-        	}
-        	throw new IOException(String.format("Maximum arity for ngrams is %d. Ngram of arity %d was passed. First few words: %s", 
-        			HasStopwordNgram.MAX_ARITY, ngramArity, theLegalWords));
-        }
-        return anyWordAsStopword(input);
-	}
-	
-	/**
-	 * Run through an input tuple of words. Return true if any of the words is a
-	 * stopword. Else return false. This method uses the single-word stopword determinator
-	 * IsStopword.isStopword(). See that method for the list of words that are considered
-	 * stopwords.
-
-	 * @param input The Pig tuple containing all the words.
-	 * @return true if any of the words is a stopword.
-	 * @throws IOException
-	 */
-	private Boolean anyWordAsStopword(Tuple input) throws IOException {
 		for (int i=0; i<input.size(); i++) {
 			try {
 				if (IsStopword.isStopword((String) input.get(i))) {
@@ -168,7 +147,4 @@ public class HasStopwordNgram extends FilterFunc {
 
 	return funcList;
     }
-	
-	
-	
 }

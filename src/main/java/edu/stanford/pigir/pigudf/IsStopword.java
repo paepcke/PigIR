@@ -65,6 +65,7 @@ public class IsStopword extends FilterFunc {
 	 *     foo = FILTER bar BY pigutils.IsStopword(word); 
 	 * (non-Javadoc)
 	 * @see org.apache.pig.EvalFunc#exec(org.apache.pig.data.Tuple)
+	 * @see edu.stanford.pigir.pigudf.HasStopwordNgram#exec(org.apache.pig.data.Tuple)
 	 */
 	@Override
 	public Boolean exec(Tuple input) throws IOException {
