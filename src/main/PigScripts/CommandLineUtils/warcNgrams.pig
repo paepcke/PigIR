@@ -66,8 +66,6 @@ ngramsStopWordTreated = ($FILTER_STOPWORDS ?
 		      	   FILTER ngramsLenFiltered by edu.stanford.pigir.pigudf.HasStopwordNgram($0) :
 			   ngramsLenFiltered);
 
-(condition ? value_if_true : value_if_false) 
-
 /*
    Get the following data structure:
    a,step,{(a,step,)}

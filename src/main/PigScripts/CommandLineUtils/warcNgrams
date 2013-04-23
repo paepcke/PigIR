@@ -95,7 +95,7 @@ fi
 # echo "endSite  : '$END_SITE'"
 # echo "crawl: '$1'"
 
-if [ $# < 2 ] 
+if [ $# < 3 ] 
 then
     echo "Missing crawl name or arity."
     echo -e $USAGE
