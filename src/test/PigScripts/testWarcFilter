@@ -3,8 +3,8 @@
 SCRIPT_DIR=`dirname $0`/../../main/PigScripts/CommandLineUtils
 RESOURCE_DIR=`dirname $0`/../resources
 DEST_DIR=/tmp/test
-#EXEC_MODE=local
-EXEC_MODE=mapreduce
+EXEC_MODE=local
+#EXEC_MODE=mapreduce
 
 TEST_FILE=mixedContent.warc
 export TEST_FILE_PATH=$DEST_DIR/$TEST_FILE
@@ -13,7 +13,7 @@ export TEST_FILE_PATH=$DEST_DIR/$TEST_FILE
 # in /tmp, and copy the warc test file there.
 # Remove possibly left over result from previous run:
 
-mkdir /tmp/test
+mkdir --parents /tmp/test
 
 # Place the test file into the expected directory,
 # and remove old result files: 
@@ -26,7 +26,7 @@ else
   # Will just quietly fail if exists:
   hadoop fs -mkdir /tmp/test
   hadoop fs -copyFromLocal $RESOURCE_DIR/$TEST_FILE $DEST_DIR
-  hadoop fs -rmr ${TEST_FILE_PATH_onlyOne.gz
+  hadoop fs -rmr ${TEST_FILE_PATH}_onlyOne.gz
   hadoop fs -rmr ${TEST_FILE_PATH}_noSomething.gz
 fi
 
