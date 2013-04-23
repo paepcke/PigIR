@@ -50,6 +50,9 @@ public class TestAllProperLengthNgram {
 		assertTrue(ngramTestFunc.exec(TupleFac.newTuple(4,-1,new String[] {"rumble","bluetooth"})));
 		assertFalse(ngramTestFunc.exec(TupleFac.newTuple(4,-1,new String[] {"so","bluetooth"})));
 		
-}
-
+		// Test having a comma-separated list as the 3rd field, rather than having 
+		// the words of the ngram spread across various tuple fields:
+		assertTrue(ngramTestFunc.exec(TupleFac.newTuple(4,-1,new String[] {"rumble,bluetooth"})));
+		assertFalse(ngramTestFunc.exec(TupleFac.newTuple(4,-1,new String[] {"so,bluetooth"})));
+	}
 }

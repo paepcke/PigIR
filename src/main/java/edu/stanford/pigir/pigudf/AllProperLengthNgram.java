@@ -33,7 +33,13 @@ public class AllProperLengthNgram  extends FilterFunc {
 	 * @see org.apache.pig.EvalFunc#exec(org.apache.pig.data.Tuple)
 	 * @see edu.stanford.pigir.pigudf.IsStopword#exec(org.apache.pig.data.Tuple)
 	 * Expecting a tuple of BYTEARRAY or CHARARRAY. The tuple represents
-	 * an ngram. The arity of the ngram may be 1 to MAX_ARITY.
+	 * an ngram. The arity of the ngram may be 1 to MAX_ARITY. 
+	 * 
+	 * If the ngram arity is 1, there are two options: if the string (i.e. 'word')
+	 * contains commas, the string is assumed to be a comma-separated string
+	 * containing all the words of a higher-arity ngram. Else, the string is taken
+	 * as a true unigram.
+	 * 
 	 * Run through the input tuple of words. Return false if any of the words has
 	 * an out-of-bound length. Else return true.
 	 * 	 * 
@@ -67,9 +73,33 @@ public class AllProperLengthNgram  extends FilterFunc {
         } catch (Exception e) {
         	throw new IOException("Either min length or max length are not non-zero integers in the input tuple to ProperLengthsNgrams.exec()");
         }
-		for (int i=2; i<input.size(); i++) {
+        // Where in the input the ngram words start (i.e. after min and max len):
+        int ngramStartIndex = 2;
+        int ngramEndIndex   = input.size();
+        String[] words = null;
+        if (input.size() == 3) {
+        	// Unigram or comma-separated string of a
+        	// higher-arity ngram:
+        	words = ((String)input.get(2)).split(",");
+        	if (words.length > 1) {
+        		// Have comma-separated ngrams; will use
+        		// the words array to iterate over the words
+        		// below, so we start from index 0:
+        		ngramStartIndex = 0;
+        		ngramEndIndex   = words.length;
+        	} else {
+        		// Really have a unigram, not a comma-separated list:
+        		words = null;
+        	}
+        }
+		for (int i=ngramStartIndex; i<ngramEndIndex; i++) {
+			String word = null;
 			try {
-				String word = (String) input.get(i);
+				if (words!=null) {
+					word = words[i];
+				} else {
+					word = (String) input.get(i);
+				}
 				// Don't-care about min?
 				if (minLength < 0) {
 					if (word.length() > maxLength)
