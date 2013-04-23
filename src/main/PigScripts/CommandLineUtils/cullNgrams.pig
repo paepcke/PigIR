@@ -15,10 +15,13 @@
 	 [{-d | --destdir} <destinationDirectory>] (default: pwd if execmode==local; 
 	      		   			   	     else '/user/<username>')
    Environment assumptions:
-      * $USER_CONTRIB  points to location of piggybank.jar and jsoup-1.5.2.jar
-      * $PIGIR_HOME    points to location project root (above target dir)
-      * CULLED_DEST    destination WARC name (directory if source is a directory, else dest file name).
-      * NGRAM_FILE     the ngram file or directory to strip
+      * $USER_CONTRIB  	 points to location of piggybank.jar and jsoup-1.5.2.jar
+      * $PIGIR_HOME    	 points to location project root (above target dir)
+      * CULLED_DEST    	 destination WARC name (directory if source is a directory, else dest file name).
+      * NGRAM_FILE     	 the ngram file or directory to strip
+      * FILTER_STOPWORDS 0 if stopwords are to remain in the ngrams, else another value
+      * WORD_LEN_MIN     minimum char length of words in each ngram
+      * WORD_LEN_MAX     maxmimum char length of words in each ngram
 */       
 
 REGISTER $USER_CONTRIB/piggybank.jar;

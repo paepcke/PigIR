@@ -10,7 +10,7 @@ import org.apache.pig.data.TupleFactory;
 /**
  * @author paepcke
  * Pig Filter function: Receives a CSV string and returns true 
- * if all fields are composed of only alpha chars.
+ * if all fields are of minimal length.
  */
 
 public class CSVMaxLength extends FilterFunc {

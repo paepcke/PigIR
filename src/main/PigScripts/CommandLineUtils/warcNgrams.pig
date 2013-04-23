@@ -44,7 +44,7 @@ docsLenFiltered = FILTER docs BY SIZE(content) < 700000;
 --strippedDocs = FOREACH docsLenFiltered GENERATE edu.stanford.pigir.pigudf.StripHTML(content);
 
 /*
-   Get this data structure:
+   Get this data structure (each line is a string, not fields in a tuple):
    foo,bar
    blue,gray
    foo,bar
@@ -56,9 +56,11 @@ ngrams = FOREACH docsLenFiltered GENERATE FLATTEN(edu.stanford.pigir.pigudf.NGra
 -- Keep only ngrams with alpha chars...no numbers:
 ngramsAlphaFiltered = FILTER ngrams by edu.stanford.pigir.pigudf.CSVOnlyLetters($0);
 
--- Keep only fields shorter than 20 chars. More than that is garbage:
-ngramsLenFiltered = FILTER ngramsAlphaFiltered by edu.stanford.pigir.pigudf.CSVMaxLength($0,20);
-
+-- Keep only ngrams in which all words are shorter than 20 chars, and greater than 1 char. 
+-- More or less than those are garbage:
+ngramsLenFiltered = FILTER ngramsAlphaFiltered by edu.stanford.pigir.pigudf.AllProperLengthNgram($WORD_LEN_MIN,
+												 $WORD_LEN_MAX,
+												 $0);
 /*
    Get the following data structure:
    a,step,{(a,step,)}

@@ -5,15 +5,22 @@
 
 USAGE="Usage: cullNgrams   [{-h | --help}] \n
                            \t\t\t [{-x | --execmode] {local | mapreduce}] \n
+                           \t\t\t [{-s | --stopwords}] (default: no stopword removal)\n
+                           \t\t\t [{-i | --minlength}] (default: 2)\n
+                           \t\t\t [{-a | --maxlength}] (default: 25)\n
                            \t\t\t <ngramFilePathOrDirOnHDFS> \n
     \tExample: cullNgrams Dataset/dmozNgrams.csv.gz \n
     \tExample: cullNgrams Dataset/myNgramDir \n
     \tExample: cullNgrams -d /user/doe/mycounts Dataset/googleNgrams.csv.gz \n"
 
+# Defaults:
 EXEC_MODE=mapreduce
+FILTER_STOPWORDS=0
+WORD_LEN_MIN=2
+WORD_LEN_MAX=25
 
-SHORTOPTS="hx:"
-LONGOPTS="help,execmode:"
+SHORTOPTS="hx:si:a:"
+LONGOPTS="help,execmode:stopwords,minlength:,maxlength:"
 
 ARGS=`getopt -s bash --options=$SHORTOPTS  \
   --longoptions=$LONGOPTS --name=$PROGNAME -- "$@"`
@@ -30,10 +37,17 @@ while true; do
          shift
          EXEC_MODE=$1
          ;;
-      -d|--destdir)
-         shift
-         DEST_DIR=$1
-         ;;
+      -s|--stopwords)
+	 FILTER__STOPWORDS=1
+	 ;;
+      -i|--minlength)
+	 shift
+	 WORD_LEN_MIN=$1
+	 ;;
+      -a|--maxlength)
+	 shift
+	 WORD_LEN_MAX=$1
+	 ;;
       --)
          shift
          break
@@ -94,6 +108,9 @@ Input file : $NGRAM_NAME
 Output file: ${DEST_DIR}/${NGRAM_NAME}_culled.gz"
 
  pigrun -x $EXEC_MODE \
+         FILTER_STOPWORDS=${FILTER_STOPWORDS} \
+         WORD_LEN_MIN=${WORD_LEN_MIN} \
+         WORD_LEN_MAX=${WORD_LEN_MAX} \
          CULLED_DEST=${DEST_DIR}/${NGRAM_NAME}_culled.gz \
          NGRAM_FILE=$NGRAM_NAME \
          ${SCRIPT_DIR}/cullNgrams.pig
