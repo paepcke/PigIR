@@ -61,6 +61,13 @@ ngramsAlphaFiltered = FILTER ngrams by edu.stanford.pigir.pigudf.CSVOnlyLetters(
 ngramsLenFiltered = FILTER ngramsAlphaFiltered by edu.stanford.pigir.pigudf.AllProperLengthNgram($WORD_LEN_MIN,
 												 $WORD_LEN_MAX,
 												 $0);
+-- If desired, remove ngrams in which any of the words is a stopword:
+ngramsStopWordTreated = ($FILTER_STOPWORDS ? 
+		      	   FILTER ngramsLenFiltered by edu.stanford.pigir.pigudf.HasStopwordNgram($0) :
+			   ngramsLenFiltered);
+
+(condition ? value_if_true : value_if_false) 
+
 /*
    Get the following data structure:
    a,step,{(a,step,)}
@@ -69,7 +76,7 @@ ngramsLenFiltered = FILTER ngramsAlphaFiltered by edu.stanford.pigir.pigudf.AllP
       groupedNgrams: groupedNgrams: {group: chararray,
        		     		     ngramsFiltered: {(edu.stanford.pigir.pigudf.ngramgenerator...: chararray)}}
 */
-groupedNgrams = GROUP ngramsLenFiltered BY $0;
+groupedNgrams = GROUP ngramsStopWordTreated BY $0;
 
 /*
    Now generate:

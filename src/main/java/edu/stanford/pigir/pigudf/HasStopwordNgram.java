@@ -35,8 +35,11 @@ public class HasStopwordNgram extends FilterFunc {
 	 * @see org.apache.pig.EvalFunc#exec(org.apache.pig.data.Tuple)
 	 * @see edu.stanford.pigir.pigudf.IsStopword#exec(org.apache.pig.data.Tuple)
 	 * Expecting a tuple of BYTEARRAY or CHARARRAY. The tuple represents
-	 * an ngram. The arity of the ngram may be 1 to MAX_ARITY.
-	 * Run through the input tuple of words. Return true if any of the words is a
+	 * an ngram in one of two ways:
+	 * 		- Each word of the ngram may occupy one field of the input tuple, or
+	 * 		- The one and only field may contain a comma-separated string that defines
+	 * 	      the ngram.
+	 * Run through the words. Return true if any of the words is a
 	 * stopword. Else return false. This method uses the single-word stopword determinator
 	 * IsStopword.isStopword(). See that method for the list of words that are considered
 	 * stopwords.
@@ -53,9 +56,37 @@ public class HasStopwordNgram extends FilterFunc {
 	public Boolean exec(Tuple input) throws IOException {
         if (input == null || input.size() == 0)
             return null;
-		for (int i=0; i<input.size(); i++) {
+        
+        int ngramEndIndex   = input.size();
+        String[] words = null;
+        if (input.size() == 1) {
+        	// Unigram or comma-separated string of a
+        	// higher-arity ngram:
+        	try {
+        		words = ((String)input.get(0)).split(",");
+        	} catch (Exception e) {
+        		throw new IOException("Input to HasStopwordNgram.exec() is a one-field tuple whose field is not of type String.");
+        	}
+        	if (words.length > 1) {
+        		// Have comma-separated ngrams; will use
+        		// the words array to iterate over the words
+        		// below, so we start from index 0:
+        		ngramEndIndex   = words.length;
+        	} else {
+        		// Really have a unigram, not a comma-separated list:
+        		words = null;
+        	}
+        }
+        
+		for (int i=0; i<ngramEndIndex; i++) {
+			String word = null;
 			try {
-				if (IsStopword.isStopword((String) input.get(i))) {
+				if (words!=null) {
+					word = words[i];
+				} else {
+					word = (String) input.get(i);
+				}
+				if (IsStopword.isStopword(word)) {
 					return true;
 				}
 			} catch (Exception e) {

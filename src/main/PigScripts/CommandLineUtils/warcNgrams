@@ -9,6 +9,7 @@
 USAGE="Usage: warcNgrams  [{-h | --help}] \n
                            \t\t\t [{-v | --version}] \n
                            \t\t\t [{-x | --execmode] {local | mapreduce}] \n
+                           \t\t\t [{-s | --stopwords}] (default: no stopword removal) \n
                            \t\t\t [{-d | --destdir} <destinationDirectory>] (default: pwd if execmode==local; else '/user/<username>') \n
                            \t\t\t <warcFilePathOnHDFS> \n
                            \t\t\t <arity> \n
@@ -19,8 +20,9 @@ EXEC_MODE=mapreduce
 NUM_PAGES=""
 START_SITE=""
 END_SITE=""
+FILTER_STOPWORDS=0
 
-SHORTOPTS="hvx:d:"
+SHORTOPTS="hvsx:d:"
 LONGOPTS="help,version,execmode:,destdir:"
 
 ARGS=`getopt -s bash --options=$SHORTOPTS  \
@@ -42,6 +44,9 @@ while true; do
          shift
          EXEC_MODE=$1
          ;;
+      -s|--stopwords)
+	 FILTER__STOPWORDS=1
+	 ;;
       -d|--destdir)
          shift
          DEST_DIR=$1
@@ -131,6 +136,7 @@ Arity: $ARITY"
 export PIG_HEAPSIZE=10000
 
 pigrun -x $EXEC_MODE \
+       FILTER_STOPWORDS=${FILTER_STOPWORDS} \
        NGRAM_DEST=${DEST_DIR}/${WARC_NAME}_ngrams.csv.gz \
        ARITY=$ARITY \
        WARC_FILE=$WARC_NAME \

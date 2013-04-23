@@ -49,5 +49,11 @@ public class TestHasStopwordNgram {
 		assertTrue(ngramTestFunc.exec(TupleFac.newTuple(new String[] {"a"})));
 		assertTrue(ngramTestFunc.exec(TupleFac.newTuple(new String[] {"a","this"})));
 		assertTrue(ngramTestFunc.exec(TupleFac.newTuple(new String[] {"juice","garden","this"})));
+		
+		// Test passing in comma-separated strings for the ngrams:
+		assertFalse(ngramTestFunc.exec(TupleFac.newTuple(new String[] {"juicy,test,go,running,building"})));
+		assertTrue(ngramTestFunc.exec(TupleFac.newTuple(new String[] {"a,this"})));
+		assertTrue(ngramTestFunc.exec(TupleFac.newTuple(new String[] {"juice,garden,this"})));
+		
 	}
 }
