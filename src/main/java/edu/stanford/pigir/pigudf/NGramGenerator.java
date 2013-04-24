@@ -81,7 +81,7 @@ public class NGramGenerator extends EvalFunc<DataBag> {
 
     @Override
     /**
-     * This method gives a name to the column.
+     * This method gives a name to the output column.
      * @param input - schema of the input data
      * @return schema of the input data
      */

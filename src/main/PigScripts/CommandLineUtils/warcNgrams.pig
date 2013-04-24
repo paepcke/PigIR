@@ -22,9 +22,12 @@
 	 [{-d | --destdir} <destinationDirectory>] (default: pwd if execmode==local; 
 	      		   			   	     else '/user/<username>')
    Environment assumptions:
-      * $USER_CONTRIB points to location of piggybank.jar and jsoup-1.5.2.jar
-      * $PIGIR_HOME   points to location project root (above target dir)
-      * $ARITY        is the value of 'n' in ngrams
+      * $USER_CONTRIB 	  points to location of piggybank.jar and jsoup-1.5.2.jar
+      * $PIGIR_HOME   	  points to location project root (above target dir)
+      * $ARITY        	  is the value of 'n' in ngrams
+      * FILTER_STOPWORDS  is 1 if ngrams are to be removed if any of their words are stopwords
+      * WORD_LEN_MIN      is min length of words in ngrams, or -1 if don't care
+      * WORD_LEN_MAXis 	  max length of words in ngrams, or -1 if don't care
 */       
 
 -- STORE command for the final output:
@@ -50,11 +53,11 @@ docsLenFiltered = FILTER docs BY SIZE(content) < 700000;
    foo,bar
    1,4
 */
---ngrams = FOREACH strippedDocs GENERATE FLATTEN(edu.stanford.pigir.pigudf.NGramGenerator(content,$ARITY));
-ngrams = FOREACH docsLenFiltered GENERATE FLATTEN(edu.stanford.pigir.pigudf.NGramGenerator(content,$ARITY));
+--ngramTuples = FOREACH strippedDocs GENERATE FLATTEN(edu.stanford.pigir.pigudf.NGramGenerator(content,$ARITY));
+ngramTuples = FOREACH docsLenFiltered GENERATE FLATTEN(edu.stanford.pigir.pigudf.NGramGenerator(content,$ARITY));
 
 -- Keep only ngrams with alpha chars...no numbers:
-ngramsAlphaFiltered = FILTER ngrams by edu.stanford.pigir.pigudf.CSVOnlyLetters($0);
+ngramsAlphaFiltered = FILTER ngramTuples by edu.stanford.pigir.pigudf.CSVOnlyLetters($0);
 
 -- Keep only ngrams in which all words are shorter than 20 chars, and greater than 1 char. 
 -- More or less than those are garbage:
@@ -62,9 +65,7 @@ ngramsLenFiltered = FILTER ngramsAlphaFiltered by edu.stanford.pigir.pigudf.AllP
 												 $WORD_LEN_MAX,
 												 $0);
 -- If desired, remove ngrams in which any of the words is a stopword:
-ngramsStopWordTreated = ($FILTER_STOPWORDS ? 
-		      	   FILTER ngramsLenFiltered by edu.stanford.pigir.pigudf.HasStopwordNgram($0) :
-			   ngramsLenFiltered);
+ngramsStopWordTreated = FILTER ngramsLenFiltered BY (($FILTER_STOPWORDS == 0) OR (($FILTER_STOPWORDS == 1) AND (NOT edu.stanford.pigir.pigudf.HasStopwordNgram($0))));
 
 /*
    Get the following data structure:
@@ -72,7 +73,7 @@ ngramsStopWordTreated = ($FILTER_STOPWORDS ?
    a,team,{(a,team,),(a,team,),(a,team,),(a,team,)}
    A DESCRIBE of the following groupedNGrams would return:
       groupedNgrams: groupedNgrams: {group: chararray,
-       		     		     ngramsFiltered: {(edu.stanford.pigir.pigudf.ngramgenerator...: chararray)}}
+       		     		     ngramsLenFiltered: {(edu.stanford.pigir.pigudf.ngramgenerator...: chararray)}}
 */
 groupedNgrams = GROUP ngramsStopWordTreated BY $0;
 
@@ -83,12 +84,12 @@ groupedNgrams = GROUP ngramsStopWordTreated BY $0;
    Where the number is the ngram count.
 */
 
-countedNgrams = FOREACH groupedNgrams GENERATE group AS wordPair:chararray, SIZE(ngramsLenFiltered) AS count:long;
+countedNgrams = FOREACH groupedNgrams GENERATE group AS words:chararray, SIZE(ngramsStopWordTreated) AS count:long;
 
 -- Keep only ngrams with counts > 1:
 ngramsGreaterOne = FILTER countedNgrams by $1>1;
 
-sortedNgrams  = ORDER ngramsGreaterOne BY wordPair PARALLEL 5;
+sortedNgrams  = ORDER ngramsGreaterOne BY words PARALLEL 5;
 
 
 $NGRAM_STORE_COMMAND;
