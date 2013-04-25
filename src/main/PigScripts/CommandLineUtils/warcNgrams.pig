@@ -84,10 +84,10 @@ groupedNgrams = GROUP ngramsStopWordTreated BY $0;
    Where the number is the ngram count.
 */
 
-countedNgrams = FOREACH groupedNgrams GENERATE group AS words:chararray, SIZE(ngramsStopWordTreated) AS count:long;
+countedNgrams = FOREACH groupedNgrams GENERATE SIZE(ngramsStopWordTreated) AS count:long, group AS words:chararray;
 
 -- Keep only ngrams with counts > 1:
-ngramsGreaterOne = FILTER countedNgrams by $1>1;
+ngramsGreaterOne = FILTER countedNgrams by count>1;
 
 sortedNgrams  = ORDER ngramsGreaterOne BY words PARALLEL 5;
 

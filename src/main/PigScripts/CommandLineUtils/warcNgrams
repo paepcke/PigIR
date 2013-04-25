@@ -28,7 +28,7 @@ WORD_LEN_MAX=20
 
 
 SHORTOPTS="hvsx:d:i:a:"
-LONGOPTS="help,version,stopwords,execmode:,destdir:,minlength:,maxlength"
+LONGOPTS="help,version,stopwords,execmode:,destdir:,minlength:,maxlength:"
 
 ARGS=`getopt -s bash --options=$SHORTOPTS  \
   --longoptions=$LONGOPTS --name=$PROGNAME -- "$@"`

@@ -6,7 +6,6 @@
 USAGE="Usage: ngramFrequencies   [{-h | --help}] \n
                            \t\t\t [{-x | --execmode] {local | mapreduce}] \n
                            \t\t\t <ngramFilePathOrDirOnHDFS> \n
-    \tArity \n
     \tOutput to <inputFile_freqs> \n
     \tExample: ngramFrequencies Dataset/dmozNgrams.csv.gz 2\n
     \tExample: ngramFrequencies Dataset/myNgramDir 2 \n
@@ -61,14 +60,13 @@ then
     fi     
 fi    
 
-if [ $# != 2 ] 
+if [ $# != 1 ] 
 then
-    echo "Missing path to ngram file or directory, or arity."
+    echo "Missing path to ngram file or directory."
     echo -e $USAGE
     exit -1
 else
     NGRAM_NAME=$1
-    ARITY=$2
 fi
 
 # If we are running in cygwin, we have to convert the 
@@ -93,14 +91,12 @@ fi
 
 echo "Starting ngramFrequencies:
 Exec mode: -x $EXEC_MODE
-NGram arity: $ARITY
 Input file : $NGRAM_NAME
 Output file: ${DEST_DIR}/${NGRAM_NAME}_freqs.gz"
 
  pigrun -x $EXEC_MODE \
          FREQS_DEST=${DEST_DIR}/${NGRAM_NAME}_freqs.gz \
          NGRAM_FILE=$NGRAM_NAME \
-         ARITY=$ARITY \
          ${SCRIPT_DIR}/ngramFrequencies.pig
 
 
