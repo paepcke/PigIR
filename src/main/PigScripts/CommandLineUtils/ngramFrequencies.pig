@@ -43,9 +43,35 @@ ngrams = LOAD '$NGRAM_FILE'
    USING PigStorage(',');
 
 -- Create intermediate result, one tuple for each ngram occurrence count:
-freqGroups = GROUP ngrams BY $0 PARALLEL 5;
+-- 	  freqGroups: {group: int,ngrams: {()}}
+-- From:
+-- 	3,one,two,three
+-- 	2,one,blue,red
+-- 	3,one,yellow,blue
+-- 	1,one,red,pink
+-- 	3,four,five,six
+-- 	2,seven,eight,nine
+-- 	2,six,apples,pairs
+-- 	3,six,pairs,apples
+-- 	3,ten,eleven,thirteen
+-- 	2,fourteen,fifteen,fifteen
 
--- Generate relation of form (freq, freqOfFreq):
+-- (2,{(2,seven,eight,nine),
+--     (2,one,blue,red),
+--     (2,fourteen,fifteen,fifteen),
+--     (2,six,apples,pairs)})
+-- (3,{(3,four,five,six),
+--     (3,one,yellow,blue),
+--     (3,six,pairs,apples),
+--     (3,ten,eleven,thirteen),
+--     (3,one,two,three)})
+-- (1,{(1,one,red,pink)})
+
+freqGroups = GROUP ngrams BY (int)$0 PARALLEL 5;
+
+-- Generate relation of form (freq, freqOfFreq);
+-- get freqOfFreqsOrdered: {freq: int,freqOfFreq: int}
+
 freqOfFreqs = FOREACH freqGroups GENERATE group AS freq:int, COUNT(ngrams) as freqOfFreq:int;
 
 -- Order by frequency:

@@ -3,14 +3,14 @@
 # Script that runs the PigScript smoothNgrams.pig with command line
 # parameters. The script takes two arguments:
 #
-#   1. An ngrams file of format: word,follower,followerCount
+#   1. An ngrams file of format: ngramCount,word1,word2,...
 #   2. A GoodTuring result file of format: frequency,probability
 #
 # If the --limit option is provided, it specifies 'n' for top-n frequency occurrence
 # probability. Included in the output are only ngrams with a follower probabiliy 
 # in the top-n among all probabilities ngrams with the same word, but a different follower.
 #
-# Output: word,follower,probability
+# Output: probability,word1,word2,...
 #
 
 USAGE="Usage: smoothNgrams [{-h | --help}] \n
@@ -90,14 +90,14 @@ then
 	LIMIT=-1
 fi    
 
-if [ $# .gt 2 ] 
+if [ $# -gt 2 ] 
 then
     echo "Too many arguments: $#"
     echo -e $USAGE
     exit -1
 fi      
 
-if [ $# .lt 2 ] 
+if [ $# -lt 2 ] 
 then
     echo "Missing one or both of the script arguments."
     echo -e $USAGE

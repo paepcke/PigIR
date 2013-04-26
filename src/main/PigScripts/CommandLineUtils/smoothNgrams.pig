@@ -25,34 +25,57 @@
       * NGRAM_FILE     	   HDFS location of ngrams
       * FREQS_FILE     	   HDFS location of frequency file
       * LIMIT 	       	   -1 if all output requested, else k of top-k probably for each root.
+
+For testing:
+
+smoothNgrams Datasets/trigramsForMixWithGoodTuring.csv Datasets/goodTuringForMixWithTrigrams.csv
+
 */       
 
 REGISTER $USER_CONTRIB/piggybank.jar;
 REGISTER $PIGIR_HOME/target/pigir.jar;
 REGISTER $USER_CONTRIB/jsoup.jar;
 
-ngrams = LOAD '$NGRAM_FILE'
-   USING PigStorage(',') AS (word:chararray, follower:chararray, followerCount:int);
 
+-- The following file will be AS (ngramCount:int, word1, word2, word3,...).
+-- We'd like to declare the field names and types, but we don't know the ngram arity:
+ngrams = LOAD '$NGRAM_FILE'
+   USING PigStorage(',');
+
+-- Get the Good-Turing smoothed frequency/probability file:
 freqs = LOAD '$FREQS_FILE'
    USING PigStorage(',') AS (freq:int, probability:double);
 
--- Get word,follower,freq,freq,freqOfFreqs
-ngramPlusProbability = JOIN ngrams BY followerCount, freqs BY freq;
+-- Get freq,freqOfFreqs,freq,word1,word2,word3,...
+-- (ngrams.$0 is the ngram count):
+-- Example for result:
+--     (2,0.056,2,ABATE,feels,that)
+--     (2,0.056,2,Teapot,Scandal,He)
+--     (44,3.8E-4,44,Teapot,Tea,in)
+--     (67,3.5E-4,67,Teapot,Tea,Blog)
+--     (82,4.0E-4,82,Teapot,Tea,Fight)
+--     (577,2.5E-4,577,Teapot,Tea,Library)
 
--- Project out the FREQS_FILE's 'freq' column, and the NGRAM_FILE's followerCount
--- to be left with word,follower,probability:
+ngramPlusProbability = JOIN freqs BY freq, ngrams BY $0;
 
-ngramPlusProbsOnly = FOREACH ngramPlusProbability GENERATE word, follower, probability;
+-- Project out the FREQS_FILE's 'freq' column, and the NGRAM_FILE's frequency count
+-- to be left with probability,word1,word2,word3,...:
+
+ngramPlusProbsOnly = FOREACH ngramPlusProbability GENERATE 
+		     	     $1 AS probability:double,
+			     $3 AS rootWord:chararray,
+			     $4..; -- all the remaining words in the ngram
 
 -- Create: 
---    wordGroups: {group: chararray,ngramPlusProbsOnly: {(ngrams::word: chararray,
+-- ****this schema example is out of date (but the code works):
+--    wordGroups: {group: chararray,ngramPlusProbsOnly: {(ngrams::rootWord: chararray,
 --                                                        ngrams::follower: chararray,
 --                                                        freqs::probability: double)}}
 -- Example: (six,{(six,seven,0.056),(six,apples,0.056),(six,pairs,0.1234)})
 --          (one,{(one,brown,2.4E-5),(one,blue,0.056),(one,two,0.1234),(one,red,0.1234),(one,yellow,0.1234)})
+-- $1 is the rootWord of a row's ngram:
 
-wordGroups = GROUP ngramPlusProbsOnly BY word;
+wordGroups = GROUP ngramPlusProbsOnly BY $1;
 
 -- Isolate the bags of tuples (see Example above).
 -- Each bag contains all ngrams with one particular word
