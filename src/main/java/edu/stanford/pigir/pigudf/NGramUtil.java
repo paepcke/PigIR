@@ -15,8 +15,11 @@ package edu.stanford.pigir.pigudf;
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
+ * 
+ * Andreas added a bunch of facilities, including optional removal of duplicates.
  */
 
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -24,8 +27,8 @@ import java.util.Set;
 
 public class NGramUtil {
 
-	static boolean DO_ALL_NGRAMS  = true;
-	static boolean NOT_ALL_NGRAMS = false;
+	public static boolean DO_ALL_NGRAMS  = true;
+	public static boolean NOT_ALL_NGRAMS = false;
 	/**
 	 * This function splits a search query string into a set 
 	 * of non-empty words 
@@ -48,17 +51,20 @@ public class NGramUtil {
 	 * @param ngrams
 	 * @param size
 	 */
-	protected static void makeNGram(String[] words, Set<String> ngrams, int ngramSize) {
+	public static void makeNGram(String[] words, Collection<String> ngrams, int ngramSize) {
 		NGramUtil.makeNGram(words, ngrams, ngramSize, NGramUtil.NOT_ALL_NGRAMS);
 	}
+	
 	/**
-	 * Heavy lifting for ngram computation
+	 * Heavy lifting for ngram computation. Note: If ngrams, the destination of the results,
+	 * is an ArrayList<String>, all ngrams will be available to the caller. If ngrams is 
+	 * instead a Set<String>, then duplicates are removed.
 	 * @param words array of the words in order
 	 * @param ngrams place to put the result, a set
 	 * @param maxN the n of ngrams
 	 * @param doAllNgrams if true, computes ngrams from 1 to n. If false, only computes the ngrams for the given n
 	 */
-	protected static void makeNGram(String[] words, Set<String> ngrams, int maxN, boolean doAllNgrams) {
+	public static void makeNGram(String[] words, Collection<String> ngrams, int maxN, boolean doAllNgrams) {
 		if (maxN == -1)
 			maxN = 2;
 		int stop = words.length - maxN + 1;
