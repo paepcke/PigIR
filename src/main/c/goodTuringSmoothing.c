@@ -81,6 +81,8 @@
  *     o changed maxrows from 200 to 20,000 
  *     o allowed comma as field separator on input
  *     o changed output separator to comma
+ *
+ *     Compilation: gcc goodTuringSmoothing.c -o goodTuringSmoothing -lm
  */
  
  

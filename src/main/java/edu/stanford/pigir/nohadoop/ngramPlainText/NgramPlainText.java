@@ -1,40 +1,58 @@
 /**
- * 
+ * Takes a plain text file, and generates an output file with 
+ * ngrams and their probabilities, smoothed via Good-Turing.
+ * The arity of ngrams maybe be specified.
+ * Example:
+ * 		NgramPlainText ngrammer = new NgramPlainText("src/test/resources/ClueWeb09_English_Sample.warc", 
+ *													 "/tmp/ngramTest.csv", 
+ *													 3); // I.e. trigrams. Use 2 for bigrams, etc.
+ *      produces a file like this:
+ *  	   2.822000e-06,More,people,have
+ *  	   2.822000e-06,to,Sakura,Friend
+ *  	   2.822000e-06,Sailing,Opportunities,WSO
+ *                    ...
+ *                    
+ * You must run the code in the project root directory.
+ * Note that no HTML detagging is done by this module.                          
  */
+
 package edu.stanford.pigir.nohadoop.ngramPlainText;
 
 import static ch.lambdaj.Lambda.by;
 
+import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.io.PrintStream;
 import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.commons.exec.CommandLine;
+import org.apache.commons.exec.DefaultExecutor;
+
 import ch.lambdaj.Lambda;
 import ch.lambdaj.group.GroupItem;
+
+import com.google.common.io.Files;
+
 import edu.stanford.pigir.nohadoop.TokenizeRegExp;
 import edu.stanford.pigir.pigudf.NGramUtil;
 
 /**
- * @author paepcke
+ * Comparator for sorting funky data structures produced
+ * by a group-by capability library. 
  *
  */
 
@@ -54,6 +72,10 @@ class FreqToOccurrenceListComparator implements Comparator<GroupItem<Map<Integer
 	}
 }
 
+/**
+ * Main class
+ *
+ */
 public class NgramPlainText {
 	
 	static boolean REMOVE_DUP_NGRAMS = true;
@@ -61,31 +83,53 @@ public class NgramPlainText {
 
 
 	/**
-	 * @param args
-	 * @throws IOException 
+	 * This constructor provides a version that
+	 * requires a minimal number of parameters. 
+	 * @param plainTextFileName Full path of input text file. 
+	 * @param outfileName Full path of file where the probabilities and ngrams will be deposited 
+	 * @param arity Arity of the ngrams.
+	 * @throws IOException
 	 */
-	
 	public NgramPlainText(String plainTextFileName, String outfileName, int arity) throws IOException {
 		generateNgrams(new File(plainTextFileName), new File(outfileName), arity,  NgramPlainText.KEEP_DUP_NGRAMS);
 	}
 
+	/**
+	 * This constructor provides a version that
+	 * requires a minimal number of parameters. 
+	 * @param plainTextFileName Full path of input text file. 
+	 * @param outfileName Full path of file where the probabilities and ngrams will be deposited 
+	 * @param arity Arity of the ngrams.
+	 * @throws IOException
+	 */
 	public NgramPlainText(File plainTextFile, String outfileName, int arity) throws IOException {
 		generateNgrams(plainTextFile, new File(outfileName), arity, NgramPlainText.KEEP_DUP_NGRAMS);
 	}
 	
+	/**
+	 * This constructor provides a version that
+	 * requires a minimal number of parameters. 
+	 * @param plainTextFileName Full path of input text file. 
+	 * @param outfileName Full path of file where the probabilities and ngrams will be deposited 
+	 * @param arity Arity of the ngrams.
+	 * @throws IOException
+	 */
 	public NgramPlainText(File plainTextFile, File outfileName, int arity) throws IOException {
 		generateNgrams(plainTextFile, outfileName, arity, NgramPlainText.KEEP_DUP_NGRAMS);
 	}
 	
 	/**
 	 * Main initializer.
-	 * @param infile
-	 * @param outfile
-	 * @param arity
-	 * @param removeDups
+	 * @param infile Full path of input text file.
+	 * @param outfile Full path of file where the probabilities and ngrams will be deposited
+	 * @param arity Arity of the ngrams.
+	 * @param removeDups If removeDups is NgramPlainText.REMOVE_DUP_NGRAMS, then each ngram is only represented
+	 *                   once! This duplicate suppression makes the probabilities meaningless. But the
+	 *                   option may be useful if only the ngrams are desired, and the probabilities will
+	 *                   be ignored.
 	 * @throws IOException
 	 */
-	public void generateNgrams(File infile, File resOutfile, int arity, boolean removeDups) throws IOException {
+	public static void generateNgrams(File infile, File resOutfile, int arity, boolean removeDups) throws IOException {
 		if (! infile.canRead()) {
 			throw new IOException(String.format("Input text file '%s' does not exist or cannot be opened.", infile));
 		}
@@ -95,16 +139,32 @@ public class NgramPlainText {
 		} catch (IOException e) {
 			throw new IOException(String.format("Output ngram file '%s' cannot be created: %s", resOutfile, e.getMessage()));
 		}
-		BufferedWriter outStream = new BufferedWriter(new FileWriter(resOutfile));
-		writeNgrams(infile, outStream, arity, removeDups);
-	}
-	
-	
-	public Map<String,Integer> countNgrams(String[] ngrams) {
-		return countNgrams(new ArrayList<String>(Arrays.asList(ngrams)));
-	}
 		
-	public Map<String,Integer> countNgrams(Collection<String> ngrams) {
+		// Generate the ngrams from the input file:
+		Collection<String> ngrams = createNgrams(infile, arity, removeDups);
+
+		// Get ngram-->count mappings:
+		Map<String,Integer> ngramsPlusCounts = NgramPlainText.countNgrams(ngrams);
+		
+		// Get frequency of frequencies:
+		Map<Integer,Integer> freqsOfFreqs = NgramPlainText.getFreqOfFreqs(ngramsPlusCounts);
+		
+		// Apply Good-Turing smoothing to freqOfFreqs:
+		Map<Integer,Float> freqPlusProbability = NgramPlainText.applyGoodTuring(freqsOfFreqs);
+		
+		// Now we have ngram-->count, and we have count-->probability
+		// Need probability,ngram:
+		BufferedWriter outStream = new BufferedWriter(new FileWriter(resOutfile));
+		for (String ngram : ngramsPlusCounts.keySet()) {
+			int ngramCount = ngramsPlusCounts.get(ngram);
+			float ngramCountProbability = freqPlusProbability.get(ngramCount);
+			String tuple = String.format("%e,%s\n", ngramCountProbability, ngram);
+			outStream.write(tuple);
+		}
+		outStream.close();
+	}
+	
+	private static Map<String,Integer> countNgrams(Collection<String> ngrams) {
 		Map<String,Integer> res = new HashMap<String,Integer>(); 
 		for (String ngram : ngrams) {
 				Integer ngramCount = res.get(ngram);
@@ -117,12 +177,12 @@ public class NgramPlainText {
 		return res;
 	}
 	
-	
-	//************* NEXT: integrate smoothing
-	
 	/**
+	 * This method performs a group-by over an ngram-->ngramOccurrenceCount map.
+	 * We need this grouping to compute the number of times each count was observed.
+	 * The feature is provided by lambdaj:
 	 * http://lambdaj.googlecode.com/svn/trunk/html/apidocs/ch/lambdaj/group/Group.html
-	 * @param ngramsPlusFreqs
+	 * @param ngramsPlusFreqs the map from ngram-->thatNgram'sCount
 	 * @return
 	 */
 	private static Map<Integer,Integer> getFreqOfFreqs(Map<String,Integer> ngramsPlusFreqs) {
@@ -150,7 +210,8 @@ public class NgramPlainText {
 			Integer freq = listOfCounts.get(0);
 			freqToFreqOfFreqs.put(freq, listOfCounts.size());
 		}
-		// Need an entry for one occurrence to make Good Turing work.
+		// Need an entry for one occurrence to make Good Turing set
+		// aside some probability mass for unseen ngrams:
 		if (freqToFreqOfFreqs.get(1) == null) {
 			freqToFreqOfFreqs.put(1,1);
 		}
@@ -158,25 +219,72 @@ public class NgramPlainText {
 		return freqToFreqOfFreqs;
 	}
 	
-	private static Map<Integer,Float> applyGoodTuring(Map<Integer,Integer> freqToFreqOfFreqs) throws FileNotFoundException {
-		PrintStream streamToGoodTuring = new PrintStream(new FileOutputStream("bin/goodTuringSmoothing"));
+	/**
+	 * Takes a frequency-->numberOfObservationsOfThisFrequency map.
+	 * Invokes a C function that computes a map count-->probability
+	 * via Good-Turing smoothing:
+	 * @param freqToFreqOfFreqs
+	 * @return map ngramCount-->probabilty
+	 * @throws IOException
+	 */
+	private static Map<Integer,Float> applyGoodTuring(Map<Integer,Integer> freqToFreqOfFreqs) throws IOException {
 		Set<Integer> freqs = freqToFreqOfFreqs.keySet();
 		List<Integer> freqsList = new ArrayList<Integer>();
 		freqsList.addAll(freqs);
 		Collections.sort(freqsList);
+
+		// Write freqToFreqOfFreq to a temp file:
+		File freqOfFreqsFile = File.createTempFile("freqToFreqOfFreqsTmp", ".csv");
+		freqOfFreqsFile.deleteOnExit();
+		FileWriter fileoutput = new FileWriter(freqOfFreqsFile);
+		BufferedWriter buffout = new BufferedWriter(fileoutput);		
 		
-		// Build strings: "freq,freqOfFreq\n" to feed into the 
-		// C binary goodTuringSmoothing:
+		// Do the writing:
 		for (Integer freq : freqsList) {
 			Integer freqOfFreq = freqToFreqOfFreqs.get(freq);
-			String tupleToPass = freq.toString() + "," + freqOfFreq.toString() + "\n";
-			streamToGoodTuring.print(tupleToPass);
+			String tupleToWrite= freq.toString() + "," + freqOfFreq.toString() + "\n";
+			buffout.write(tupleToWrite);
 		}
-		streamToGoodTuring.close();
-		return null; //*******
+		buffout.close();
+		
+		// Get second tmpfile for good turing smoother to write to:
+		File smoothedResultFile = File.createTempFile("smoothedResultTmp", ".csv");
+		smoothedResultFile.deleteOnExit();
+		
+		//String cmdLineStr = "/bin/cat " + freqOfFreqsFile.getAbsolutePath() + " | bin/goodTuringSmoothing > " + smoothedResultFile.getAbsolutePath();
+		String cmdLineStr = "src/main/scripts/runGoodTuring.sh " + freqOfFreqsFile.getAbsolutePath() + " " + smoothedResultFile.getAbsolutePath();
+		CommandLine cmdLine = CommandLine.parse(cmdLineStr);
+		DefaultExecutor executor = new DefaultExecutor();
+		executor.setExitValue(1);
+		@SuppressWarnings("unused")
+		int exitValue = executor.execute(cmdLine);
+		
+		// Read good turing file back in, and make count-->probability Map
+		Map<Integer,Float> countToProbMap = new HashMap<Integer,Float>();
+		Charset charset = Charset.forName("US-ASCII");
+		try (BufferedReader reader = Files.newReader(smoothedResultFile, charset)) {
+			String line = null;
+			while ((line = reader.readLine()) != null) {
+				//System.out.println(line);
+				String[] countAndProb = line.split(",");
+				countToProbMap.put(Integer.valueOf(countAndProb[0]), Float.valueOf(countAndProb[1]));
+			}
+		} catch (IOException x) {
+			System.err.format("IOException: %s%n", x);
+		}
+
+		return countToProbMap;
 	}
 	
-	private void writeNgrams(File infile, BufferedWriter outfileStream, int arity, boolean removeDups) throws IOException {	
+	/**
+	 * Workhorse for chopping text file into ngrams
+	 * @param infile Plain text file.
+	 * @param arity ngram arity
+	 * @param removeDups whether to keep ngram duplicates (the usual case) 
+	 * @return ngrams
+	 * @throws IOException
+	 */
+	private static Collection<String> createNgrams(File infile, int arity, boolean removeDups) throws IOException {	
 		String text = readFile(infile);
 		List<String> tokens = new TokenizeRegExp().tokenize(text);
 		Collection<String> ngrams = null;
@@ -185,14 +293,11 @@ public class NgramPlainText {
 		else
 			ngrams = new HashSet<String>();
 		NGramUtil.makeNGram(tokens.toArray(new String[tokens.size()]), ngrams, arity, NGramUtil.NOT_ALL_NGRAMS);
-		for (String ngram : ngrams) {
-			outfileStream.write(ngram + '\n');
-		}
-		outfileStream.close();
+		return ngrams;
 	}
 	
 	
-	private String readFile(File infile) throws IOException {
+	private static String readFile(File infile) throws IOException {
 	  FileInputStream stream = new FileInputStream(infile);
 	  try {
 	    FileChannel fc = stream.getChannel();
@@ -205,18 +310,35 @@ public class NgramPlainText {
 	  }
 	}	
 	
-	public static void main(String[] args) throws FileNotFoundException {
-		Map<String,Integer> ngramCounts = new HashMap<String,Integer>();
+	// ======================= Main =========================
+	
+	public static void main(String[] args) throws IOException {
+		
+		if (args.length < 3) {
+			System.out.println("Usage: NgramPlainText <infile:String> <outfile:String> <arity:int>");
+			System.exit(1);
+		}
+		
+		new NgramPlainText(args[0], args[1], Integer.valueOf(args[2]));
+		
+		
+	// =====================================   Just for  Testing =================
+		
+/*		Map<String,Integer> ngramCounts = new HashMap<String,Integer>();
 		ngramCounts.put("again,Happy",4); 	
 		ngramCounts.put("here,again",1);  	
 		ngramCounts.put("Happy,days",2);  	
 		ngramCounts.put("are,here",1);		
 		ngramCounts.put("days,are",1);    	
+													   
+		NgramPlainText ngrammer = new NgramPlainText("src/test/resources/ClueWeb09_English_Sample.warc", 
+													 "/home/paepcke/tmp/ngramTest.csv", 
+													 3);
 		
 		Map<Integer,Integer> freqOfFreqs = NgramPlainText.getFreqOfFreqs(ngramCounts);
 		System.out.println(freqOfFreqs);
 		applyGoodTuring(freqOfFreqs);
-/*		for (GroupItem<Map<Integer,List<Integer>>> ngramCountGroup : ngramCountGroups) {
+		for (GroupItem<Map<Integer,List<Integer>>> ngramCountGroup : ngramCountGroups) {
 			@SuppressWarnings("unchecked")
 			List<Integer> listOfCounts = (List<Integer>) ngramCountGroup.get("children");
 			Integer freq = listOfCounts.get(0);
