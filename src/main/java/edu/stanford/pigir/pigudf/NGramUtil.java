@@ -49,10 +49,10 @@ public class NGramUtil {
 	 * ngrams from a set of words
 	 * @param words
 	 * @param ngrams
-	 * @param size
+	 * @param maxArity: how many ngram arities to produce
 	 */
-	public static void makeNGram(String[] words, Collection<String> ngrams, int ngramSize) {
-		NGramUtil.makeNGram(words, ngrams, ngramSize, NGramUtil.NOT_ALL_NGRAMS);
+	public static void makeNGram(String[] words, Collection<String> ngrams, int maxArity) {
+		NGramUtil.makeNGram(words, ngrams, maxArity, NGramUtil.NOT_ALL_NGRAMS);
 	}
 	
 	/**
@@ -61,16 +61,16 @@ public class NGramUtil {
 	 * instead a Set<String>, then duplicates are removed.
 	 * @param words array of the words in order
 	 * @param ngrams place to put the result, a set
-	 * @param maxN the n of ngrams
+	 * @param maxArity the n of ngrams
 	 * @param doAllNgrams if true, computes ngrams from 1 to n. If false, only computes the ngrams for the given n
 	 */
-	public static void makeNGram(String[] words, Collection<String> ngrams, int maxN, boolean doAllNgrams) {
-		if (maxN == -1)
-			maxN = 2;
-		int stop = words.length - maxN + 1;
+	public static void makeNGram(String[] words, Collection<String> ngrams, int maxArity, boolean doAllNgrams) {
+		if (maxArity == -1)
+			maxArity = 2;
+		int stop = words.length - maxArity + 1;
 		for (int i = 0; i < stop; i++) {
 			StringBuilder sb = new StringBuilder();
-			for (int j = 0; j < maxN; j++) {
+			for (int j = 0; j < maxArity; j++) {
 				//sb.append(words[i + j]).append(" ");
 				sb.append(words[i + j]).append(",");
 			}
@@ -78,8 +78,8 @@ public class NGramUtil {
 			ngrams.add(sb.toString());
 		}
 
-		if (doAllNgrams && maxN > 1) {
-			makeNGram(words, ngrams, maxN - 1, doAllNgrams);
+		if (doAllNgrams && maxArity > 1) {
+			makeNGram(words, ngrams, maxArity - 1, doAllNgrams);
 		}
 	}
 
@@ -87,7 +87,7 @@ public class NGramUtil {
 	 * @param args
 	 */
 	public static void main(String[] args) {
-		String content = "This is a nice juicy test";
+		String content = "This is a nice juicy test, a nice test.";
 		String[] words = NGramUtil.splitToWords(content);
 		System.out.println("------------- The Words -----------");		
 		for (String word : words) {
@@ -96,18 +96,24 @@ public class NGramUtil {
 		Set<String> ngrams = new HashSet<String>();
 		int ngramSize = 2;
 		
-		System.out.println("------------- DO_ALL_NGRAMS -----------");		
+		System.out.println("------------- DO_ALL_NGRAMS  Dups Removed -----------");		
 		NGramUtil.makeNGram(words, ngrams, ngramSize, DO_ALL_NGRAMS);
 		System.out.println(ngrams);
 		
-		System.out.println("------------- NOT_ALL_NGRAMS -----------");
+		System.out.println("------------- NOT_ALL_NGRAMS Dups Removed -----------");
 		ngrams = new HashSet<String>();
 		ngramSize = 2;
 		NGramUtil.makeNGram(words, ngrams, ngramSize, NOT_ALL_NGRAMS);
 		System.out.println(ngrams);
 		
-		System.out.println("------------- Trigrams -----------");		
-		ngrams = new HashSet<String>();
+		System.out.println("------------- NOT_ALL_NGRAMS, Dups Not Removed -----------");
+		ngramsNotSet = new ArrayList<String>();
+		ngramSize = 2;
+		NGramUtil.makeNGram(words, ngrams, ngramSize, NOT_ALL_NGRAMS);
+		System.out.println(ngrams);
+
+		System.out.println("------------- Trigrams  Dups Removed -----------");		
+		ngramsNotSet = new ArrayList<String>();
 		ngramSize = 3;
 		NGramUtil.makeNGram(words, ngrams, ngramSize, NOT_ALL_NGRAMS);
 		System.out.println(ngrams);

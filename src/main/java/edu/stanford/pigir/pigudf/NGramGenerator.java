@@ -38,11 +38,11 @@ import org.apache.pig.impl.logicalLayer.FrontendException;
 import org.apache.pig.impl.logicalLayer.schema.Schema;
 
 /**
- * This function divides a search query string into words and extracts
+ * This function divides a string into words and extracts
  * n-grams with up to _ngramSizeLimit length.
- * Example 1: if query = "a real nice query" and _ngramSizeLimit = 2,
+ * Example 1: if input = "a real nice query" and _ngramSizeLimit = 2,
  * the query is split into: a real, real nice, nice query
- * Example 2: if record = (u1, h1, pig hadoop) and _ngramSizeLimit = 2,
+ * Example 2: if input = (u1, h1, pig hadoop) and _ngramSizeLimit = 2,
  * the record is split into: (u1, h1, pig), (u1, h1, hadoop), (u1, h1, pig hadoop)
  */
 public class NGramGenerator extends EvalFunc<DataBag> {
@@ -65,7 +65,7 @@ public class NGramGenerator extends EvalFunc<DataBag> {
             DataBag output = DefaultBagFactory.getInstance().newDefaultBag();
             String query = (String)input.get(0);
             String[] words = NGramUtil.splitToWords(query);
-            Set<String> ngrams = new HashSet<String>();
+            ArrayList<String> ngrams = new ArrayList<String>();
             NGramUtil.makeNGram(words, ngrams, _ngramSizeLimit, NGramUtil.NOT_ALL_NGRAMS);
             for (String ngram : ngrams) {
                 Tuple t = TupleFactory.getInstance().newTuple(1);
