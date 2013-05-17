@@ -19,6 +19,7 @@ package edu.stanford.pigir.pigudf;
  * Andreas added a bunch of facilities, including optional removal of duplicates.
  */
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -107,13 +108,13 @@ public class NGramUtil {
 		System.out.println(ngrams);
 		
 		System.out.println("------------- NOT_ALL_NGRAMS, Dups Not Removed -----------");
-		ngramsNotSet = new ArrayList<String>();
+		ArrayList<String>ngramsNotASet = new ArrayList<String>();
 		ngramSize = 2;
-		NGramUtil.makeNGram(words, ngrams, ngramSize, NOT_ALL_NGRAMS);
+		NGramUtil.makeNGram(words, ngramsNotASet, ngramSize, NOT_ALL_NGRAMS);
 		System.out.println(ngrams);
 
 		System.out.println("------------- Trigrams  Dups Removed -----------");		
-		ngramsNotSet = new ArrayList<String>();
+		ngramsNotASet = new ArrayList<String>();
 		ngramSize = 3;
 		NGramUtil.makeNGram(words, ngrams, ngramSize, NOT_ALL_NGRAMS);
 		System.out.println(ngrams);

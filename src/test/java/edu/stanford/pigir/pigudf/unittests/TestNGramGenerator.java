@@ -12,6 +12,7 @@ import org.apache.pig.data.DefaultDataBag;
 import org.apache.pig.data.SortedDataBag;
 import org.apache.pig.data.Tuple;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import edu.stanford.pigir.pigudf.NGramGenerator;
@@ -152,6 +153,23 @@ public class TestNGramGenerator {
 	}
 
 	@Test
+	public void testBigramsWithDupsNotRemoved() throws IOException {
+		
+		parmLen1.set(0, "This is a juicy test, a juicy test.");
+		DefaultDataBag resBag = makeBag(new Tuple[] {
+				TupleFac.newTuple(new String[] {"juicy,test"}),
+				TupleFac.newTuple(new String[] {"is,a"}),
+				TupleFac.newTuple(new String[] {"This,is"}),
+				TupleFac.newTuple(new String[] {"a,juicy"}),
+				TupleFac.newTuple(new String[] {"test,a"}),
+				TupleFac.newTuple(new String[] {"a,juicy"}),
+				TupleFac.newTuple(new String[] {"juicy,test"}),
+		});
+		assertTrue(compareBags(resBag, (DefaultDataBag) ngramFunc.exec(parmLen1)));
+	}
+
+	
+	@Test
 	public void testTrigrams() throws IOException {
 		parmLen2.set(0, "This is a nice juicy test.");		
 		parmLen2.set(1, 3); // 3: trigrams		
@@ -163,4 +181,20 @@ public class TestNGramGenerator {
 		});
 		assertTrue(compareBags(resBag, (DefaultDataBag) ngramFunc.exec(parmLen2)));
 	}
+
+	public void testTrigramsWithDupsNotRemoved() throws IOException {
+		parmLen2.set(0, "This is a nice juicy test, a juicy test");		
+		parmLen2.set(1, 3); // 3: trigrams		
+		DefaultDataBag resBag = makeBag(new Tuple[] {
+				TupleFac.newTuple(new String[] {"nice,juicy,test"}),
+				TupleFac.newTuple(new String[] {"This,is,a"}),
+				TupleFac.newTuple(new String[] {"is,a,nice"}),
+				TupleFac.newTuple(new String[] {"a,nice,juicy"}),
+				TupleFac.newTuple(new String[] {"juicy,test,a"}),
+				TupleFac.newTuple(new String[] {"test,a,juicy"}),
+				TupleFac.newTuple(new String[] {"a,juicy,test"}),
+		});
+		assertTrue(compareBags(resBag, (DefaultDataBag) ngramFunc.exec(parmLen2)));
+	}
+
 }
