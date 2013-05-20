@@ -12,6 +12,8 @@ import java.util.Map;
 
 import org.junit.Before;
 import org.junit.Test;
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertTrue;
 
 import edu.stanford.pigir.nohadoop.ngramPlainText.NgramPlainText;
 
@@ -34,44 +36,83 @@ public class TestNgramPlainText {
 
 	@Test
 	public void testCountNgrams() throws IOException {
-		int arity = 2;
-		NgramPlainText ngrammer = new NgramPlainText(plainTextTestFile, tmpFile, arity);
+		// int arity = 2;
+		ArrayList<String> input = new ArrayList<String>();
+		input.add("here,here");
+		input.add("are,are");                     
+		input.add("are,are");
+		input.add("again,yes");
+		input.add("here,here");
+		input.add("Happy,days");
+		input.add("yes,yes");
+		input.add("yes,yes");
+		input.add("are,here");
+		input.add("yes,yes");
+		input.add("here,here");
+		input.add("here,here");
+		input.add("days,are");
+		input.add("here,here");
+		input.add("here,again");
+		input.add("yes,yes");
+		input.add("yes,yes");
+		input.add("are,are");
+		input.add("yes,yes");
 		
 		Map<String,Integer> groundTruth = new HashMap<String,Integer>();
-		groundTruth.put("This,is", 1);
-		groundTruth.put("is,a",1);
-		groundTruth.put("a,juicy",2);
-		groundTruth.put("juicy,test",2);
-		groundTruth.put("test,a",1);
+		groundTruth.put("Happy,days", 1);
+		groundTruth.put("days,are", 1);
+		groundTruth.put("are,are", 3);
+		groundTruth.put("are,here", 1);
+		groundTruth.put("here,here", 5);
+		groundTruth.put("here,again", 1);
+		groundTruth.put("again,yes", 1);
+		groundTruth.put("yes,yes", 6);
 		
-		//******* Test private method  assertTrue(compareMaps(groundTruth, ngrammer.countNgrams(ngrams)));
+		Map<String,Integer> result = NgramPlainText.countNgrams(input);
+		assertTrue(compareMaps(groundTruth, result));
 	}
 	
+	/**
+	 * Using src/test/resources/plainTextTestFile.txt, test ngram smoothing from
+	 * text to final frequency-->probability. The text file generates the following
+	 * frequency of frequencies:
+	 * 1,5
+	   3,1
+	   4,1
+	   5,1
+	   6,1
+	   
+	   The final result should be (by goodTuringSmoothing.c):
+	   0,0.2174
+	   1,0.03824
+	   3,0.1013
+	   4,0.1324
+	   5,0.1634
+	   6,0.1944
+
+	 * @throws IOException
+	 */
 	@Test
 	public void testGenerateNgramCountsViaFiles() throws IOException {
 		int arity = 2;
-		Map<String,Integer> groundTruth = new HashMap<String,Integer>();
-		groundTruth.put("again,Happy",1); 	
-		groundTruth.put("here,again",1);  	
-		groundTruth.put("Happy,days",2);  	
-		groundTruth.put("are,here",1);		
-		groundTruth.put("days,are",1);    	
-						
-		// Read input file, and write ngrams to output file:
-		NgramPlainText ngrammer = new NgramPlainText(plainTextTestFile, tmpFile, arity);
-		String[] resultLines = readLines(tmpFile.getAbsolutePath());
-		//for (String line : resultLines)
-		//	System.out.println(line);
-		//******* Test private method Map<String,Integer> ngramCounts = ngrammer.countNgrams(resultLines);
-		//for (String line : ngramCounts.keySet()) {
-		//	System.out.println(line + ":" + ngramCounts.get(line));
-		//}
-		//******* Test private method   assertTrue(compareMaps(groundTruth, ngramCounts));
 		
+		String[] groundTruth = new String[] {"3.824000e-02,again,yes",
+						        			 "1.634000e-01,again,again",                      
+						        			 "1.013000e-01,are,are",
+						        			 "1.944000e-01,yes,yes",
+						        			 "1.324000e-01,here,here",
+						        			 "3.824000e-02,here,again",
+						        			 "3.824000e-02,Happy,days",
+						        			 "3.824000e-02,are,here",
+						        			 "3.824000e-02,days,are"
+		};
+		// Read input file, and write ngram probability to output file:
+		new NgramPlainText(plainTextTestFile, tmpFile, arity);
+		String[] resultLines = readLines(tmpFile.getAbsolutePath());
+		assertArrayEquals("Ngram smoothing for plainTextTestFile failed.", groundTruth, resultLines);
 	}
 	
-//************* NEXT: Integrate smoothing	
-	
+
 	private boolean compareMaps(Map<String,Integer> map1, Map<String,Integer> map2) {
 		if (map1.size() != map2.size())
 			return false;

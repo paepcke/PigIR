@@ -39,9 +39,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.commons.exec.CommandLine;
-import org.apache.commons.exec.DefaultExecutor;
-
 import ch.lambdaj.Lambda;
 import ch.lambdaj.group.GroupItem;
 
@@ -154,7 +151,8 @@ public class NgramPlainText {
 		
 		// Now we have ngram-->count, and we have count-->probability
 		// Need probability,ngram:
-		BufferedWriter outStream = new BufferedWriter(new FileWriter(resOutfile));
+		FileWriter fileWriter = new FileWriter(resOutfile);
+		BufferedWriter outStream = new BufferedWriter(fileWriter);
 		for (String ngram : ngramsPlusCounts.keySet()) {
 			int ngramCount = ngramsPlusCounts.get(ngram);
 			float ngramCountProbability = freqPlusProbability.get(ngramCount);
@@ -164,7 +162,9 @@ public class NgramPlainText {
 		outStream.close();
 	}
 	
-	private static Map<String,Integer> countNgrams(Collection<String> ngrams) {
+	// Declared public to make accessible to unit tests:
+	//private static Map<String,Integer> countNgrams(Collection<String> ngrams) {
+	public static Map<String,Integer> countNgrams(Collection<String> ngrams) {
 		Map<String,Integer> res = new HashMap<String,Integer>(); 
 		for (String ngram : ngrams) {
 				Integer ngramCount = res.get(ngram);
@@ -251,27 +251,59 @@ public class NgramPlainText {
 		File smoothedResultFile = File.createTempFile("smoothedResultTmp", ".csv");
 		smoothedResultFile.deleteOnExit();
 		
-		//String cmdLineStr = "/bin/cat " + freqOfFreqsFile.getAbsolutePath() + " | bin/goodTuringSmoothing > " + smoothedResultFile.getAbsolutePath();
-		String cmdLineStr = "src/main/scripts/runGoodTuring.sh " + freqOfFreqsFile.getAbsolutePath() + " " + smoothedResultFile.getAbsolutePath();
-		CommandLine cmdLine = CommandLine.parse(cmdLineStr);
+		File execFile = new File(System.getProperty("user.dir") + "/src/main/scripts/runGoodTuring.sh");
+		if (!execFile.exists()) {
+			System.out.println("Exec file does not exist: " + execFile.getAbsolutePath());
+		}
+		
+		if (!execFile.canExecute()) {
+			System.out.println("Exec file not executable: " + execFile.getAbsolutePath());
+		}
+		
+		if (!freqOfFreqsFile.exists()) {
+			System.out.println("Input file does not exist: " + freqOfFreqsFile.getAbsolutePath());
+		}
+		if (!smoothedResultFile.exists()) {
+			System.out.println("Output file does not exist: " + smoothedResultFile.getAbsolutePath());
+		}
+		
+		String cmdLineStr = System.getProperty("user.dir") + "/src/main/scripts/runGoodTuring.sh " + freqOfFreqsFile.getAbsolutePath() + " " + smoothedResultFile.getAbsolutePath();
+		Runtime.getRuntime().exec(cmdLineStr);
+		
+/*		CommandLine cmdLine = new CommandLine(cmdLineStr);
+		//CommandLine cmdLine = parser.parse(new Options(), cmdLineArr);
 		DefaultExecutor executor = new DefaultExecutor();
 		executor.setExitValue(1);
 		@SuppressWarnings("unused")
 		int exitValue = executor.execute(cmdLine);
-		
+*/		
 		// Read good turing file back in, and make count-->probability Map
 		Map<Integer,Float> countToProbMap = new HashMap<Integer,Float>();
 		Charset charset = Charset.forName("US-ASCII");
-		try (BufferedReader reader = Files.newReader(smoothedResultFile, charset)) {
+		//****try (BufferedReader reader = Files.newReader(smoothedResultFile, charset)) {
+		BufferedReader reader = null;
+		try {
+			reader = Files.newReader(smoothedResultFile, charset);
 			String line = null;
 			while ((line = reader.readLine()) != null) {
 				//System.out.println(line);
 				String[] countAndProb = line.split(",");
+				if (countAndProb[0].length() == 0) {
+					// Most likely, the Good-Turing algo had too little input,
+					// and the result file has a leading empty line, followed
+					// by "Fewer than 5 input value-pairs":
+					String errorMsg = reader.readLine();
+					throw new IOException(errorMsg);
+				}
 				countToProbMap.put(Integer.valueOf(countAndProb[0]), Float.valueOf(countAndProb[1]));
 			}
 		} catch (IOException x) {
 			System.err.format("IOException: %s%n", x);
+			throw new IOException(x.getMessage());
+		} finally {
+			reader.close();
 		}
+		
 
 		return countToProbMap;
 	}
@@ -324,25 +356,5 @@ public class NgramPlainText {
 		
 	// =====================================   Just for  Testing =================
 		
-/*		Map<String,Integer> ngramCounts = new HashMap<String,Integer>();
-		ngramCounts.put("again,Happy",4); 	
-		ngramCounts.put("here,again",1);  	
-		ngramCounts.put("Happy,days",2);  	
-		ngramCounts.put("are,here",1);		
-		ngramCounts.put("days,are",1);    	
-													   
-		NgramPlainText ngrammer = new NgramPlainText("src/test/resources/ClueWeb09_English_Sample.warc", 
-													 "/home/paepcke/tmp/ngramTest.csv", 
-													 3);
-		
-		Map<Integer,Integer> freqOfFreqs = NgramPlainText.getFreqOfFreqs(ngramCounts);
-		System.out.println(freqOfFreqs);
-		applyGoodTuring(freqOfFreqs);
-		for (GroupItem<Map<Integer,List<Integer>>> ngramCountGroup : ngramCountGroups) {
-			@SuppressWarnings("unchecked")
-			List<Integer> listOfCounts = (List<Integer>) ngramCountGroup.get("children");
-			Integer freq = listOfCounts.get(0);
-			System.out.println(freq + "," + listOfCounts.size());
-		}
-*/	}
+	}
 }
