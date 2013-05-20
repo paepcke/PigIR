@@ -23,6 +23,11 @@ public class TimestampStripper {
 		}
 
 		String[] extensions = new String[] {"txt"};
+		
+		//*************
+		//Collection<File> fileList = FileUtils.listFiles(dirRoot, extensions, true);
+		//*************		
+
 		Iterator<File> fileIter = FileUtils.iterateFiles(dirRoot, extensions, true);
 		
 		while (fileIter.hasNext()) {

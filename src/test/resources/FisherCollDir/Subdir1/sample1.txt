@@ -1,0 +1,14 @@
+# fe_03_00002.sph
+# Transcribed at the LDC
+
+0.82 1.17 B: hello 
+
+1.53 2.15 A: hello 
+
+2.18 3.11 B: hi how are you 
+
+3.41 3.88 A: good 
+
+4.65 6.85 B: where are you calling from 
+
+6.00 7.91 A: i'm calling from pittsburgh pennsylvania 
