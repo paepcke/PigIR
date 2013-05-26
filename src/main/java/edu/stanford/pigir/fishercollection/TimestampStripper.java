@@ -4,17 +4,18 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Iterator;
 import java.util.List;
 
 import org.apache.commons.io.FileUtils;
+
+import edu.stanford.pigir.warc.WarcFromTextFileMaker;
 
 /**
  * @author paepcke
  *
  * Create WARC files from Fisher Collection files. Each Fisher file will be
  * one gzipped WARC file with one record. Its record header will be:
- * 			WARC_RECORD_ID
+  			WARC_RECORD_ID
 			CONTENT_LENGTH
 			WARC_DATE
 			WARC_TYPE
@@ -46,28 +47,19 @@ public class TimestampStripper {
 	}
 	
 	public TimestampStripper(String directoryRoot, String targetDir, int outfileSerialNumStart) throws IOException {
-
-		File dirRoot = new File(directoryRoot);
-		if (! dirRoot.isDirectory() || ! dirRoot.canWrite()) {
-			throw new IOException(String.format("Path '%s' is not an existing, writeable directory.", directoryRoot));
-		}
-
-		String[] extensions = new String[] {"txt"};
 		
-		//*************
-		//Collection<File> fileList = FileUtils.listFiles(dirRoot, extensions, true);
-		//*************		
-
-		Iterator<File> fileIter = FileUtils.iterateFiles(dirRoot, extensions, true);
+		WarcFromTextFileMaker warcMaker = new WarcFromTextFileMaker(directoryRoot);
 		
-		while (fileIter.hasNext()) {
-			File infile = fileIter.next();
+		while (warcMaker.hasNext()) {
+			File infile = warcMaker.next();
 			List<String> allUtterances = FileUtils.readLines(infile);
 			Collection<String> flatFileLines =  stripTimestampsAndFlatten(allUtterances);
 			// Make an output path:
 			String outfileName = infile.getName() + "_" + Integer.toString(outfileSerialNumStart);
 			File outfile = new File(targetDir, outfileName);
-			FileUtils.writeLines(outfile, flatFileLines);
+			Collection<String> warcHeader = warcMaker.makeWarcHeader(infile.getName(), flatFileLines);
+			FileUtils.writeLines(outfile, warcHeader);
+			FileUtils.writeLines(outfile, flatFileLines, true);
 		}
 	}
 	
@@ -85,7 +77,7 @@ public class TimestampStripper {
 			char thisSpeaker = timestampPlusUtterance[0].charAt(timestampPlusUtterance[0].length() - 1); 
 			if (thisSpeaker != currSpeaker) {
 				if (currSentence.length() > 0) {
-					result.add(currSentence);
+					result.add(currSentence.trim());
 					currSpeaker = thisSpeaker;
 					currSentence = "";
 				} else {
@@ -97,10 +89,13 @@ public class TimestampStripper {
 		}
 		// Capture the closing sentence:
 		if (currSentence.length() != 0) {
-			result.add(currSentence);
+			result.add(currSentence.trim());
 		}
 		return result;
 	}
+	
+	
+	
 	
 	/**
 	 * @param args

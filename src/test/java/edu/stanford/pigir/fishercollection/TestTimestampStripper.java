@@ -1,7 +1,11 @@
 package edu.stanford.pigir.fishercollection;
 
+import static org.junit.Assert.assertTrue;
+
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 
@@ -16,7 +20,9 @@ public class TestTimestampStripper {
 	String testOutDir = "/tmp/FisherCol";
 	File tmpOutFile = null;
 	
-	
+	ArrayList<String> res1 = new ArrayList<String>();
+	ArrayList<String> res2 = new ArrayList<String>();
+	ArrayList<List<String>> removalResults = new ArrayList<List<String>>(); 
 			
 	@Before
 	public void setUp() throws Exception {
@@ -32,6 +38,32 @@ public class TestTimestampStripper {
 				throw new IOException("Could not create temp directory '" + testOutDir + "' for test output.");
 			}
 		}
+	
+		res1.add("WARC/1.0, WARC_Type: resource");
+		res1.add("WARC-Date: 2013-05-25T18:17Z");
+		res1.add("WARC_RECORD_ID: file:///sample1.txt");
+		res1.add("Content-Type: application/warc");
+		res1.add("Content-Length: 100");
+		res1.add("");
+		res1.add("hello");
+		res1.add("hello");
+		res1.add("hi how are you");
+		res1.add("good");
+		res1.add("where are you calling from");
+		res1.add("i'm calling from pittsburgh pennsylvania");
+		
+		res1.add("WARC/1.0");
+		res1.add("WARC_Type: resource");
+		res1.add("WARC-Date: 2013-05-25T18:17Z");
+		res1.add("WARC_RECORD_ID: file:///sample2.txt");
+		res1.add("Content-Type: application/warc");
+		res1.add("Content-Length: 72");
+		res1.add("");
+		res1.add("i think it was  gossiping");
+		res1.add("gossiping  (( mm ))  probably smoking, smoking");
+		
+		removalResults.add(res1);
+		removalResults.add(res2);
 	}
 
 	@Test
@@ -39,11 +71,14 @@ public class TestTimestampStripper {
 		new TimestampStripper(testDir, testOutDir);
 		File outDirFile = new File(testOutDir);
 		Iterator<File> newOutFiles = FileUtils.iterateFiles(outDirFile, CanReadFileFilter.CAN_READ, null); 
-		while (newOutFiles.hasNext()) {
+		for (int i=0; i<2; i++) {
 			File nextResFile = newOutFiles.next();
-			System.out.println("Result file " + nextResFile.getAbsolutePath() + ":");
 			List<String> resultLines = FileUtils.readLines(nextResFile);
-			System.out.println(resultLines);
+			
+			assertTrue(Arrays.equals(resultLines.toArray(),removalResults.get(i).toArray()));
+			//System.out.println("Result file " + nextResFile.getAbsolutePath() + ":");
+			//System.out.println(resultLines);
+			
 		}
 	}
 }
