@@ -69,7 +69,7 @@ public class WarcFromTextFileMaker {
 		res.add("WARC/1.0");
 		res.add("WARC-Type: resource");
 		res.add("WARC-Date: " + df.format(new Date()));
-		res.add("WARC-RECORD_ID: file:///" + originResourceFile);
+		res.add("WARC-RECORD-ID: file:///" + originResourceFile);
 		res.add("Content-Type: application/warc");
 		
 		// Compute total content length, with single-char newlines,
