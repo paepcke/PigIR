@@ -256,13 +256,23 @@ public class FisherCollectionProcessor {
 	 */
 	public static void main(String[] args) throws IOException {
 		
-		final String usage = "Usage: java -jar pigir.jar edu.stanford.pigir.fishercollection.FisherCollectionProcessor dirRoot targetDir"; 
+		final String usage = "Usage: java -jar src/main/resources/fisherCollectionProcessor.jar edu.stanford.pigir.fishercollection.FisherCollectionProcessor dirRoot targetDir"; 
 		if (args.length != 2) {
-			System.out.println(usage);
+			System.out.println("Number of arguments passed in is " + args.length + ". Should be 2:\n" + usage);
 			System.exit(1);
 		}
 		String directoryRoot = args[0];
 		String targetDir     = args[1];
+		File dirRootFile 	 = new File(directoryRoot);
+		File targetDirFile   = new File(targetDir);
+		if (! (dirRootFile.isDirectory() && dirRootFile.canRead())) {
+			System.out.println("Argument " + directoryRoot + " is not a readable, existing directory.\n" + usage);
+			System.exit(1);
+		}
+		if (! (targetDirFile.isDirectory() && targetDirFile.canRead())) {
+			System.out.println("Argument " + targetDir + " is not a readable, existing directory.\n" + usage);
+			System.exit(1);
+		}
 		new FisherCollectionProcessor(directoryRoot, targetDir);
 	}
 }
