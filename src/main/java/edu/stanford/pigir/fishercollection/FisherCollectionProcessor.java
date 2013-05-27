@@ -257,12 +257,19 @@ public class FisherCollectionProcessor {
 	public static void main(String[] args) throws IOException {
 		
 		final String usage = "Usage: java -jar src/main/resources/fisherCollectionProcessor.jar edu.stanford.pigir.fishercollection.FisherCollectionProcessor dirRoot targetDir"; 
-		if (args.length != 2) {
-			System.out.println("Number of arguments passed in is " + args.length + ". Should be 2:\n" + usage);
+
+		// If running in Eclipse, passing args into main via run/debug setup,
+		// remember that first arg needs to be the name of the script:
+		// "edu.stanford.pigir.fishercollection.FisherCollectionProcessor"
+		
+		if (args.length != 3) {
+			System.out.println("Number of arguments passed in is " + args.length + ". Should be 2 (plus the shell's hidden arg[0]=script name):\n" + usage);
 			System.exit(1);
 		}
-		String directoryRoot = args[0];
-		String targetDir     = args[1];
+		
+		String directoryRoot = args[1];
+		String targetDir     = args[2];
+		
 		File dirRootFile 	 = new File(directoryRoot);
 		File targetDirFile   = new File(targetDir);
 		if (! (dirRootFile.isDirectory() && dirRootFile.canRead())) {
