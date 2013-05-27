@@ -133,7 +133,7 @@ public class StripHTML extends EvalFunc<Tuple> {
 
 	    Document doc = Jsoup.parse( webPage );
 	    doc.outputSettings().charset("UTF-8");
-	    String htmlText = Jsoup.clean( doc.body().html(), Whitelist.simpleText() );
+	    String htmlText = Jsoup.clean( doc.body().html(), Whitelist.none() );
 	    htmlText = StringEscapeUtils.unescapeHtml(htmlText);
 	    return htmlText;		
 		
