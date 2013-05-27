@@ -67,9 +67,9 @@ public class WarcFromTextFileMaker {
 	public Collection<String> makeWarcHeader(String originResourceFile, Collection<String> contentLines) {
 		ArrayList<String> res = new ArrayList<String>();
 		res.add("WARC/1.0");
-		res.add("WARC_Type: resource");
+		res.add("WARC-Type: resource");
 		res.add("WARC-Date: " + df.format(new Date()));
-		res.add("WARC_RECORD_ID: file:///" + originResourceFile);
+		res.add("WARC-RECORD_ID: file:///" + originResourceFile);
 		res.add("Content-Type: application/warc");
 		
 		// Compute total content length, with single-char newlines,

@@ -18,10 +18,10 @@ import edu.stanford.pigir.warc.WarcFromTextFileMaker;
  *
  * Create WARC files from Fisher Collection files. Each Fisher file will be
  * one gzipped WARC file with one record. Its record header will be:
-  			WARC_RECORD_ID
-			CONTENT_LENGTH
-			WARC_DATE
-			WARC_TYPE
+  			WARC-RECORD-ID
+			CONTENT-LENGTH
+			WARC-DATE
+			WARC-TYPE
 			
  * Fisher files look like this:
 		26.62 28.05 A: i think it was 
