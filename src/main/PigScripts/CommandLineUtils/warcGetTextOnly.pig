@@ -1,6 +1,6 @@
 -- Input WARC file, and pull out content from .txt and .html records only
 
--- Invoke with: pig -param infile=<pathRelToUserDir> -param outfile=<outfileRelToUserDir>
+-- Invoke with: pig -param infile=<pathRelToUserDir> -param outfile=<outfileRelToUserDir> warcGetTextOnly.pig
 
 REGISTER /dfs/rulk/0/paepcke/EclipseWorkspaces/PigIR/target/pigir.jar;
 
