@@ -25,7 +25,7 @@ public class TextualHTMLLinksRemover {
 	}
 	
 	public static void main(String[] args) throws IOException {
-		final String usage = "Usage: java -jar linkRemover.jar edu.stanford.pigir.TextualHTMLLinksRemover <inFilePath> <outFilePath>";
+		final String usage = "Usage: java -jar textualHTMLLinksRemover.jar edu.stanford.pigir.TextualHTMLLinksRemover <inFilePath> <outFilePath>";
 		if (args.length != 3) {
 			System.out.println(usage);
 			System.exit(1);
