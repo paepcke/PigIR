@@ -462,9 +462,24 @@ public final class Common {
 	  throw new IOException("No matching file name found in " + dir + " that starts with " + fileNameRoot + ", and ends with " + fileNameExt);
 	}
 	
+	/*-----------------------------------------------------
+	| removeLinks 
+	------------------------*/
 	
-	
-	
+	/**
+	 * Examples
+	 *   	 "http://infolab" returns empty str
+	 *  	 "https://infolab" returns empty str
+	 *  	 "This is https://infolab a link." returns This is a link."
+	 *  	 "http://infolab trailer." returns trailer.
+     *
+	 * @param inStr String with embedded HTTP links, but textual, not as tags.
+	 * @return Text with http and https URLs removed.
+	 */
+	public static String removeLinks(String inStr) {
+		String newStr = inStr.replaceAll("\\b(http://|https://)[^\\s]*\\b", "");
+		return newStr;
+	}
 	
 	// ---------------------------------   Support Classes ---------------------------
 	
