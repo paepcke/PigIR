@@ -8,7 +8,6 @@ import java.net.InetAddress;
 import java.net.JarURLConnection;
 import java.net.Socket;
 import java.net.URL;
-import java.net.URLClassLoader;
 import java.net.UnknownHostException;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
@@ -136,19 +135,31 @@ public final class Common {
 	| fileViaClasspath() 
 	------------------------*/
 	
+	/**
+	 * Given a resource that is in the system classpath, return a File
+	 * that contains the full pathname. Example1:
+	 * 
+	 * 		Common.fileViaClasspath("edu/stanford/pigir/Common.class")
+	 * 
+	 * returns the full path to this Common class, which is
+	 * <mavenRootDir>/target/classes/edu/stanford/pigir/Common.class.
+	 * Example2:
+	 * 
+	 * 		Common.fileViaClasspath("warcStripHTML.pig");
+	 * 
+	 * returns the path to <mavenRootDir>/target/classes/warcStripHTML.pig
+	 * Note that the resource path mirrors the package hierarchy, you
+	 * use '/' in the parameter string.
+	 * 
+	 * @param fileBaseName is the package path
+	 * @return a File object for the found resource, or null if resource not found.
+	 * @throws IOException
+	 */
 	public static File fileViaClasspath(String fileBaseName) throws IOException {
-		//URL url = relatedObj.getClass().getClassLoader().getResource(fileBaseName);
-		//URL url = Common.class.getClassLoader().getResource(fileBaseName);
-		
-/*		ClassLoader cl = ClassLoader.getSystemClassLoader();
-		URL[] urls = ((URLClassLoader)cl).getURLs();
-        for(URL url: urls){
-        	System.out.println(url.getFile());
-        }		
-		return null;
-*/		
 		
 		URL url = ClassLoader.getSystemClassLoader().getResource(fileBaseName);
+		if (url == null)
+			return null;
 		String fullFilePath;
 		if (url.getProtocol().equals("file")) {
 			fullFilePath = url.getFile();        

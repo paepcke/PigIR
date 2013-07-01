@@ -1,5 +1,7 @@
 package edu.stanford.pigir;
 
+import static org.junit.Assert.*;
+
 import java.io.File;
 import java.io.IOException;
 
@@ -9,13 +11,9 @@ public class TestCommon {
 
 	@Test
 	public void testFileViaClassPath() throws IOException {
-		//File file = Common.fileViaClasspath(this, "/edu/stanford/pigir/Common.java");
-		//File file = Common.fileViaClasspath(this, "/edu/stanford/pigir/Common");
 		File file = Common.fileViaClasspath("edu/stanford/pigir/Common.class");
-		//File file = Common.fileViaClasspath("Common.class");
-		//File file = Common.fileViaClasspath(this, "/Common.java");
-		//File file = Common.fileViaClasspath(this, "Common");
-		System.out.println(file.getAbsolutePath());
+		assertTrue(file.getAbsolutePath().endsWith("target/classes/edu/stanford/pigir/Common.class"));
+		file = Common.fileViaClasspath("warcStripHTML.pig");
+		assertTrue(file.getAbsolutePath().endsWith("target/classes/warcStripHTML.pig"));
 	}
-
 }
