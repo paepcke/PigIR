@@ -119,7 +119,7 @@ pigrun -x $EXEC_MODE \
        WARC_FILE=$WARC_NAME \
        WARC_FIELD=$FIELD_NAME \
        REGEX=$REGEX \
-       ${SCRIPT_DIR}/warcFilter.pig
+       ${SCRIPT_DIR}/Pig/warcFilter.pig
 
 exit 0
 

@@ -131,6 +131,6 @@ CRAWL_SOURCE=${CRAWL_NAME}:${NUM_PAGES}:${START_SITE}:${END_SITE}
 pigrun -x $EXEC_MODE \
         WORD_COUNT_DEST=${DEST_DIR}/${CRAWL_NAME}_wordCount.cnt \
         CRAWL_SOURCE=$CRAWL_SOURCE \
-        ${SCRIPT_DIR}/webBaseWordCount.pig
+        ${SCRIPT_DIR}/Pig/webBaseWordCount.pig
 
 exit 0

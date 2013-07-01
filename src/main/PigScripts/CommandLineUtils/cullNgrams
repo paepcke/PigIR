@@ -113,6 +113,6 @@ Output file: ${DEST_DIR}/${NGRAM_NAME}_culled.gz"
          WORD_LEN_MAX=${WORD_LEN_MAX} \
          CULLED_DEST=${DEST_DIR}/${NGRAM_NAME}_culled.gz \
          NGRAM_FILE=$NGRAM_NAME \
-         ${SCRIPT_DIR}/cullNgrams.pig
+         ${SCRIPT_DIR}/Pig/cullNgrams.pig
 
 exit 0

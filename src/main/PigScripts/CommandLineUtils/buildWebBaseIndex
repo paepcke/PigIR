@@ -141,7 +141,7 @@ pigrun -x $EXEC_MODE \
         INDEX_DEST=${DEST_DIR}/${CRAWL_NAME}_index.idx \
         TMP_INDEX_DEST=$TMP_INDEX_PATH \
         CRAWL_SOURCE=$CRAWL_SOURCE \
-        ${SCRIPT_DIR}/buildWebBaseIndex.pig
+        ${SCRIPT_DIR}/Pig/buildWebBaseIndex.pig
 
 EXISTENCE=`hadoop fs -stat $TMP_INDEX_PATH 2> /dev/null`
 if [ -n "$EXISTENCE" ]

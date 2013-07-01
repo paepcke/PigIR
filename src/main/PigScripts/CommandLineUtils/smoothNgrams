@@ -143,7 +143,7 @@ pigrun -x $EXEC_MODE \
        NGRAM_FILE=$NGRAM_PATH \
        FREQS_FILE=$FREQ_DISTRIB_PATH \
        LIMIT=$LIMIT \
-       ${SCRIPT_DIR}/smoothNgrams.pig
+       ${SCRIPT_DIR}/Pig/smoothNgrams.pig
 
 exit 0
 

@@ -72,6 +72,6 @@ Input file : $WARC_NAME"
 
  pigrun -x $EXEC_MODE \
          WARC_FILE=$WARC_NAME \
-         ${SCRIPT_DIR}/warcRecordCount.pig
+         ${SCRIPT_DIR}/Pig/warcRecordCount.pig
 
 exit 0

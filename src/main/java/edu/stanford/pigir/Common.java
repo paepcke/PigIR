@@ -5,7 +5,10 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.InetAddress;
+import java.net.JarURLConnection;
 import java.net.Socket;
+import java.net.URL;
+import java.net.URLClassLoader;
 import java.net.UnknownHostException;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
@@ -127,6 +130,36 @@ public final class Common {
 			if (tmpDir == null || tmpDir.isEmpty())
 				tmpDir = "/tmp/" + userName;
 			return File.createTempFile(userName, "tmp", new File(tmpDir));
+	}
+
+	/*-----------------------------------------------------
+	| fileViaClasspath() 
+	------------------------*/
+	
+	public static File fileViaClasspath(String fileBaseName) throws IOException {
+		//URL url = relatedObj.getClass().getClassLoader().getResource(fileBaseName);
+		//URL url = Common.class.getClassLoader().getResource(fileBaseName);
+		
+/*		ClassLoader cl = ClassLoader.getSystemClassLoader();
+		URL[] urls = ((URLClassLoader)cl).getURLs();
+        for(URL url: urls){
+        	System.out.println(url.getFile());
+        }		
+		return null;
+*/		
+		
+		URL url = ClassLoader.getSystemClassLoader().getResource(fileBaseName);
+		String fullFilePath;
+		if (url.getProtocol().equals("file")) {
+			fullFilePath = url.getFile();        
+		} else if (url.getProtocol().equals("jar")) {
+			JarURLConnection jarUrl = (JarURLConnection) url.openConnection();
+			fullFilePath = jarUrl.getJarFile().getName();            
+		} else {
+			throw new IllegalArgumentException("Not a file");
+		}
+		File file = new File(fullFilePath);
+		return file;
 	}
 	
 	/*-----------------------------------------------------

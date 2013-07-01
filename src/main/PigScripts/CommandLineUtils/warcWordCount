@@ -127,7 +127,7 @@ Output file: ${DEST_DIR}/${WARC_NAME}_wordCount.cnt"
 pigrun -x $EXEC_MODE \
         WORD_COUNT_DEST=${DEST_DIR}/${WARC_NAME}_wordCount.cnt \
         WARC_FILE=$WARC_NAME \
-        ${SCRIPT_DIR}/warcWordCount.pig
+        ${SCRIPT_DIR}/Pig/warcWordCount.pig
 
 exit 0
 

@@ -9,6 +9,18 @@
   <url>http://maven.apache.org</url>
 
   <build>
+
+  <resources>
+    <resource>
+      <!-- The default resource dir (for which I wouldn't need <resources>): -->
+      <directory>src/main/resources</directory>
+    </resource>
+    <resource>
+      <!-- The Pig scripts that need to be available to other projects: -->
+      <directory>src/main/PigScripts/CommandLineUtils/Pig/</directory>
+    </resource>
+  </resources>
+
     <plugins>
       <plugin>
 	<groupId>org.apache.maven.plugins</groupId>

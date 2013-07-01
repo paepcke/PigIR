@@ -127,7 +127,7 @@ pigrun -x $EXEC_MODE \
        DEST_MAIN=${DEST_DIR}/${WARC_NAME}_main.gz \
        WARC_FILE=$WARC_NAME \
        PERCENTAGE=$PERCENTAGE \
-       ${SCRIPT_DIR}/warcSetAside.pig
+       ${SCRIPT_DIR}/Pig/warcSetAside.pig
 
 exit 0
 

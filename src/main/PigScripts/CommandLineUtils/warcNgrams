@@ -155,7 +155,7 @@ pigrun -x $EXEC_MODE \
        NGRAM_DEST=${DEST_DIR}/${WARC_NAME}_ngrams.csv.gz \
        ARITY=$ARITY \
        WARC_FILE=$WARC_NAME \
-       ${SCRIPT_DIR}/warcNgrams.pig
+       ${SCRIPT_DIR}/Pig/warcNgrams.pig
 
 exit 0
 

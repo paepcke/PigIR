@@ -18,7 +18,8 @@ class TestWebBaseLoad {
 	public TestWebBaseLoad() {
 		try {
 			props.setProperty("pig.usenewlogicalplan", "false");
-			pserver = new PigServer(ExecType.MAPREDUCE, props);
+			//pserver = new PigServer(ExecType.MAPREDUCE, props);
+			pserver = new PigServer(ExecType.LOCAL, props);
 		} catch (ExecException e) {
 			e.printStackTrace();
 		}
@@ -42,16 +43,27 @@ class TestWebBaseLoad {
 					"docs = LOAD '04-2009:5' " +
 					"		USING edu.stanford.pigir.webbase.WebBaseLoader() " +
 					"       AS (url:chararray, date:chararray, pageSize:int, position:int, docidInCrawl:int, httpHeader:chararray, content:chararray);"
-			);
+					);
+			pserver.registerQuery(
+					"stripped = FOREACH docs {" +
+   	                      "stripped = edu.stanford.pigir.pigudf.StripHTML(content); " +
+		                  "GENERATE " +
+		                  "stripped.$1, stripped.$0;" +
+		                  "}"
+					);
+			
 			//pserver.registerQuery("docsCulled = FOREACH docs GENERATE contentLength,date;");
 			//pserver.registerQuery("docsCulled = FOREACH docs GENERATE contentLength,content;");
-			Common.print(pserver, "docs");
+			//Common.print(pserver, "docs");
+			Common.print(pserver, "stripped");
 			//Common.print(pserver, "docsCulled");
 			pserver.dumpSchema("docs");
 			//pserver.dumpSchema("docsCulled");
 			
 		} catch (Exception e) {
 			e.printStackTrace();
+		} finally {
+			pserver.shutdown();
 		}
 	}
 

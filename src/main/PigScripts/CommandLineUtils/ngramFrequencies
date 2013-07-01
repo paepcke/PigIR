@@ -97,7 +97,7 @@ Output file: ${DEST_DIR}/${NGRAM_NAME}_freqs.gz"
  pigrun -x $EXEC_MODE \
          FREQS_DEST=${DEST_DIR}/${NGRAM_NAME}_freqs.gz \
          NGRAM_FILE=$NGRAM_NAME \
-         ${SCRIPT_DIR}/ngramFrequencies.pig
+         ${SCRIPT_DIR}/Pig/ngramFrequencies.pig
 
 
 echo "NOTE: If you use GoodTuring as implemented in http://www.grsampson.net/D_SGT.c, not having first entry be "1 x", where x may not be 0 will not move probaility mass to unseen ngrams. Probably makes little difference for large ngram files."
