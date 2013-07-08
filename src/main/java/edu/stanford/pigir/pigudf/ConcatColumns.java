@@ -1,14 +1,18 @@
 package edu.stanford.pigir.pigudf;
 
 import java.io.IOException;
+import java.security.InvalidParameterException;
 
 import org.apache.pig.EvalFunc;
-import org.apache.pig.data.BinSedesTuple;
+import org.apache.pig.data.DefaultTuple;
 import org.apache.pig.data.Tuple;
 import org.apache.pig.impl.logicalLayer.schema.Schema;
 
 public class ConcatColumns  extends EvalFunc<String> {
 	
+	public static final int SLICE_SPEC_POS = 0;
+	public static final int CONCAT_SEPARATOR_POS = 1;
+	public static final int TUPLE_TO_FUSE_POS = 2;
 	
 	@Override
 	public String exec(Tuple input) throws IOException {
@@ -17,9 +21,14 @@ public class ConcatColumns  extends EvalFunc<String> {
 			if (input == null || input.size() < 3) 
 				return null;
 
-			String sliceDecl = (String) input.get(0);
-			String concatSeparator = (String) input.get(1);
-			BinSedesTuple tupleToFuse = (BinSedesTuple) input.get(2);
+			String sliceDecl = (String) input.get(SLICE_SPEC_POS);
+			String concatSeparator = (String) input.get(CONCAT_SEPARATOR_POS);
+			if (concatSeparator == null)
+				concatSeparator = "";
+			DefaultTuple tupleToFuse = (DefaultTuple) input.get(TUPLE_TO_FUSE_POS);
+			
+			if (tupleToFuse == null)
+				return null;
 			
 			if (tupleToFuse.size() == 0)
 				return "";
@@ -28,39 +37,57 @@ public class ConcatColumns  extends EvalFunc<String> {
 			
 			int start;
 			int end;
+			
+			// For slice def of ":", startEnd will be empty:
+			if (startEnd.length == 0) {
+				startEnd = new String[2];
+				startEnd[0] = "0";
+				startEnd[1] = ((Integer)tupleToFuse.size()).toString();
+			} else if (startEnd.length == 1) {
+				// Spec was "i:". For this input, split leads to single-field array [i], where i is start:
+					String theStartStr = startEnd[0];
+					startEnd = new String[2];
+					startEnd[0] = theStartStr;
+					startEnd[1] = ((Integer)tupleToFuse.size()).toString();
+			}				
+				
 			if (startEnd[0].length() == 0)
 				start = 0;
 			else
-				start = Integer.getInteger(startEnd[0]);
-			
-			if (startEnd[1].length() == 0)
-				end = input.size();
-			else 			
-				end   = Integer.getInteger(startEnd[1]);			
+				start = Integer.valueOf(startEnd[0]);
+			end = Integer.valueOf(startEnd[1]);
 			
 			// Now have [start,end]. Handle negative specs
 			// has working from the end of the tuple:
 			if (start < 0)
-				start = input.size() + start;
+				start = tupleToFuse.size() + start;
 			if (end < 0)
-				end = input.size() + end;
+				end = tupleToFuse.size() + end;
+			
+			if (end > tupleToFuse.size())
+				// Be tolerant: Treat end > tuple size as
+				// "get all from start to end of tuple):
+				end = tupleToFuse.size();
 			
 			if (start > end)
-				throw new IOException("In FuseColumns, slice spec start must be <= end.");
+				throw new InvalidParameterException("In FuseColumns, slice spec start must be <= end.");
 			
 			if (start == end)
 				return (String) tupleToFuse.get(start);
 			
-			if (start > input.size() - 1 )
-				throw new IOException("In FuseColumns, slice spec start must be < number of fields.");
+			if (start > tupleToFuse.size() - 1 )
+				throw new InvalidParameterException("In FuseColumns, slice spec start must be < number of fields.");
 				
 			// Finally, all seems kosher:
 			String result = "";
 			for (int indx=start; indx<end; indx++) {
 				result += tupleToFuse.get(indx) + concatSeparator;
 			}
-			
-			return result.substring(0,-1);
+			// Snip off the trailing concatSeparator, if it's not empty:
+			if (concatSeparator.length() == 0)
+				return result.substring(0,result.length());
+			else
+				return result.substring(0,result.length() - 1);
 			
 		} catch (Exception e) {
 			throw new IOException("Exception ConcatColumns().", e);
