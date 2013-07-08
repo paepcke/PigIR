@@ -8,12 +8,42 @@ import org.apache.pig.data.DefaultTuple;
 import org.apache.pig.data.Tuple;
 import org.apache.pig.impl.logicalLayer.schema.Schema;
 
+/**
+ * @author paepcke
+ * 
+ * Pig UDF to 'fuse' multiple (String) columns of a tuple into 
+ * a single String. Callers may specify the desired slice, using
+ * a Pythonic array slice syntax. Callers may also provide a 
+ * concatenation separator. Syntax:
+ * 
+ *      ConcatColumns(<sliceSpecStr>, {separatorStr | null}, <tuple>)
+ *      
+ * Examples:
+ *    t = ("foo", "bar", 'fum')
+ *    ConcatColumns('1:2', '', t)  ==> "bar"
+ *    ConcatColumns('0:2', '', t)  ==> "foobar"
+ *    ConcatColumns(':2', '', t)   ==> "foobar"
+ *    ConcatColumns('1:', '', t)   ==> "barfum"
+ *    ConcatColumns('0:-1', '', t)   ==> "foobar"
+ *    ConcatColumns('2:2', '', t)   ==> "fum"
+ *
+ *	  ConcatColumns('0:-1', '|', t)   ==> "foo|bar"
+ */
 public class ConcatColumns  extends EvalFunc<String> {
 	
 	public static final int SLICE_SPEC_POS = 0;
 	public static final int CONCAT_SEPARATOR_POS = 1;
 	public static final int TUPLE_TO_FUSE_POS = 2;
 	
+	/* (non-Javadoc)
+	 * @see org.apache.pig.EvalFunc#exec(org.apache.pig.data.Tuple)
+	 * Expected input tuple: (sliceDefStr, {concatSeparatorStr | null}, (tuple-to-fuse-in))
+	 * ConcatSeparator of null, or empty string concats the addressed columns without
+	 * a filler.
+	 * 
+	 * If tuple-to-fuse-in is null, return null.
+	 * If tuple-to-fuse-in is empty, return empty string
+	 */
 	@Override
 	public String exec(Tuple input) throws IOException {
 
@@ -21,6 +51,7 @@ public class ConcatColumns  extends EvalFunc<String> {
 			if (input == null || input.size() < 3) 
 				return null;
 
+			// Check args:
 			String sliceDecl = (String) input.get(SLICE_SPEC_POS);
 			String concatSeparator = (String) input.get(CONCAT_SEPARATOR_POS);
 			if (concatSeparator == null)
@@ -35,6 +66,8 @@ public class ConcatColumns  extends EvalFunc<String> {
 			
 			String[] startEnd = sliceDecl.split(":");
 			
+
+			// Parse and error check the slice declaration:
 			int start;
 			int end;
 			
@@ -57,8 +90,7 @@ public class ConcatColumns  extends EvalFunc<String> {
 				start = Integer.valueOf(startEnd[0]);
 			end = Integer.valueOf(startEnd[1]);
 			
-			// Now have [start,end]. Handle negative specs
-			// has working from the end of the tuple:
+			// Now have start and end as integers. Handle negative specs:
 			if (start < 0)
 				start = tupleToFuse.size() + start;
 			if (end < 0)
