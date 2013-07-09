@@ -1,0 +1,102 @@
+#!/bin/bash
+
+# Script that runs the PigScript concatNgrams.pig with
+# command line paramters. Result is echoed to the console.
+
+USAGE="Usage: concatNgrams [{-h | --help}] \n
+                           \t\t\t [{-x | --execmode] {local | mapreduce}] \n
+                           \t\t\t <tupleSliceSpec> \n
+                           \t\t\t <concatSeparator> \n
+                           \t\t\t <ngramFilePathOrDirOnHDFS> \n
+    \tExample: concatNgrams '1:4' '|' Dataset/dmozNgrams.csv.gz \n
+    \tExample: concatNgrams '1:' '' Dataset/dmozNgrams.csv.gz \n"
+
+# Defaults:
+EXEC_MODE=mapreduce
+
+SHORTOPTS="hx:"
+LONGOPTS="help,execmode:"
+
+ARGS=`getopt -s bash --options=$SHORTOPTS  \
+  --longoptions=$LONGOPTS --name=$PROGNAME -- "$@"`
+
+eval set -- "$ARGS"
+
+while true; do
+   case $1 in
+      -h|--help)
+         echo -e $USAGE
+         exit 0
+         ;;
+      -x|--execmode)
+         shift
+         EXEC_MODE=$1
+         ;;
+      --)
+         shift
+         break
+         ;;
+      *)
+         shift
+         break
+         ;;
+   esac
+   # Throw away the '--' that's added by getopt.
+   # The -- case above doesn't get hit when user
+   # forgets to put in any required args.
+   shift
+done
+
+if [ -z $DEST_DIR ]
+then    
+    if [ $EXEC_MODE == local ] 
+    	then
+    	    DEST_DIR=`pwd`
+    	else
+    	    DEST_DIR='/user/'`whoami`
+    fi     
+fi    
+
+if [ $# < 3 ] 
+then
+    echo -e $USAGE
+    exit -1
+else
+    SLICE_SPEC=$1
+    CONCAT_SEPARATOR=$2
+    NGRAM_NAME=$3
+fi
+
+# If we are running in cygwin, we have to convert the 
+# path to the Pig script into a Windows path:
+
+export SCRIPT_DIR=`dirname $0`
+if [[ `uname` == *CYGWIN* ]]
+then 
+  export SCRIPT_DIR=`cygpath --mixed ${SCRIPT_DIR}`
+fi
+
+# Check whether the ngram target file exists.
+# If so, Pig would run for a long time, and then die. Make
+# this more fail-fast:
+
+EXISTENCE=`hadoop fs -stat ${DEST_DIR}/${NGRAM_NAME}_concat.gz 2> /dev/null` 
+if [ -n "$EXISTENCE" ]
+then
+    echo "File ${DEST_DIR}/${NGRAM_NAME}_concat.gz already exists. Quitting."
+    exit -1
+fi
+
+echo "Starting concatNgrams:
+Exec mode: -x $EXEC_MODE
+Input file : $NGRAM_NAME
+Output file: ${DEST_DIR}/${NGRAM_NAME}_concat.gz"
+
+ pigrun -x $EXEC_MODE \
+         CONCAT_DEST=${DEST_DIR}/${NGRAM_NAME}_concat.gz \
+         SLICE_SPEC=$SLICE_SPEC \
+         CONCAT_SEPARATOR=$CONCAT_SEPARATOR \
+         NGRAM_FILE=$NGRAM_NAME \
+         ${SCRIPT_DIR}/Pig/concatNgrams.pig
+
+exit 0
