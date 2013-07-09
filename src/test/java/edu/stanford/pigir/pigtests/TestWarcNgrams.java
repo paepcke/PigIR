@@ -12,6 +12,7 @@ import org.apache.pig.backend.executionengine.ExecException;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.junit.Ignore;
 
 import edu.stanford.pigir.Common;
 
@@ -41,6 +42,7 @@ public class TestWarcNgrams {
 	}
 
 	@Test
+	@Ignore
 	public void test() {
 		fail("Not yet implemented");
 	}

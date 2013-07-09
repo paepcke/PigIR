@@ -26,9 +26,9 @@ public class TestFisherCollectionProcessor {
 	
 	String[] res1 = new String[]{
 		"WARC/1.0",
-		"WARC_Type: resource",
+		"WARC-Type: resource",
 		"WARC-Date: 2013-05-25T18:17Z",
-		"WARC_RECORD_ID: file:///fe_03_05858.txt",
+		"WARC-RECORD-ID: file:///fe_03_05858.txt",
 		"Content-Type: application/warc",
 		"Content-Length: 100",
 		"Fisher-topic-name: ENG10",
@@ -45,9 +45,9 @@ public class TestFisherCollectionProcessor {
 	
 	String[] res2 = new String[]{
 		"WARC/1.0",
-		"WARC_Type: resource",
+		"WARC-Type: resource",
 		"WARC-Date: 2013-05-25T18:17Z",
-		"WARC_RECORD_ID: file:///fe_03_11599.txt",
+		"WARC-RECORD-ID: file:///fe_03_11599.txt",
 		"Content-Type: application/warc",
 		"Content-Length: 72",
 		"Fisher-topic-name: ENG25",

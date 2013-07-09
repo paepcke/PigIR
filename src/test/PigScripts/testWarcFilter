@@ -53,7 +53,7 @@ pigrun -x $EXEC_MODE \
         WARC_FILE=$TEST_FILE_PATH \
         WARC_FIELD=$FIELD_NAME_CONTENT \
         REGEX=$REGEX_NO_SOMETHING \
-        ${SCRIPT_DIR}/warcFilter.pig
+        ${SCRIPT_DIR}/Pig/warcFilter.pig
 
 # If ran on mapreduce, then the reference file and
 # the generated file to test are on HDFS. Copy them
