@@ -2,11 +2,17 @@ package edu.stanford.pigir.pigudf;
 
 import java.io.IOException;
 import java.security.InvalidParameterException;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.apache.pig.EvalFunc;
+import org.apache.pig.FuncSpec;
+import org.apache.pig.data.DataType;
 import org.apache.pig.data.DefaultTuple;
 import org.apache.pig.data.Tuple;
+import org.apache.pig.impl.logicalLayer.FrontendException;
 import org.apache.pig.impl.logicalLayer.schema.Schema;
+import org.apache.pig.impl.logicalLayer.schema.Schema.FieldSchema;
 
 /**
  * @author paepcke
@@ -124,6 +130,20 @@ public class ConcatColumns  extends EvalFunc<String> {
 		} catch (Exception e) {
 			throw new IOException("Exception ConcatColumns().", e);
 		}
+	}
+	
+	public List<FuncSpec> getArgToFuncMapping() throws FrontendException{
+		List<FuncSpec> funcList = new ArrayList<FuncSpec>();
+		FieldSchema sliceSpec       = new Schema.FieldSchema("sliceSpec", DataType.CHARARRAY);
+		FieldSchema concatSeparator = new Schema.FieldSchema("concatSep", DataType.CHARARRAY);
+		FieldSchema tupleToFuse     = new Schema.FieldSchema("tupleToFuse", DataType.TUPLE);
+		Schema concatColumnsExecSignature = new Schema();
+		concatColumnsExecSignature.add(sliceSpec);
+		concatColumnsExecSignature.add(concatSeparator);
+		concatColumnsExecSignature.add(tupleToFuse);
+		
+		funcList.add(new FuncSpec(this.getClass().getName(), concatColumnsExecSignature));
+		return funcList;
 	}
 	
 	public Schema outputSchema(Schema input) {

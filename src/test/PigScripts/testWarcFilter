@@ -46,7 +46,7 @@ pigrun -x $EXEC_MODE \
         WARC_FILE=$TEST_FILE_PATH \
         WARC_FIELD=$FIELD_NAME_ONLY_ONE_RECORD \
         REGEX=$REGEX_ONLY_ONE_RECORD \
-        ${SCRIPT_DIR}/warcFilter.pig
+        ${SCRIPT_DIR}/Pig/warcFilter.pig
 
 pigrun -x $EXEC_MODE \
         FILTERED_DEST=${TEST_FILE_PATH}_noSomething.gz \
