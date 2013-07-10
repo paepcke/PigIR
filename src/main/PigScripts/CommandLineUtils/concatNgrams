@@ -12,7 +12,7 @@ USAGE="Usage: concatNgrams [{-h | --help}] \n
     \tExample: concatNgrams '1:' '' Dataset/dmozNgrams.csv.gz \n"
 
 # Defaults:
-EXEC_MODE=mapreduce
+export EXEC_MODE=mapreduce
 
 SHORTOPTS="hx:"
 LONGOPTS="help,execmode:"
@@ -88,7 +88,9 @@ then
 fi
 
 echo "Starting concatNgrams:
-Exec mode: -x $EXEC_MODE
+Exec mode : -x $EXEC_MODE
+Slice spec: $SLICE_SPEC
+Concat sep: $CONCAT_SEPARATOR
 Input file : $NGRAM_NAME
 Output file: ${DEST_DIR}/${NGRAM_NAME}_concat.gz"
 

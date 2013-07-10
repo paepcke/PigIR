@@ -46,7 +46,7 @@ REGISTER $PIGIR_HOME/target/pigir.jar;
 ngrams = LOAD '$NGRAM_FILE' USING PigStorage(',');
 
 fused = FOREACH ngrams GENERATE 
-      edu.stanford.pigir.pigudf.ConcatColumns($SLICE_SPEC,$CONCAT_SEPARATOR,$0);
+      edu.stanford.pigir.pigudf.ConcatColumns('$SLICE_SPEC','$CONCAT_SEPARATOR',$0);
 
 DUMP fused;
 --STORE fused '$CONCAT_DEST' USING PigStorage(',');
