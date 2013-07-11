@@ -42,15 +42,18 @@
 REGISTER $PIGIR_HOME/target/pigir.jar;
 
 
--- Don't know input tuple cardinality, so cannot create input schema:
+set1 = LOAD '$SET1' USING PigStorage(',') AS (jaccEl:bytearray);
+set2 = LOAD '$SET2' USING PigStorage(',') AS (jaccEl:bytearray);
 
-relation = LOAD '$RELATION_FILE' USING PigStorage(',');
+set1Group = GROUP set1 ALL;
+set2Group = GROUP set2 ALL;
 
-fused = FOREACH relation {
-            tupleToFuse = TOTUPLE(*);
-	    GENERATE
-	      edu.stanford.pigir.pigudf.ConcatColumns('$SLICE_SPEC','$CONCAT_SEPARATOR', tupleToFuse);
-	    }
+set1Cardinality = FOREACH set1Group GENERATE COUNT_STAR(set1);
+set2Cardinality = FOREACH set2Group GENERATE COUNT_STAR(set2);
 
-STORE fused INTO '$CONCAT_DEST' USING PigStorage(',');
+setsJoined = JOIN set1 BY jaccEl, set2 BY jaccEl;
 
+DUMP setsJoined;
+DESCRIBE setsJoined;
+
+--STORE fused INTO '$CONCAT_DEST' USING PigStorage(',');

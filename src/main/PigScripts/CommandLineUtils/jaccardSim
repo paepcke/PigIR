@@ -1,0 +1,99 @@
+#!/bin/bash
+
+# Script that runs the PigScript jaccardSim.pig with
+# command line paramters. Result is echoed to the console.
+
+USAGE="Usage: jaccardSim [{-h | --help}] \n
+                       \t\t\t [{-x | --execmode] {local | mapreduce}] \n
+                       \t\t\t <pathToSet1-LocalOrHDFS> \n
+                       \t\t\t <pathToSet2-LocalOrHDFS> \n
+    \tExample:  Dataset/dmozNgrams_concat.csv.gz Dataset/dmozRecreationNgrams_concat.csv.gz \n"
+
+# Defaults:
+export EXEC_MODE=mapreduce
+
+SHORTOPTS="hx:"
+LONGOPTS="help,execmode:"
+
+ARGS=`getopt -s bash --options=$SHORTOPTS  \
+  --longoptions=$LONGOPTS --name=$PROGNAME -- "$@"`
+
+eval set -- "$ARGS"
+
+while true; do
+   case $1 in
+      -h|--help)
+         echo -e $USAGE
+         exit 0
+         ;;
+      -x|--execmode)
+         shift
+         EXEC_MODE=$1
+         ;;
+      --)
+         shift
+         break
+         ;;
+      *)
+         shift
+         break
+         ;;
+   esac
+   # Throw away the '--' that's added by getopt.
+   # The -- case above doesn't get hit when user
+   # forgets to put in any required args.
+   shift
+done
+
+if [ -z $DEST_DIR ]
+then    
+    if [ $EXEC_MODE == local ] 
+    	then
+    	    DEST_DIR=`pwd`
+    	else
+    	    DEST_DIR='/user/'`whoami`
+    fi     
+fi    
+
+if [ $# -ne 2 ] 
+then
+    echo -e $USAGE
+    exit -1
+else
+    SET1=$1
+    SET2=$2
+fi
+
+# If we are running in cygwin, we have to convert the 
+# path to the Pig script into a Windows path:
+
+export SCRIPT_DIR=`dirname $0`
+if [[ `uname` == *CYGWIN* ]]
+then 
+  export SCRIPT_DIR=`cygpath --mixed ${SCRIPT_DIR}`
+fi
+
+# Check whether the result target file exists.
+# If so, Pig would run for a long time, and then die. Make
+# this more fail-fast:
+
+EXISTENCE=`hadoop fs -stat ${DEST_DIR}/${SET1}_${SET2}_jaccardSim.gz 2> /dev/null` 
+if [ -n "$EXISTENCE" ]
+then
+    echo "File ${DEST_DIR}/${SET1}_${SET2}_jaccardSim.gz already exists. Quitting."
+    exit -1
+fi
+
+echo "Starting jaccardSim:
+Exec mode : -x $EXEC_MODE
+Set1: $SET1
+Set2: $SET2
+Output file: ${DEST_DIR}/${SET1}_${SET2}_jaccardSim.gz"
+
+ pigrun -x $EXEC_MODE \
+         CONCAT_DEST=${DEST_DIR}/${SET1}_${SET2}_jaccardSim.gz \
+         SET1=$SET1 \
+         SET2=$SET2 \
+         ${SCRIPT_DIR}/Pig/jaccardSim.pig
+
+exit 0
