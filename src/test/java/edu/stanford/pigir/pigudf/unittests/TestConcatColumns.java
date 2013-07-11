@@ -7,7 +7,6 @@ import java.io.IOException;
 import org.apache.pig.data.DefaultTuple;
 import org.apache.pig.data.Tuple;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import edu.stanford.pigir.pigudf.ConcatColumns;
