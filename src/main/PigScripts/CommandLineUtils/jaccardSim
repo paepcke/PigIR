@@ -7,7 +7,7 @@ USAGE="Usage: jaccardSim [{-h | --help}] \n
                        \t\t\t [{-x | --execmode] {local | mapreduce}] \n
                        \t\t\t <pathToSet1-LocalOrHDFS> \n
                        \t\t\t <pathToSet2-LocalOrHDFS> \n
-    \tExample:  Dataset/dmozNgrams_concat.csv.gz Dataset/dmozRecreationNgrams_concat.csv.gz \n"
+    \tExample:  jaccardSim Dataset/dmozNgrams_concat.csv.gz Dataset/dmozRecreationNgrams_concat.csv.gz \n"
 
 # Defaults:
 export EXEC_MODE=mapreduce

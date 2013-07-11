@@ -45,15 +45,57 @@ REGISTER $PIGIR_HOME/target/pigir.jar;
 set1 = LOAD '$SET1' USING PigStorage(',') AS (jaccEl:bytearray);
 set2 = LOAD '$SET2' USING PigStorage(',') AS (jaccEl:bytearray);
 
+-- Get:
+--  all	{(foo),(foo),(bar),(fum),(fum),(fum)}
 set1Group = GROUP set1 ALL;
+-- Get:
+--  all	{(foo),(fum)}
 set2Group = GROUP set2 ALL;
 
-set1Cardinality = FOREACH set1Group GENERATE COUNT_STAR(set1);
-set2Cardinality = FOREACH set2Group GENERATE COUNT_STAR(set2);
+--************
+--STORE set1Group INTO '/tmp/set1Group.txt' USING PigStorage();
+--STORE set2Group INTO '/tmp/set2Group.txt' USING PigStorage();
+--************
+
+-- Get Card1=6 and card2=2:
+set1Cardinality = FOREACH set1Group GENERATE COUNT_STAR(set1) AS cardSet;
+set2Cardinality = FOREACH set2Group GENERATE COUNT_STAR(set2) AS cardSet;
+
+--************
+--STORE set1Cardinality INTO '/tmp/set1card.txt' USING PigStorage();
+--STORE set2Cardinality INTO '/tmp/set2card.txt' USING PigStorage();
+--************
+
+
+-- Get
+--   (foo,foo)
+--   (foo,foo)
+--   (fum,fum)
+--   (fum,fum)
+--   (fum,fum)
 
 setsJoined = JOIN set1 BY jaccEl, set2 BY jaccEl;
 
-DUMP setsJoined;
-DESCRIBE setsJoined;
+--**********
+--STORE setsJoined INTO '/tmp/setsJoint.txt' USING PigStorage();
+--**********
+
+setsJoinedDistinct = DISTINCT setsJoined;
+
+-- Get:
+--    all	{(foo,foo),(fum,fum)}
+setsJoinedDistinctGrp = GROUP setsJoinedDistinct ALL;
+
+--**********
+--STORE setsJoinedDistinctGrp INTO '/tmp/setsJointDistinctGrp.txt' USING PigStorage();
+--**********
+
+cardinalitySet1CutSet2 = FOREACH setsJoinedDistinctGrp GENERATE COUNT(setsJoinedDistinct) AS cardOfCut;
+
+similarity = FOREACH cardinalitySet1CutSet2 GENERATE
+	   (double)cardinalitySet1CutSet2.cardOfCut / ((double)set1Cardinality.cardSet + (double)set2Cardinality.cardSet - (double) cardinalitySet1CutSet2.cardOfCut);
+
+DUMP similarity;
+
 
 --STORE fused INTO '$CONCAT_DEST' USING PigStorage(',');
