@@ -63,13 +63,24 @@ public class ConcatColumns  extends EvalFunc<String> {
 			if (concatSeparator == null)
 				concatSeparator = "";
 			DefaultTuple tupleToFuse = (DefaultTuple) input.get(TUPLE_TO_FUSE_POS);
-			
+ 			
+	                //**************
+			//System.out.println(sliceDecl + "," + 
+			//		   concatSeparator + "," + 
+			//		   tupleToFuse + 
+			//		   "Ln:(" + tupleToFuse.size() + "; 1st el: '" + tupleToFuse.get(0) + "'");
+	                //**************
+
+
 			if (tupleToFuse == null)
 				return null;
 			
 			if (tupleToFuse.size() == 0)
-				return "";
+				return null;
 			
+			if (tupleToFuse.get(0) == null)
+  			        return null;
+
 			String[] startEnd = sliceDecl.split(":");
 			
 
@@ -110,6 +121,15 @@ public class ConcatColumns  extends EvalFunc<String> {
 			if (start > end)
 				throw new InvalidParameterException("In FuseColumns, slice spec start must be <= end.");
 			
+			if (start > tupleToFuse.size() - 1) {
+  			        int topIndex = start - 1;
+			        throw new InvalidParameterException("In FuseColumns, start index is " +
+								    start +
+								    "; But tuple " +
+								    tupleToFuse +
+								    " only has indices running 0-" +
+								    topIndex);
+			}
 			if (start == end)
 				return (String) tupleToFuse.get(start);
 			
