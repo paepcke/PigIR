@@ -1,27 +1,12 @@
 /* 
-   Given a bigram file or a directory of compressed
-   or non-compressed relations, create a new relation
-   with one column. The column will be the concatenation
-   of two or more adjacent (string-typed) columns in the
-   original relation. Callers may specify the desired slice, using
-   a Pythonic array slice syntax. Callers may also provide a 
-   concatenation separator. Syntax:
+   Given two one-column relations, find their Jaccard similarity.
+   The relations may contain duplicates, but the number of duplicates
+   are not used for weighting.
     
-         ConcatColumns(<sliceSpecStr>, {separatorStr | null}, <tuple>)
+         jaccardSim <file1> <file2>
          
-    Examples:
-       t = ("foo", "bar", 'fum')
-       ConcatColumns('1:2', '', t)  ==> "bar"
-       ConcatColumns('0:2', '', t)  ==> "foobar"
-       ConcatColumns(':2', '', t)   ==> "foobar"
-       ConcatColumns('1:', '', t)   ==> "barfum"
-       ConcatColumns('0:-1', '', t)   ==> "foobar"
-       ConcatColumns('2:2', '', t)   ==> "fum"
-
-   	  ConcatColumns('0:-1', '|', t)   ==> "foo|bar"
-
    Start this Pig script via the concatColumns bash script, like this:
-      concatColumns [options] <sliceSpec> <concatSeparator> <relationFile>
+      jaccardSim [options] <file1> <file2>
 
    where options are:
 
@@ -34,68 +19,79 @@
       * $USER_CONTRIB  	 points to location of piggybank.jar and jsoup-1.5.2.jar
       * $PIGIR_HOME    	 points to location project root (above target dir)
       * CONCAT_DEST    	 destination WARC name (directory if source is a directory, else dest file name).
-      * SLICE_SPEC       string with specification of the relation tuple slicing
-      * CONCAT_SEPARATOR separator string to insert between concatenated columns
-      * RELATION_FILE 	 the ngram file or directory to strip
-*/       
+      * BAG1		 the file path to the relation1. Local if -x local was specified, else on HDFS
+      * BAG2		 the file path to the relation2. Local if -x local was specified, else on HDFS
+
+   For the running example in the comments below, assumeing the following
+   two relations:
+      BAG1:         BAG2:
+	 foo           foo
+	 foo           fum
+	 bar
+	 fum
+	 fum
+	 fum
+
+   We use the modified Jaccard simlarity form:
+
+               |A cut B|
+	 ---------------------
+         |A| + |B| - |A cut B|
+
+*/
 
 REGISTER $PIGIR_HOME/target/pigir.jar;
 
 
-set1 = LOAD '$SET1' USING PigStorage(',') AS (jaccEl:bytearray);
-set2 = LOAD '$SET2' USING PigStorage(',') AS (jaccEl:bytearray);
+bag1 = LOAD '$BAG1' USING PigStorage(',') AS (jaccEl:bytearray);
+bag2 = LOAD '$BAG2' USING PigStorage(',') AS (jaccEl:bytearray);
 
 -- Get:
---  all	{(foo),(foo),(bar),(fum),(fum),(fum)}
-set1Group = GROUP set1 ALL;
--- Get:
---  all	{(foo),(fum)}
-set2Group = GROUP set2 ALL;
+--   {group: chararray, bag1:{(foo),(foo),(bar),(fum),(fum),(fum)},bag2:{(foo),(fum)}}
 
---************
---STORE set1Group INTO '/tmp/set1Group.txt' USING PigStorage();
---STORE set2Group INTO '/tmp/set2Group.txt' USING PigStorage();
---************
+bag1Bag2Group = COGROUP bag1 ALL, bag2 ALL;
 
--- Get Card1=6 and card2=2:
-set1Cardinality = FOREACH set1Group GENERATE COUNT_STAR(set1) AS cardSet;
-set2Cardinality = FOREACH set2Group GENERATE COUNT_STAR(set2) AS cardSet;
+-- Turn bags into sets, and get (|Set1| + |Set2|), 
+-- as well as two bags, one with the Set1 tuples, the
+-- other with the Set2 tuples (three columns total):
+--    5, {(bar),(foo),(fum)}, {(foo),(fum)}
+--
+-- Schema:  {sumCards: long,set1: {(jaccEl: bytearray)},set2: {(jaccEl: bytearray)}}
 
---************
---STORE set1Cardinality INTO '/tmp/set1card.txt' USING PigStorage();
---STORE set2Cardinality INTO '/tmp/set2card.txt' USING PigStorage();
---************
+cardSumAndSets = FOREACH bag1Bag2Group {
+		   set1 = DISTINCT bag1;
+		   set2 = DISTINCT bag2;
+		   cardSet1 = COUNT_STAR(set1);
+		   cardSet2 = COUNT_STAR(set2);
+		   cardSet1PlusCardSet2 = cardSet1 + cardSet2;
+		   GENERATE
+		   	  cardSet1PlusCardSet2 AS sumCards, set1 AS set1, set2 AS set2;
+	};
 
+-- Get bar
+--     foo
+--     fum
+--   Schema: theSet1: {set1::jaccEl: bytearray}
+theSet1 = FOREACH cardSumAndSets GENERATE FLATTEN(set1);
 
--- Get
---   (foo,foo)
---   (foo,foo)
---   (fum,fum)
---   (fum,fum)
---   (fum,fum)
+-- Get foo
+--     fum
+--   Schema: theSet2: {set2::jaccEl: bytearray}
+theSet2 = FOREACH cardSumAndSets GENERATE FLATTEN(set2);
 
-setsJoined = JOIN set1 BY jaccEl, set2 BY jaccEl;
+-- Get foo,foo
+--     fum,fum
+setsJoined = JOIN theSet1 BY jaccEl, theSet2 BY jaccEl; 
 
---**********
---STORE setsJoined INTO '/tmp/setsJoint.txt' USING PigStorage();
---**********
+-- Get all,{(foo,foo),(fum,fum)}
+--   Schema: setsJoinedGrp: {group: chararray,setsJoined: {(theSet1::set1::jaccEl: bytearray,theSet2::set2::jaccEl: bytearray)}}
+setsJoinedGrp = GROUP setsJoined ALL;
 
-setsJoinedDistinct = DISTINCT setsJoined;
+similarity = FOREACH cardSumAndSets {
+	       cardCutSet1Set2 = COUNT_STAR(setsJoinedGrp.setsJoined);
+	       jaccSim = (double)cardCutSet1Set2 / ((double)sumCards - (double)cardCutSet1Set2);
+	       GENERATE jaccSim;
+	       }
 
--- Get:
---    all	{(foo,foo),(fum,fum)}
-setsJoinedDistinctGrp = GROUP setsJoinedDistinct ALL;
-
---**********
---STORE setsJoinedDistinctGrp INTO '/tmp/setsJointDistinctGrp.txt' USING PigStorage();
---**********
-
-cardinalitySet1CutSet2 = FOREACH setsJoinedDistinctGrp GENERATE COUNT(setsJoinedDistinct) AS cardOfCut;
-
-similarity = FOREACH cardinalitySet1CutSet2 GENERATE
-	   (double)cardinalitySet1CutSet2.cardOfCut / ((double)set1Cardinality.cardSet + (double)set2Cardinality.cardSet - (double) cardinalitySet1CutSet2.cardOfCut);
-
-DUMP similarity;
-
-
---STORE fused INTO '$CONCAT_DEST' USING PigStorage(',');
+-- DUMP similarity;
+STORE similarity INTO '$CONCAT_DEST' USING PigStorage(',');
