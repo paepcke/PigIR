@@ -62,6 +62,8 @@ then
 else
     BAG1=$1
     BAG2=$2
+    BAG1_FILE_NAME=`basename $BAG1`
+    BAG2_FILE_NAME=`basename $BAG2`
 fi
 
 # If we are running in cygwin, we have to convert the 
@@ -77,10 +79,10 @@ fi
 # If so, Pig would run for a long time, and then die. Make
 # this more fail-fast:
 
-EXISTENCE=`hadoop fs -stat ${DEST_DIR}/${BAG1}_${BAG2}_jaccardSim.gz 2> /dev/null` 
+EXISTENCE=`hadoop fs -stat ${DEST_DIR}/${BAG1_FILE_NAME}_${BAG2_FILE_NAME}_jaccSim.gz 2> /dev/null` 
 if [ -n "$EXISTENCE" ]
 then
-    echo "File ${DEST_DIR}/${BAG1}_${BAG2}_jaccardSim.gz already exists. Quitting."
+    echo "File ${DEST_DIR}/${BAG1_FILE_NAME}_${BAG2_FILE_NAME}_jaccSim.gz already exists. Quitting."
     exit -1
 fi
 
@@ -88,10 +90,10 @@ echo "Starting jaccardSim:
 Exec mode : -x $EXEC_MODE
 Bag1: $BAG1
 Bag2: $BAG2
-Output file: ${DEST_DIR}/${BAG1}_${BAG2}_jaccardSim.gz"
+Output file: ${DEST_DIR}/${BAG1_FILE_NAME}_${BAG2_FILE_NAME}_jaccSim.gz"
 
  pigrun -x $EXEC_MODE \
-         CONCAT_DEST=${DEST_DIR}/${BAG1}_${BAG2}_jaccardSim.gz \
+         DEST=${DEST_DIR}/${BAG1_FILE_NAME}_${BAG2_FILE_NAME}_jaccSim.gz \
          BAG1=$BAG1 \
          BAG2=$BAG2 \
          ${SCRIPT_DIR}/Pig/jaccardSim.pig

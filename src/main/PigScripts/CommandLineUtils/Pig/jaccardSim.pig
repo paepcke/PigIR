@@ -5,7 +5,7 @@
     
          jaccardSim <file1> <file2>
          
-   Start this Pig script via the concatColumns bash script, like this:
+   Start this Pig script via the jaccardSim bash script, like this:
       jaccardSim [options] <file1> <file2>
 
    where options are:
@@ -18,7 +18,7 @@
    Environment assumptions:
       * $USER_CONTRIB  	 points to location of piggybank.jar and jsoup-1.5.2.jar
       * $PIGIR_HOME    	 points to location project root (above target dir)
-      * CONCAT_DEST    	 destination WARC name (directory if source is a directory, else dest file name).
+      * DEST    	 destination WARC name (directory if source is a directory, else dest file name).
       * BAG1		 the file path to the relation1. Local if -x local was specified, else on HDFS
       * BAG2		 the file path to the relation2. Local if -x local was specified, else on HDFS
 
@@ -94,4 +94,4 @@ similarity = FOREACH cardSumAndSets {
 	       }
 
 -- DUMP similarity;
-STORE similarity INTO '$CONCAT_DEST' USING PigStorage(',');
+STORE similarity INTO '$DEST' USING PigStorage(',');
