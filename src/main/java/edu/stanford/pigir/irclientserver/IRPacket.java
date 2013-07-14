@@ -1,15 +1,36 @@
 package edu.stanford.pigir.irclientserver;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import com.esotericsoftware.kryo.Kryo;
 import com.esotericsoftware.kryonet.Client;
 import com.esotericsoftware.kryonet.Server;
+import com.esotericsoftware.minlog.Log;
 
 public class IRPacket {
 
-	public static class ServiceRequestPacket {
+/*	public static class ServiceRequestPacket {
 		public String msg;
 	};
-
+*/
+	
+	public static class ServiceRequestPacket {
+		public String operator;
+		public Map<String,String> params;
+		
+		public void logMsg() {
+			String operation = operator + "(";
+			for (String key : params.keySet()) {
+				operation += key + "=" + params.get(key) + ",";
+			}
+			if (operation.endsWith(","))
+				operation = operation.substring(0,operation.length()-1);
+			operation += ")";
+			Log.info("[Server] " + operation);
+		}
+	};
+	
 	public static class ServiceResponsePacket {
 		public String msg;
 	};
@@ -27,6 +48,7 @@ public class IRPacket {
 		Kryo kryo = kryoServer.getKryo();
 		kryo.register(ServiceRequestPacket.class);
 		kryo.register(ServiceResponsePacket.class);
+		kryo.register(HashMap.class);
 		//kryo.register(byte[].class);  // if you want to pass byte arrays, etc.
 	}
 
@@ -37,6 +59,7 @@ public class IRPacket {
 		Kryo kryo = kryoClient.getKryo();
 		kryo.register(ServiceRequestPacket.class);
 		kryo.register(ServiceResponsePacket.class);
+		kryo.register(HashMap.class);
 		//kryo.register(byte[].class);  // if you want to pass byte arrays, etc.
 	}
 }

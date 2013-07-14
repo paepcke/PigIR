@@ -5,6 +5,8 @@ import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 
+import org.python.modules.time.Time;
+
 import com.esotericsoftware.kryonet.Client;
 import com.esotericsoftware.minlog.Log;
 
@@ -41,5 +43,8 @@ public class IRClient {
 	public static void main(String[] args) throws UnknownHostException {
 		Log.set(Log.LEVEL_DEBUG);
 		new IRClient();
+		while (true) {
+			Time.sleep(5);
+		}
 	}
 }

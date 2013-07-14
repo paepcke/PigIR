@@ -1,36 +1,47 @@
 package edu.stanford.pigir.irclientserver.irserver;
 
-import com.esotericsoftware.kryonet.Client;
+import java.net.InetSocketAddress;
+import java.util.Date;
+
 import com.esotericsoftware.kryonet.Connection;
 import com.esotericsoftware.kryonet.Listener;
 import com.esotericsoftware.minlog.Log;
 
 import edu.stanford.pigir.irclientserver.IRPacket.ServiceRequestPacket;
-import edu.stanford.pigir.irclientserver.IRPacket.ServiceResponsePacket;
 
 public class NetworkListenerServer extends Listener {
 	
-	private Client kryoClient;
+	private IRServer irServer = null;
 	
-	
-	public void init(Client client) {
-		this.kryoClient = client;
+	public NetworkListenerServer(IRServer parentIRServer) {
+		super();
+		irServer = parentIRServer;
 	}
 	
 	public void connected(Connection conn) {
-		Log.info("[Server] Someone connected.");
+		InetSocketAddress ipAndSocket = conn.getRemoteAddressTCP();
+		conn.setName("Connection with " + ipAndSocket);
+		Date timeStamp = new Date();
+		Log.info("[Server] connection from " + conn.toString() + " at " + timeStamp);
 	}
 
 	public void disconnected(Connection conn) {
-		Log.info("[Server] Someone disconnected.");		
+		InetSocketAddress ipAndSocket = conn.getRemoteAddressTCP();
+		Date timeStamp = new Date();
+		Log.info("[Server] " + ipAndSocket + " disconnected at " + timeStamp);		
 	}
-	
+
 	public void received(Connection conn, Object content) {
-		ServiceRequestPacket req = (ServiceRequestPacket) content;
-		Log.info("[Server] " + req.msg);
-		ServiceResponsePacket resp = new ServiceResponsePacket();
-		resp.msg = "Got it.";
-		conn.sendTCP(resp);
+		ServiceRequestPacket req = null;
+		try {
+			req = (ServiceRequestPacket) content;
+		} catch (Exception e) {
+			// Ignore Kryo framework messages, such as keep-alives.
+			return;
+		}
+		req.logMsg();
+		// ServiceResponsePacket resp = new ServiceResponsePacket();
+		// resp.msg = "Got it.";
+		// conn.sendTCP(resp);
 	}
-	
 }
