@@ -21,6 +21,7 @@ public class TestGetLastPigAlias {
 		alias = Utils.getPigResultAlias("src/test/resources/pigScriptForAliasFinding3.pig");
 		assertEquals("rightAlias", alias);
 		
+		alias = Utils.getPigResultAlias("src/test/resources/pigScriptForAliasFinding4.pig");
+		assertEquals(null, alias);
 	}
-
 }

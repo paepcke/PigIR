@@ -14,9 +14,8 @@ public class Utils {
 	public static String getPigResultAlias(String pigScriptPath) throws IOException {
 		BufferedReader inReader = new BufferedReader(new FileReader(pigScriptPath));
 		List<String> pigScript = IOUtils.readLines(inReader);
-		//Pattern pattern = Pattern.compile("([^-]2)([a-zA-Z0-9]+)=");
-		Pattern pattern = Pattern.compile("([a-zA-Z0-9]+)[\\s]*=");
-		for (int i=pigScript.size()-1; i>=0; i--) {
+		Pattern pattern = Pattern.compile(".*#resultAlias[\\s]*([\\w]*)");
+		for (int i=0; i<pigScript.size(); i++) {
 			Matcher matcher = pattern.matcher(pigScript.get(i));
 			if (matcher.find()) {
 				String alias = matcher.group(1);

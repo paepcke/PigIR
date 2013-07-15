@@ -6,6 +6,9 @@ package edu.stanford.pigir.irclientserver.hadoop;
 /**
  * @author paepcke
  *
+ *    TODO:
+ *        - thread should get hold of job ID, and make it available
+ *        - servicePigRequest needs to return job ID 
  */
 
 import java.io.File;
@@ -29,6 +32,7 @@ import org.apache.pig.data.Tuple;
 import com.esotericsoftware.minlog.Log;
 
 import edu.stanford.pigir.irclientserver.PigService;
+import edu.stanford.pigir.irclientserver.Utils;
 import edu.stanford.pigir.irclientserver.irserver.IRServer;
 
 
@@ -49,15 +53,39 @@ public class PigScriptRunner implements PigService {
 	String pigVar    = null;
 	InputStream scriptInStream = null;
 
-	public PigServiceID servicePigRequest(String operator, Map<String, String> params) {
+	public static PigServiceID servicePigRequest(String operator, Map<String, String> params) {
 		String pigScriptPath = knownOperators.get(operator);
 		if (pigScriptPath == null) {
 			String errMsg = String.format("Pig request '%s' is not known; no Pig script implementation found.", operator);
 			Log.error(errMsg);
 			return null;
 		}
-		//******String lastPigAlias = getLastPigAlias(pigScriptPath);
-		return null;
+		String pigResultAlias = null;
+		try {
+			pigResultAlias = Utils.getPigResultAlias(pigScriptPath);
+		} catch (IOException e) {
+			String errMsg = String.format("Pig request '%s': could not open script '%s'", 
+								           operator, pigScriptPath);
+			Log.error(errMsg);
+			return null;
+		}
+		if (pigResultAlias == null) {
+			String errMsg = String.format("Pig request '%s': could not find Pig result alias declaration at top of script file '%s'", 
+								           operator, pigScriptPath);
+			Log.error(errMsg);
+			return null;
+		}
+		PigScriptRunner runner = null;
+		try {
+			runner = new PigScriptRunner(new File(pigScriptPath), pigResultAlias);
+		} catch (IOException e) {
+			String errMsg = String.format("Pig request '%s': could not start PigScriptRunner with script '%s'; reason: %s", 
+								           operator, pigScriptPath, e.getMessage());
+			Log.error(errMsg);
+			return null;
+		}
+		new PigRunThread().start();
+		
 	}
 	
 	
