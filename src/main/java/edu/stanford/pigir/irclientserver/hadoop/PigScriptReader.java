@@ -1,4 +1,4 @@
-package edu.stanford.arcspreadux.hadoop;
+package edu.stanford.pigir.irclientserver.hadoop;
 
 import java.io.BufferedReader;
 import java.io.File;

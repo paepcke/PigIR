@@ -1,4 +1,6 @@
 /* 
+#resultAlias fused  -- DO NOT MOVE OR DELETE
+
    Given a bigram file or a directory of compressed
    or non-compressed relations, create a new relation
    with one column. The column will be the concatenation

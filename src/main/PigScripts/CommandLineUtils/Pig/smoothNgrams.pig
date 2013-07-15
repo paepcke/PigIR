@@ -1,4 +1,6 @@
 /* 
+#resultAlias topKNgrams  -- DO NOT MOVE OR DELETE
+
    Given:
    1. An ngrams file of format: word,follower,followerCount
    2. A GoodTuring result file of format: frequency,probability

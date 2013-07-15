@@ -1,4 +1,6 @@
 /* 
+#resultAlias recCount  -- DO NOT MOVE OR DELETE
+
    Given a WARC file/dir, count the number of records in the file/dir.
    Output is via DUMP(), i.e. to stdout.
 

@@ -1,4 +1,6 @@
 /* 
+#resultAlias similarity  -- DO NOT MOVE OR DELETE
+
    Given two one-column relations, find their Jaccard similarity.
    The relations may contain duplicates, but the number of duplicates
    are not used for weighting.

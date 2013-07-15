@@ -1,4 +1,6 @@
 /* 
+#resultAlias theSample  -- DO NOT MOVE OR DELETE
+
    Given a WARC file or a directory of compressed
    or non-compressed WARC files, create two new archives:
    one containing a sample of the given archive, and another

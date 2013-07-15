@@ -1,4 +1,6 @@
 /* 
+#resultAlias strippedWarc  -- DO NOT MOVE OR DELETE
+
    Given a WARC file  or a directory of compressed
    or non-compressed WARC files, extract the contained Web pages, and
    remove their HTML tags. Write the result to a target directory, 

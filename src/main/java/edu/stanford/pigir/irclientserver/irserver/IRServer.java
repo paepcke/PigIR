@@ -22,10 +22,6 @@ public class IRServer {
     // IRServer is a singleton:
 	private static IRServer theInstance = null;
 
-	// Map from Pig script names (a.k.a. operators) to
-	// their respective full pathnanmes:
-	static Map<String,String> knownOperators = new HashMap<String,String>();
-	
 	// Map from a PigScriptRunner instance ID to the PigScriptRunner
 	// instance itself (needed e.g. for progress requests):
 	private Map<PigServiceID,PigService> pigServices = new HashMap<PigServiceID,PigService>();
@@ -43,7 +39,6 @@ public class IRServer {
 	 * @throws IOException
 	 */
 	public static IRServer getInstance() throws IOException {
-		initAvailablePigScripts();
 		if (theInstance != null) {
 			 return theInstance;
 		}
@@ -61,14 +56,6 @@ public class IRServer {
 		kryoServer.start();
 	}
 	
-	public void registerPigService(PigServiceID pigRunnerInstanceID, PigService pigRunnerObj) {
-		pigServices.put(pigRunnerInstanceID, pigRunnerObj);
-	}
-	
-	public void unregisterPigService(String operator) {
-		pigServices.remove(operator);
-	}
-	
 	public void serviceHadoopRequest(Connection kryoConn, ServiceRequestPacket requestPacket) {
 		PigService pigService = pigServices.get(requestPacket.operator);
 		if (pigService == null) {
@@ -80,15 +67,7 @@ public class IRServer {
 		pigService.servicePigRequest(requestPacket.operator, requestPacket.params);
 	}
 	
-	private static void initAvailablePigScripts() {
-		File[] files = new File("src/main/PigScripts/CommandLineUtils/Pig/").listFiles();
-		for (File file : files) {
-			if (file.isFile()) {
-				knownOperators.put(file.getName(), file.getAbsolutePath());
-			}
-		}		
-	}
-	
+
 	/**
 	 * @param args
 	 */

@@ -1,0 +1,2 @@
+/*                #resultAlias     rightAlias = 10; */
+

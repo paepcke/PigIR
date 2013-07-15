@@ -1,4 +1,6 @@
 /* 
+#resultAlias finalKeepers  -- DO NOT MOVE OR DELETE
+
    Given a WARC file  or a directory of compressed
    or non-compressed WARC files, extract the contained Web pages.
    Write a new version of the WARC files to a target directory.

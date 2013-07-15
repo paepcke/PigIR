@@ -1,3 +1,7 @@
+/*
+#resultAlias goodVals  -- DO NOT MOVE OR DELETE
+*/
+
 -- Input WARC file, and pull out content from .txt and .html records only
 
 -- Invoke with: pig -param infile=<pathRelToUserDir> -param outfile=<outfileRelToUserDir> warcGetTextOnly.pig

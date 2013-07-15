@@ -1,4 +1,6 @@
 /* 
+#resultAlias sorted -- DO NOT MOVE OR DELETE
+
    Given a WARC file, extract the contained Web pages,
    remove their HTML tags, and remove stopwords. Then
    output a two-column table: (token, wordCount). Output

@@ -1,4 +1,6 @@
 /* 
+#resultAlias freqOfFreqsOrdered  -- DO NOT MOVE OR DELETE
+
    Given a bigram file or a directory of compressed
    or non-compressed ngram files, produce a new file
    of two columns: frequency, and frequency-of-frequency.

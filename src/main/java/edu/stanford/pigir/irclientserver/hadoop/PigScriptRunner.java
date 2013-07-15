@@ -15,10 +15,12 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Properties;
 
+import org.apache.commons.io.FilenameUtils;
 import org.apache.pig.ExecType;
 import org.apache.pig.PigServer;
 import org.apache.pig.backend.executionengine.ExecException;
@@ -35,6 +37,12 @@ public class PigScriptRunner implements PigService {
 	private static PigServer pserver;   // The Pig server that comes with Pig
 	private static IRServer irServer = null;
 	
+	private static String packageRootDir = "src/main/java";
+	// Map from Pig script names (a.k.a. operators) to
+	// their respective full pathnanmes:
+	static Map<String,String> knownOperators = new HashMap<String,String>();
+	
+	
 	Properties props = new Properties();
 	File scriptFile  = null;
 	String outFilePath = null;
@@ -42,8 +50,16 @@ public class PigScriptRunner implements PigService {
 	InputStream scriptInStream = null;
 
 	public PigServiceID servicePigRequest(String operator, Map<String, String> params) {
+		String pigScriptPath = knownOperators.get(operator);
+		if (pigScriptPath == null) {
+			String errMsg = String.format("Pig request '%s' is not known; no Pig script implementation found.", operator);
+			Log.error(errMsg);
+			return null;
+		}
+		//******String lastPigAlias = getLastPigAlias(pigScriptPath);
 		return null;
 	}
+	
 	
 	public PigScriptRunner(File theScriptFile, String theVarToPrintOrIterate) throws IOException {
 		if (theScriptFile == null) {
@@ -150,6 +166,16 @@ public class PigScriptRunner implements PigService {
 		irServer = IRServer.getInstance();
 	}
 	
+	private static void initAvailablePigScripts() {
+		
+		File[] files = new File(FilenameUtils.concat(PigScriptRunner.packageRootDir, "PigScripts/CommandLineUtils/Pig/")).listFiles();
+		for (File file : files) {
+			if (file.isFile()) {
+				knownOperators.put(FilenameUtils.getBaseName(file.getAbsolutePath()), file.getAbsolutePath());
+			}
+		}	
+	}
+	
 	private void startServer() {
 		try {
 			//pserver = new PigServer(ExecType.MAPREDUCE, props);
@@ -160,6 +186,15 @@ public class PigScriptRunner implements PigService {
 		}
 	}
 
+	/**
+	 * Used by unit tests to point to the root of the Maven 'test' 
+	 * branch rather than the 'main' branch.
+	 * @param packageRoot
+	 */
+	public static void setPackageRootDir(String packageRoot) {
+		PigScriptRunner.packageRootDir = packageRoot;
+	}
+	
 	class PigRunThread extends Thread {
 		
 		public void run() {

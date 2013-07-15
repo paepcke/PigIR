@@ -1,4 +1,6 @@
 /* 
+#resultAlias sorted -- DO NOT MOVE OR DELETE
+
    Given a WebBase crawl, and optionally a number of pages,
    start, and stop sites, extract the contained Web pages,
    remove their HTML tags, and remove stopwords. Then

@@ -1,4 +1,6 @@
 /* 
+#resultAlias ngramsNoStopWords -- DO NOT MOVE OR DELETE
+
    Given a bigram file or a directory of compressed
    or non-compressed ngram files, filter the file(s)
    such that stopwords are removed from both ngram

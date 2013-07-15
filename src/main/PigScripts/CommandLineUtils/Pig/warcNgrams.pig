@@ -1,4 +1,6 @@
 /* 
+#resultAlias sortedNgrams  -- DO NOT MOVE OR DELETE
+
    Given one or more WARC file(s), extract the contained Web pages.
    In the current form, it is assumed that the HTML tags have been
    removed earlier. 
