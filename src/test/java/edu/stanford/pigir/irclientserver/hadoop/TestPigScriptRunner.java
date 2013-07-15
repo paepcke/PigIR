@@ -9,14 +9,16 @@ import java.util.Iterator;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.pig.data.Tuple;
+import org.junit.Ignore;
 import org.junit.Test;
+import org.python.modules.time.Time;
 
 import edu.stanford.pigir.irclientserver.hadoop.PigScriptRunner;
 
 public class TestPigScriptRunner {
 	
-	File scriptFileDoStore = new File("src/test/resources/pigtestStoreResult.pig");
-	File scriptFileNoStore = new File("src/test/resources/pigtestNoStore.pig");
+	File scriptFileDoStore = new File("src/test/PigScripts/CommandLineUtils/Pig/pigtestStoreResult.pig");
+	File scriptFileNoStore = new File("src/test/PigScripts/CommandLineUtils/Pig/pigtestNoStore.pig");
 	String resultFile      =          "/tmp/pigtestResult007.txt";
 	
 	String[] trueResult = new String[] {
@@ -43,6 +45,7 @@ public class TestPigScriptRunner {
 	
 	
 	@Test
+	@Ignore
 	public void testScriptProgrammaticStore() throws IOException {
 		FileUtils.deleteQuietly(new File(resultFile));
 		PigScriptRunner runner = new PigScriptRunner(scriptFileNoStore, resultFile, "theCount");
@@ -51,6 +54,7 @@ public class TestPigScriptRunner {
 	}
 
 	@Test
+	@Ignore
 	public void testSimpleScriptIteration() throws IOException {
 		PigScriptRunner runner = new PigScriptRunner(scriptFileNoStore, "theCount");
 		try {
@@ -65,26 +69,51 @@ public class TestPigScriptRunner {
 				assertEquals(wordAndFreq[1], actualTuple.get(1).toString());
 			}
 		} finally {
-			runner.shutdown();
+			runner.discardPigServer();
 		}
 	}
 	
 	@Test
-	public void testScriptRun() throws IOException {
+	@Ignore
+	public void testScriptRunFromStore() throws IOException {
 		FileUtils.deleteQuietly(new File(resultFile));
-		PigScriptRunner runner = new PigScriptRunner(scriptFileDoStore, "theCount");
+		PigScriptRunner runner = new PigScriptRunner(scriptFileDoStore, resultFile, "theCount");
 		try {
 			PigScriptRunner.setPackageRootDir("src/test");
-			runner.servicePigRequest("pigtestStoreResult", null);
-			//runner.run();
+			runner.store();
 			ensureFileAsExpected();
 		} finally {
-			runner.shutdown();
+			runner.discardPigServer();
 		}
 	}
 	
+	@Test
+	public void testScriptRunViaServicePigRequest() throws IOException {
+		FileUtils.deleteQuietly(new File(resultFile));
+		PigScriptRunner runner = new PigScriptRunner();
+		try {
+			PigScriptRunner.setPackageRootDir("src/test");
+			runner.servicePigRequest("pigtestStoreResult", null); // null: no args
+			while (! new File(resultFile).canRead()) {
+				Time.sleep(3);
+			}
+			System.out.println("Output file available; waiting for it to be written.");
+			Time.sleep(5);
+			ensureFileAsExpected();
+		} finally {
+			runner.discardPigServer();
+		}
+	}
+	
+	
+	// ------------------------------------ Utility Methods -----------------------
 	private void ensureFileAsExpected() throws IOException {
-		Iterator<String> resultIt = FileUtils.lineIterator(new File(resultFile + "/part-r-00000"));
+		Iterator<String> resultIt = null;		
+		try {
+		resultIt = FileUtils.lineIterator(new File(resultFile + "/part-r-00000"));
+		} catch (IOException e) {
+			fail(e.getMessage());
+		}
 		for (String expectedLine : trueResult) {
 			if (! resultIt.hasNext()) {
 				fail("Result does not include line '" + expectedLine + "'.");

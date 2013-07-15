@@ -1,0 +1,2 @@
+/* Foo */
+STORE foo;

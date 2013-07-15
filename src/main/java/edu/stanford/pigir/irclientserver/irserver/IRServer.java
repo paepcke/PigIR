@@ -1,9 +1,6 @@
 package edu.stanford.pigir.irclientserver.irserver;
 
-import java.io.File;
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
 
 import com.esotericsoftware.kryonet.Connection;
 import com.esotericsoftware.kryonet.Server;
@@ -12,7 +9,7 @@ import com.esotericsoftware.minlog.Log;
 import edu.stanford.pigir.irclientserver.IRPacket;
 import edu.stanford.pigir.irclientserver.IRPacket.ServiceRequestPacket;
 import edu.stanford.pigir.irclientserver.PigService;
-import edu.stanford.pigir.irclientserver.PigService.PigServiceID;
+import edu.stanford.pigir.irclientserver.hadoop.PigScriptRunner;
 
 public class IRServer {
 	
@@ -22,10 +19,6 @@ public class IRServer {
     // IRServer is a singleton:
 	private static IRServer theInstance = null;
 
-	// Map from a PigScriptRunner instance ID to the PigScriptRunner
-	// instance itself (needed e.g. for progress requests):
-	private Map<PigServiceID,PigService> pigServices = new HashMap<PigServiceID,PigService>();
-	
 	private Server kryoServer;
 	
 	/**
@@ -57,16 +50,9 @@ public class IRServer {
 	}
 	
 	public void serviceHadoopRequest(Connection kryoConn, ServiceRequestPacket requestPacket) {
-		PigService pigService = pigServices.get(requestPacket.operator);
-		if (pigService == null) {
-			String errMsg = String.format("Pig request operator '%s' unknown in request from %s",
-										  requestPacket.operator, kryoConn.toString());
-			Log.error(errMsg);
-			return;
-		}
+		PigService pigService = new PigScriptRunner();
 		pigService.servicePigRequest(requestPacket.operator, requestPacket.params);
 	}
-	
 
 	/**
 	 * @param args

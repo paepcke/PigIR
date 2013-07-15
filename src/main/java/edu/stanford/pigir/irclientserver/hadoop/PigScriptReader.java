@@ -17,6 +17,10 @@ public class PigScriptReader implements Iterator<String> {
 	
 	
 	public PigScriptReader(String pathName) throws FileNotFoundException {
+		File scriptFile = new File(pathName);
+		if (! scriptFile.canRead()) {
+			throw new IllegalArgumentException("Script file not found: " + scriptFile.getAbsolutePath());
+		}
 		reader = new BufferedReader(new FileReader(pathName));
 	}
 
