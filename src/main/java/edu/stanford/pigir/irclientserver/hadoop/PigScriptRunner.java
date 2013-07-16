@@ -15,37 +15,39 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.InetAddress;
-import java.net.UnknownHostException;
-import org.apache.hadoop.mapred.FileAlreadyExistsException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Properties;
 
 import org.apache.commons.io.FilenameUtils;
+import org.apache.hadoop.mapred.FileAlreadyExistsException;
 import org.apache.pig.ExecType;
 import org.apache.pig.PigException;
 import org.apache.pig.PigServer;
 import org.apache.pig.backend.executionengine.ExecException;
 import org.apache.pig.data.Tuple;
-import org.apache.pig.impl.PigContext;
 import org.apache.pig.impl.plan.VisitorException;
 
 import com.esotericsoftware.minlog.Log;
 
-import edu.stanford.pigir.irclientserver.PigService;
-import edu.stanford.pigir.irclientserver.Utils;
+import edu.stanford.pigir.irclientserver.JobHandle.JobStatus;
+import edu.stanford.pigir.irclientserver.PigServiceHandle;
+import edu.stanford.pigir.irclientserver.PigServiceImpl;
 
-public class PigScriptRunner implements PigService {
+public class PigScriptRunner implements PigServiceImpl {
 
-	private static String packageRootDir = "src/main/";
+	private static String DEFAULT_SCRIPT_ROOT_DIR = "src/main/";
+	private static String scriptRootDir = PigScriptRunner.DEFAULT_SCRIPT_ROOT_DIR;
 	// Map from Pig script names (a.k.a. operators) to
 	// their respective full pathnanmes:
 	static Map<String,String> knownOperators = new HashMap<String,String>();
-	
+	static 	SimpleDateFormat timestampFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ");
 	
 	Properties props = new Properties();
+	Map<String,String> params = null;
 	PigServer pserver;   // The Pig server that comes with Pig
 	File scriptFile  = null;
 	String outFilePath = null;
@@ -58,7 +60,12 @@ public class PigScriptRunner implements PigService {
 		// For constructors appropriate for synchronous use, see below.
 	}
 	
-	public PigContext servicePigRequest(String operator, Map<String, String> params) {
+	public PigServiceHandle asyncPigRequest(String operator, Map<String, String> theParams) {
+		
+		// Build a jobname
+		String timestamp = timestampFormat.format(new Date()); 
+		String jobName = "arcspread_" + timestamp;
+		
 		String pigScriptPath = knownOperators.get(operator);
 		if (pigScriptPath == null) {
 			// If this script name is not found, try updating
@@ -70,80 +77,48 @@ public class PigScriptRunner implements PigService {
 		if (pigScriptPath == null)  {
 			String errMsg = String.format("Pig request '%s' is not known; no Pig script implementation found.", operator);
 			Log.error(errMsg);
-			return null;
+			return new PigServiceHandle(jobName, JobStatus.FAILED, errMsg);
 		}
-		String pigResultAlias = null;
-		try {
-			pigResultAlias = Utils.getPigResultAlias(pigScriptPath);
-		} catch (IOException e) {
-			String errMsg = String.format("Pig request '%s': could not open script '%s'", 
-								           operator, pigScriptPath);
-			Log.error(errMsg);
-			return null;
-		}
-		/* ***********8
-		if (pigResultAlias == null) {
-			System.out.println(pserver.getAliasKeySet());
-			System.out.println(pserver.getPigContext().getLastAlias());
-			String errMsg = String.format("Pig request '%s': could not find Pig result alias declaration at top of script file '%s'", 
-								           operator, pigScriptPath);
-			Log.error(errMsg);
-			return null;
-		}
-		********/
+		params = theParams;
 		PigScriptRunner runner = null;
 		try {
-			runner = new PigScriptRunner(new File(pigScriptPath), pigResultAlias);
+			runner = new PigScriptRunner(new File(pigScriptPath), params);
 		} catch (IOException e) {
 			String errMsg = String.format("Pig request '%s': could not start PigScriptRunner with script '%s'; reason: %s", 
 								           operator, pigScriptPath, e.getMessage());
 			Log.error(errMsg);
-			return null;
+			return new PigServiceHandle(jobName, JobStatus.FAILED, errMsg);
 		}
 		
-		// Add the parameters to the properties
-		// that will be available to the thread:
-		if (params != null) {
-			for (String paramName : params.keySet()) {
-				runner.props.setProperty(paramName, params.get(paramName));
-			}
-		}
 		// Start a new thread to run this script:
 		createPigServer();
 		PigRunThread scriptThread = runner.new PigRunThread(); 
-		scriptThread.start(runner, pserver);
+		scriptThread.start(runner, pserver, params);
 		runner.runningThread = scriptThread;
 		
-		// TODO: return a real ID
-		return new PigContext(pserver.getPigContext().getExecType(), props);
+		//PigContext context = pserver.getPigContext();
+		//Properties props = context.getProperties();
+		
+		return new PigServiceHandle(jobName, JobStatus.RUNNING);
 	}
 	
 	
-	public PigScriptRunner(File theScriptFile, String theVarToPrintOrIterate) throws IOException {
-		if (theScriptFile == null) {
-			throw new IllegalArgumentException("Script file must be provided; null was passed instead.");
-		}
-		
-		//**************************
-//		if (theVarToPrintOrIterate == null) {
-//		   throw new IllegalArgumentException("Script variable to print or iterate over must be provided; null was passed instead.");
-//		}
-		//**************************
-		
-		if (! theScriptFile.canRead()) {
-			throw new IllegalArgumentException("Script file not found: " + theScriptFile.getAbsolutePath());
-		}
-		
-		scriptFile = theScriptFile;
-		scriptInStream = new FileInputStream(theScriptFile);		
-		pigVar = theVarToPrintOrIterate;
+	public PigScriptRunner(File theScriptFile, Map<String,String> theParams) throws IOException {
+		ensureScriptFileOK(theScriptFile);
+		params = theParams;
 	}
 	
-	public PigScriptRunner(File theScriptFile, String theOutfile, String varToStore) throws IOException {
-		if (theScriptFile == null) {
-			throw new IllegalArgumentException("Script file must be provided; null was passed instead.");
+	public PigScriptRunner(File theScriptFile, String theVarToIterate, Map<String,String> theParams) throws IOException {
+		ensureScriptFileOK(theScriptFile);
+		if (theVarToIterate == null) {
+		   throw new IllegalArgumentException("Script variable to print or iterate over must be provided; null was passed instead.");
 		}
-		
+		pigVar = theVarToIterate;
+		params = theParams;
+	}
+	
+	public PigScriptRunner(File theScriptFile, String theOutfile, String varToStore, Map<String,String> theParams) throws IOException {
+		ensureScriptFileOK(theScriptFile);
 		if (varToStore == null) {
 			throw new IllegalArgumentException("Script variable to store must be provided; null was passed instead.");
 		}
@@ -151,39 +126,10 @@ public class PigScriptRunner implements PigService {
 		if (theOutfile == null) {
 			throw new IllegalArgumentException("Output file name must be provided; null was passed instead.");
 		}
-		
-		if (! theScriptFile.canRead()) {
-			throw new IllegalArgumentException("Script file not found: " + theScriptFile.getAbsolutePath());
-		}
-		
-		scriptFile = theScriptFile;
-		scriptInStream = new FileInputStream(theScriptFile);
 		outFilePath = theOutfile;
 		pigVar  = varToStore;
-	}
-
-	public PigScriptRunner(InputStream theScriptStream, String theOutfile, String varToStore) throws IOException {
-		if (theScriptStream== null) {
-			throw new IllegalArgumentException("Script stream must be provided; null was passed instead.");
-		}
-		
-		if (varToStore == null) {
-			throw new IllegalArgumentException("Script variable to store must be provided; null was passed instead.");
-		}
-		
-		if (theOutfile == null) {
-			throw new IllegalArgumentException("Output file name must be provided; null was passed instead.");
-		}
-		
-		scriptInStream = theScriptStream;
-		outFilePath = theOutfile;
-		pigVar  = varToStore;
-	}
-	
-	public PigScriptRunner(InputStream theScriptStream, String theVarToPrintOrIterate) throws IOException {
-		scriptInStream = theScriptStream;
-		pigVar  = theVarToPrintOrIterate;
-	}
+		params = theParams;
+	}	
 	
 	public void addScriptCallParam(String paramName, String paramValue) {
 		props.setProperty(paramName, paramValue);
@@ -191,17 +137,17 @@ public class PigScriptRunner implements PigService {
 	
 	public Iterator<Tuple> iterator() throws IOException {
 		createPigServer();
-		pserver.registerScript(scriptInStream);
+		pserver.registerScript(scriptInStream, params);
 		return pserver.openIterator(pigVar);
 	}
-	
+
 	public boolean store() throws IOException {
 		if (outFilePath == null) {
 			Log.error("Output file path is null; use one of the PigScriptRunner constructors that take an out file.");
 			return false;
 		}
 		createPigServer();
-		pserver.registerScript(scriptInStream);
+		pserver.registerScript(scriptInStream, params);
 		try {
 			pserver.store(pigVar, outFilePath);
 		} catch (PigException e) {
@@ -221,9 +167,20 @@ public class PigScriptRunner implements PigService {
 		return true;
 	}
 
-	public void discardPigServer() {
+	public void shutDownPigRequest() {
 		if (pserver != null)
 			pserver.shutdown();
+	}
+	
+	private void ensureScriptFileOK(File theScriptFile) throws FileNotFoundException {
+		if (theScriptFile == null) {
+			throw new IllegalArgumentException("Script file must be provided; null was passed instead.");
+		}
+		if (! theScriptFile.canRead()) {
+			throw new IllegalArgumentException("Script file not found or not readable: " + theScriptFile.getAbsolutePath());
+		}
+		scriptFile = theScriptFile;
+		scriptInStream = new FileInputStream(theScriptFile);		
 	}
 	
 	private void createPigServer() {
@@ -255,11 +212,16 @@ public class PigScriptRunner implements PigService {
 		}
 	}
 	
+	/**
+	 * Check in well-known place for any new Pig scripts.
+	 * Add their file basenames to a lookup table, so that
+	 * remote callers can only use those basenames. I.e. /foo/bar/myScript.pig ==> myScript
+	 */
 	private static void initAvailablePigScripts() {
 		
-		File[] files = new File(FilenameUtils.concat(PigScriptRunner.packageRootDir, "PigScripts/CommandLineUtils/Pig/")).listFiles();
+		File[] files = new File(FilenameUtils.concat(PigScriptRunner.scriptRootDir, "PigScripts/CommandLineUtils/Pig/")).listFiles();
 		if (files == null) {
-			Log.error("Found no Pig scripts in " + FilenameUtils.concat(PigScriptRunner.packageRootDir, "PigScripts/CommandLineUtils/Pig/"));
+			Log.error("Found no Pig scripts in " + FilenameUtils.concat(PigScriptRunner.scriptRootDir, "PigScripts/CommandLineUtils/Pig/"));
 			return;
 		}
 		for (File file : files) {
@@ -270,7 +232,7 @@ public class PigScriptRunner implements PigService {
 	}
 
 	@Override
-	public String getProgress(PigContext service) {
+	public PigServiceHandle getProgress(PigServiceHandle service) {
 		// TODO Auto-generated method stub
 		return null;
 	}
@@ -280,8 +242,8 @@ public class PigScriptRunner implements PigService {
 	 * branch rather than the 'main' branch.
 	 * @param packageRoot
 	 */
-	public static void setPackageRootDir(String packageRoot) {
-		PigScriptRunner.packageRootDir = packageRoot;
+	public void setScriptRootDir(String scriptRoot) {
+		PigScriptRunner.scriptRootDir = scriptRoot;
 	}
 	
 	class PigRunThread extends Thread {
@@ -289,11 +251,13 @@ public class PigScriptRunner implements PigService {
 		PigScriptRunner parent = null;
 		boolean keepRunning    = true;
 		PigServer pserver      = null;
+		Map<String,String> params = null;
 		
-		public void start(PigScriptRunner threadStarter, PigServer thePserver) {
+		public void start(PigScriptRunner threadStarter, PigServer thePserver, Map<String,String> theParams) {
 			super.start();
 			parent  = threadStarter;
 			pserver = thePserver;
+			params  = theParams;
 		}
 
 		public void run() {
@@ -306,9 +270,7 @@ public class PigScriptRunner implements PigService {
 					e.printStackTrace();
 				}
 				try {
-					pserver.registerScript(scriptInStream);
-					System.out.println(pserver.getAliasKeySet());
-					System.out.println(pserver.getPigContext().getLastAlias());
+					pserver.registerScript(scriptInStream, params);
 				} catch (IOException e) {
 					String errMsg = String.format("Cannot run script '%s': %s", scriptFile, e.getMessage());
 					Log.error(errMsg);
@@ -321,7 +283,8 @@ public class PigScriptRunner implements PigService {
 				
 		
 /*		public void run() {
-			
+			// This version of run feeds one script line after another
+			// to the Pig server.
 			PigScriptReader scriptReader;
 			try {
 				try {
@@ -360,10 +323,8 @@ public class PigScriptRunner implements PigService {
 */		
 		public void shutdown() {
 			keepRunning = false;
-			if (pserver != null) {
-				pserver.shutdown();
-			}
-			Log.info("Pig script server thread shutting down on request.");
+			shutDownPigRequest();
+			Log.info("Pig script server thread shutting down cleanly upon request.");
 		}
 	}
 	

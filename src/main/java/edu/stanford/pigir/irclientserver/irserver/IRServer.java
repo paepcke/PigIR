@@ -1,25 +1,33 @@
 package edu.stanford.pigir.irclientserver.irserver;
 
 import java.io.IOException;
+import java.util.HashSet;
+import java.util.Set;
 
-import com.esotericsoftware.kryonet.Connection;
 import com.esotericsoftware.kryonet.Server;
 import com.esotericsoftware.minlog.Log;
 
 import edu.stanford.pigir.irclientserver.IRPacket;
 import edu.stanford.pigir.irclientserver.IRPacket.ServiceRequestPacket;
+import edu.stanford.pigir.irclientserver.JobHandle;
 import edu.stanford.pigir.irclientserver.PigService;
+import edu.stanford.pigir.irclientserver.PigServiceImpl;
 import edu.stanford.pigir.irclientserver.hadoop.PigScriptRunner;
 
-public class IRServer {
+public class IRServer implements PigService {
 	
 		
 	public static int IRSERVICE_PORT = 4040;
 	
     // IRServer is a singleton:
 	private static IRServer theInstance = null;
-
 	private Server kryoServer;
+	
+	@SuppressWarnings("serial")
+	private static Set<String> adminOps = new HashSet<String>() {{
+		add("setPigScriptRoot");
+		add("getJobStatus");
+	}};
 	
 	/**
 	 * Get the singleton instance of the IRServer, creating
@@ -49,11 +57,39 @@ public class IRServer {
 		kryoServer.start();
 	}
 	
-	public void serviceHadoopRequest(Connection kryoConn, ServiceRequestPacket requestPacket) {
-		PigService pigService = new PigScriptRunner();
-		pigService.servicePigRequest(requestPacket.operator, requestPacket.params);
+	public JobHandle newPigServiceRequest(ServiceRequestPacket req) {
+		PigServiceImpl pigServiceImpl = new PigScriptRunner();
+		if (IRServer.adminOps.contains(req.operator))
+			return processAdminOp(pigServiceImpl, req.operator, req);
+		else
+			return pigServiceImpl.asyncPigRequest(req.operator, req.params);
+	}
+			
+	public String getJobName() {
+		// TODO Auto-generated method stub
+		return null;
 	}
 
+	public String getMessage() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	public int getErrorCode() {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+			
+	private JobHandle processAdminOp(PigServiceImpl pigService, String operator, ServiceRequestPacket req) {
+		switch (operator) {
+		case "setPigScriptRoot":
+			pigService.setScriptRootDir(req.params.get("scriptRoot"));
+			return null;
+		case "getJobStatus":
+			return null;
+		}
+		return null;
+	}
 	/**
 	 * @param args
 	 */
@@ -66,5 +102,4 @@ public class IRServer {
 		}
 		Log.info("IR Server running at " + IRSERVICE_PORT);
 	}
-
 }

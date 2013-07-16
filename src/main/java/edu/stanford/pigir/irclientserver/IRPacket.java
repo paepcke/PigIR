@@ -8,6 +8,8 @@ import com.esotericsoftware.kryonet.Client;
 import com.esotericsoftware.kryonet.Server;
 import com.esotericsoftware.minlog.Log;
 
+import edu.stanford.pigir.irclientserver.JobHandle.JobStatus;
+
 public class IRPacket {
 
 /*	public static class ServiceRequestPacket {
@@ -20,19 +22,22 @@ public class IRPacket {
 		public Map<String,String> params;
 		
 		public void logMsg() {
-			String operation = operator + "(";
-			for (String key : params.keySet()) {
-				operation += key + "=" + params.get(key) + ",";
+			String operation = operator;
+			if (params != null) {
+				operation += "(";
+				for (String key : params.keySet()) {
+					operation += key + "=" + params.get(key) + ",";
+				}
+				if (operation.endsWith(","))
+					operation = operation.substring(0,operation.length()-1);
 			}
-			if (operation.endsWith(","))
-				operation = operation.substring(0,operation.length()-1);
 			operation += ")";
 			Log.info("[Server] " + operation);
 		}
 	};
 	
 	public static class ServiceResponsePacket {
-		public String msg;
+		public JobHandle resultHandle;
 	};
 
 	/**
@@ -49,6 +54,8 @@ public class IRPacket {
 		kryo.register(ServiceRequestPacket.class);
 		kryo.register(ServiceResponsePacket.class);
 		kryo.register(HashMap.class);
+		kryo.register(PigServiceHandle.class);
+		kryo.register(JobStatus.class);
 		//kryo.register(byte[].class);  // if you want to pass byte arrays, etc.
 	}
 
@@ -60,6 +67,8 @@ public class IRPacket {
 		kryo.register(ServiceRequestPacket.class);
 		kryo.register(ServiceResponsePacket.class);
 		kryo.register(HashMap.class);
+		kryo.register(PigServiceHandle.class);
+		kryo.register(JobStatus.class);
 		//kryo.register(byte[].class);  // if you want to pass byte arrays, etc.
 	}
 }

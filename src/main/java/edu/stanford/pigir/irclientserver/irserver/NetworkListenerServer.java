@@ -8,14 +8,17 @@ import com.esotericsoftware.kryonet.Listener;
 import com.esotericsoftware.minlog.Log;
 
 import edu.stanford.pigir.irclientserver.IRPacket.ServiceRequestPacket;
+import edu.stanford.pigir.irclientserver.IRPacket.ServiceResponsePacket;
+import edu.stanford.pigir.irclientserver.JobHandle;
+import edu.stanford.pigir.irclientserver.PigService;
 
 public class NetworkListenerServer extends Listener {
 	
-	private IRServer irServer = null;
+	private PigService pigServer = null;
 	
-	public NetworkListenerServer(IRServer parentIRServer) {
+	public NetworkListenerServer(PigService parentIRServer) {
 		super();
-		irServer = parentIRServer;
+		pigServer = parentIRServer;
 	}
 	
 	public void connected(Connection conn) {
@@ -40,8 +43,11 @@ public class NetworkListenerServer extends Listener {
 			return;
 		}
 		req.logMsg();
-		// ServiceResponsePacket resp = new ServiceResponsePacket();
-		// resp.msg = "Got it.";
-		// conn.sendTCP(resp);
+		JobHandle callResult = pigServer.newPigServiceRequest(req);
+		
+		ServiceResponsePacket resp = new ServiceResponsePacket();
+		resp.resultHandle = callResult;
+		Log.info("[Server] responding " + resp.resultHandle.toString());
+		conn.sendTCP(resp);
 	}
 }

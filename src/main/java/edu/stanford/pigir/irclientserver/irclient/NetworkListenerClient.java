@@ -1,6 +1,5 @@
 package edu.stanford.pigir.irclientserver.irclient;
 
-import java.util.HashMap;
 import java.util.Map;
 
 import com.esotericsoftware.kryonet.Client;
@@ -22,12 +21,6 @@ public class NetworkListenerClient extends Listener {
 	
 	public void connected(Connection conn) {
 		Log.info("[Client] Connection to server successful.");
-		Log.info("[Client] Sending packet");
-		Map<String,String> params = new HashMap<String,String>();
-		sendPacket("myOpNoParms", params);
-		Map<String,String> params1 = new HashMap<String,String>();
-		params1.put("parm1", "myParm1");
-		sendPacket("myOpNoParms", params1);
 	}
 
 	public void sendPacket(String operator, Map<String,String> params) {
@@ -38,7 +31,7 @@ public class NetworkListenerClient extends Listener {
 	}
 	
 	public void disconnected(Connection conn) {
-		Log.info("[Client] Connection to IRServer is gone.");		
+		Log.info("[Client] Connection to IRServer was broken.");		
 	}
 	
 	public void received(Connection conn, Object content) {
@@ -49,6 +42,6 @@ public class NetworkListenerClient extends Listener {
 			// Ignore Kryo framework messages, such as keep-alives.
 			return;
 		}
-		System.out.println("[Client] " + resp.msg);
+		Log.info("[Client] " + resp.resultHandle);
 	}
 }
