@@ -96,7 +96,7 @@ public class IRServer implements PigService {
 			break;
 		case "getJobStatus":
 			ArcspreadException.NotImplementedException exc = new ArcspreadException.NotImplementedException();
-			break;
+			resultHandle = exc;
 		}
 		return resultHandle;
 	}

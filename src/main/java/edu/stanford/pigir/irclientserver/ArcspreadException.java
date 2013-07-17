@@ -20,7 +20,7 @@ import edu.stanford.pigir.irclientserver.JobHandle.JobStatus;
 public class ArcspreadException extends Exception {
 
 	private static String DEFAULT_JOBNAME = "<unnamed>";
-
+	protected String jobName = ArcspreadException.DEFAULT_JOBNAME;
 	
 	public ArcspreadException() {
 		super();
@@ -34,9 +34,7 @@ public class ArcspreadException extends Exception {
 	
 	public static class NotImplementedException extends ArcspreadException implements JobHandle {
 		protected static final int errorCode = 1;
-		@SuppressWarnings("unused")
-		protected static String jobName = ArcspreadException.DEFAULT_JOBNAME;
-
+		
 		public NotImplementedException(String msg) {
 			super(msg);
 		}
@@ -72,17 +70,6 @@ public class ArcspreadException extends Exception {
 	}
 
 	public String getJobName() {
-		String jobName = null;
-		try {
-			jobName = (String) this.getClass().getDeclaredField("jobName").get(this);
-		} catch (NoSuchFieldException | SecurityException e) {
-			// We guarantee that the field is defined (in each exception subclass)
-			e.printStackTrace();
-		} catch (IllegalArgumentException e) {
-			e.printStackTrace();
-		} catch (IllegalAccessException e) {
-			e.printStackTrace();
-		}
 		return jobName;
 	}
 	
@@ -92,7 +79,7 @@ public class ArcspreadException extends Exception {
 
 	public void setMessage(String newMessage) {}
 	
-	
+	// -----------------------  Testing  ------------------------------
 	
 	
 	
