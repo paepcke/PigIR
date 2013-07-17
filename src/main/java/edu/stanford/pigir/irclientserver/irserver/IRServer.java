@@ -7,10 +7,13 @@ import java.util.Set;
 import com.esotericsoftware.kryonet.Server;
 import com.esotericsoftware.minlog.Log;
 
+import edu.stanford.pigir.irclientserver.ArcspreadException;
 import edu.stanford.pigir.irclientserver.IRPacket;
 import edu.stanford.pigir.irclientserver.IRPacket.ServiceRequestPacket;
 import edu.stanford.pigir.irclientserver.JobHandle;
+import edu.stanford.pigir.irclientserver.JobHandle.JobStatus;
 import edu.stanford.pigir.irclientserver.PigService;
+import edu.stanford.pigir.irclientserver.PigServiceHandle;
 import edu.stanford.pigir.irclientserver.PigServiceImpl;
 import edu.stanford.pigir.irclientserver.hadoop.PigScriptRunner;
 
@@ -81,14 +84,21 @@ public class IRServer implements PigService {
 	}
 			
 	private JobHandle processAdminOp(PigServiceImpl pigService, String operator, ServiceRequestPacket req) {
+		JobHandle resultHandle = new PigServiceHandle("pigServiceAdmin", JobStatus.SUCCEEDED);
 		switch (operator) {
 		case "setPigScriptRoot":
-			pigService.setScriptRootDir(req.params.get("scriptRoot"));
-			return null;
+			try {
+				pigService.setScriptRootDir(req.params.get("scriptRoot"));
+			} catch (Exception e) {
+				resultHandle.setMessage(e.getMessage());
+				resultHandle.setStatus(JobStatus.FAILED);
+			}
+			break;
 		case "getJobStatus":
-			return null;
+			ArcspreadException.NotImplementedException exc = new ArcspreadException.NotImplementedException();
+			break;
 		}
-		return null;
+		return resultHandle;
 	}
 	/**
 	 * @param args

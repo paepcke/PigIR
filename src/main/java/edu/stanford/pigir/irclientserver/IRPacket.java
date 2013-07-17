@@ -56,6 +56,7 @@ public class IRPacket {
 		kryo.register(HashMap.class);
 		kryo.register(PigServiceHandle.class);
 		kryo.register(JobStatus.class);
+		kryo.register(ArcspreadException.class);
 		//kryo.register(byte[].class);  // if you want to pass byte arrays, etc.
 	}
 
@@ -69,6 +70,7 @@ public class IRPacket {
 		kryo.register(HashMap.class);
 		kryo.register(PigServiceHandle.class);
 		kryo.register(JobStatus.class);
+		kryo.register(ArcspreadException.class);
 		//kryo.register(byte[].class);  // if you want to pass byte arrays, etc.
 	}
 }

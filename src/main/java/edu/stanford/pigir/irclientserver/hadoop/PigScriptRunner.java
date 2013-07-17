@@ -44,7 +44,6 @@ public class PigScriptRunner implements PigServiceImpl {
 	// Map from Pig script names (a.k.a. operators) to
 	// their respective full pathnanmes:
 	static Map<String,String> knownOperators = new HashMap<String,String>();
-	static 	SimpleDateFormat timestampFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ");
 	
 	Properties props = new Properties();
 	Map<String,String> params = null;
@@ -63,8 +62,8 @@ public class PigScriptRunner implements PigServiceImpl {
 	public PigServiceHandle asyncPigRequest(String operator, Map<String, String> theParams) {
 		
 		// Build a jobname
-		String timestamp = timestampFormat.format(new Date()); 
-		String jobName = "arcspread_" + timestamp;
+		String jobName = "arcspread_" + PigServiceHandle.getPigTimestamp();
+		PigServiceHandle resultHandle = new PigServiceHandle(jobName, JobStatus.RUNNING);
 		
 		String pigScriptPath = knownOperators.get(operator);
 		if (pigScriptPath == null) {
@@ -99,7 +98,7 @@ public class PigScriptRunner implements PigServiceImpl {
 		//PigContext context = pserver.getPigContext();
 		//Properties props = context.getProperties();
 		
-		return new PigServiceHandle(jobName, JobStatus.RUNNING);
+		return resultHandle;
 	}
 	
 	
