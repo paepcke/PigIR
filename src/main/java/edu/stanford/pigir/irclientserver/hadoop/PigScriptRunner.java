@@ -15,8 +15,6 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.text.SimpleDateFormat;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -33,7 +31,7 @@ import org.apache.pig.impl.plan.VisitorException;
 
 import com.esotericsoftware.minlog.Log;
 
-import edu.stanford.pigir.irclientserver.JobHandle.JobStatus;
+import edu.stanford.pigir.irclientserver.JobHandle_I.JobStatus;
 import edu.stanford.pigir.irclientserver.PigServiceHandle;
 import edu.stanford.pigir.irclientserver.PigServiceImpl;
 

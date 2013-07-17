@@ -10,14 +10,14 @@ import com.esotericsoftware.minlog.Log;
 import edu.stanford.pigir.irclientserver.ArcspreadException;
 import edu.stanford.pigir.irclientserver.IRPacket;
 import edu.stanford.pigir.irclientserver.IRPacket.ServiceRequestPacket;
-import edu.stanford.pigir.irclientserver.JobHandle;
-import edu.stanford.pigir.irclientserver.JobHandle.JobStatus;
-import edu.stanford.pigir.irclientserver.PigService;
+import edu.stanford.pigir.irclientserver.JobHandle_I;
+import edu.stanford.pigir.irclientserver.JobHandle_I.JobStatus;
+import edu.stanford.pigir.irclientserver.PigService_I;
 import edu.stanford.pigir.irclientserver.PigServiceHandle;
 import edu.stanford.pigir.irclientserver.PigServiceImpl;
 import edu.stanford.pigir.irclientserver.hadoop.PigScriptRunner;
 
-public class IRServer implements PigService {
+public class IRServer implements PigService_I {
 	
 		
 	public static int IRSERVICE_PORT = 4040;
@@ -60,7 +60,7 @@ public class IRServer implements PigService {
 		kryoServer.start();
 	}
 	
-	public JobHandle newPigServiceRequest(ServiceRequestPacket req) {
+	public JobHandle_I newPigServiceRequest(ServiceRequestPacket req) {
 		PigServiceImpl pigServiceImpl = new PigScriptRunner();
 		if (IRServer.adminOps.contains(req.operator))
 			return processAdminOp(pigServiceImpl, req.operator, req);
@@ -83,8 +83,8 @@ public class IRServer implements PigService {
 		return 0;
 	}
 			
-	private JobHandle processAdminOp(PigServiceImpl pigService, String operator, ServiceRequestPacket req) {
-		JobHandle resultHandle = new PigServiceHandle("pigServiceAdmin", JobStatus.SUCCEEDED);
+	private JobHandle_I processAdminOp(PigServiceImpl pigService, String operator, ServiceRequestPacket req) {
+		JobHandle_I resultHandle = new PigServiceHandle("pigServiceAdmin", JobStatus.SUCCEEDED);
 		switch (operator) {
 		case "setPigScriptRoot":
 			try {

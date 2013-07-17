@@ -1,6 +1,6 @@
 package edu.stanford.pigir.irclientserver;
 
-import edu.stanford.pigir.irclientserver.JobHandle.JobStatus;
+import edu.stanford.pigir.irclientserver.JobHandle_I.JobStatus;
 
 /**
  * @author paepcke
@@ -10,7 +10,7 @@ import edu.stanford.pigir.irclientserver.JobHandle.JobStatus;
  *  extends Java exceptions. The exceptions are classes nested
  *  inside ArcspreadException. 
  *  
- *  What's special is that these exceptions implement JobHandle,
+ *  What's special is that these exceptions implement JobHandle_I,
  *  and can therefore be passed wherever computation results are
  *  passed across the client/server boundary. The methods required
  *  by this interface are inherited from AcrspreadException.
@@ -32,7 +32,7 @@ public class ArcspreadException extends Exception {
 
 	// -----------------------------  Each Exception is a Subclass ----------------------------------
 	
-	public static class NotImplementedException extends ArcspreadException implements JobHandle {
+	public static class NotImplementedException extends ArcspreadException implements JobHandle_I {
 		protected static final int errorCode = 1;
 		
 		public NotImplementedException(String msg) {
@@ -66,7 +66,7 @@ public class ArcspreadException extends Exception {
 	}
 	
 	public JobStatus getStatus() {
-		return JobHandle.JobStatus.FAILED;
+		return JobHandle_I.JobStatus.FAILED;
 	}
 
 	public String getJobName() {

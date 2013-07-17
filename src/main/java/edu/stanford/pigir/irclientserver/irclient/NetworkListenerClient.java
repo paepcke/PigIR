@@ -7,13 +7,19 @@ import com.esotericsoftware.kryonet.Connection;
 import com.esotericsoftware.kryonet.Listener;
 import com.esotericsoftware.minlog.Log;
 
+import edu.stanford.pigir.irclientserver.ClientSideReqID_I;
 import edu.stanford.pigir.irclientserver.IRPacket.ServiceRequestPacket;
 import edu.stanford.pigir.irclientserver.IRPacket.ServiceResponsePacket;
 
 public class NetworkListenerClient extends Listener {
 	
 	private Client kryoClient;
+	private IRClient resultRecipient = null;
 	
+	public NetworkListenerClient(IRClient irClient) {
+		super();
+		resultRecipient = irClient;
+	}	
 	
 	public void init(Client client) {
 		this.kryoClient = client;
@@ -23,10 +29,11 @@ public class NetworkListenerClient extends Listener {
 		Log.info("[Client] Connection to server successful.");
 	}
 
-	public void sendPacket(String operator, Map<String,String> params) {
+	public void sendPacket(String operator, Map<String,String> params, ClientSideReqID_I theClientSideId) {
 		ServiceRequestPacket req = new ServiceRequestPacket();
 		req.operator = operator;
 		req.params   = params;
+		req.clientSideReqId = theClientSideId;
 		kryoClient.sendTCP(req);
 	}
 	
@@ -43,5 +50,6 @@ public class NetworkListenerClient extends Listener {
 			return;
 		}
 		Log.info("[Client] " + resp.resultHandle);
+		resultRecipient.newPigResponse(resp);
 	}
 }

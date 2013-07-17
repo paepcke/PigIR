@@ -3,14 +3,18 @@ package edu.stanford.pigir.irclientserver;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
-public class PigServiceHandle implements JobHandle {
+public class PigServiceHandle implements JobHandle_I {
 
 	private static final SimpleDateFormat timestampFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ");
 	
-	JobStatus status 	= null;
-	String	  jobName 	= null;
+	JobStatus status 	= JobStatus.UNKNOWN;
+	String	  jobName 	= "null";
 	int       errorCode = -1;
 	String    message   = "";
+	
+	public PigServiceHandle() {
+		// Kryonet deserialization needs a no-args constructor. 
+	}
 	
 	public PigServiceHandle(String theJobName, JobStatus theStatus) {
 		status = theStatus;

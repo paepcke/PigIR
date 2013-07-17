@@ -11,6 +11,7 @@ import org.apache.commons.io.FileUtils;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.python.modules.time.Time;
 
 public class TestIRClient {
 	
@@ -45,6 +46,8 @@ public class TestIRClient {
 		// Tell PigScriptRunner.java where to look for the 
 		// Script files.
 		pigClient.setScriptRootDir("src/test/");
+		// Allow time for the response from server to be processed:
+		Time.sleep(4000); 
 	}
 
 	@Test

@@ -9,14 +9,14 @@ import com.esotericsoftware.minlog.Log;
 
 import edu.stanford.pigir.irclientserver.IRPacket.ServiceRequestPacket;
 import edu.stanford.pigir.irclientserver.IRPacket.ServiceResponsePacket;
-import edu.stanford.pigir.irclientserver.JobHandle;
-import edu.stanford.pigir.irclientserver.PigService;
+import edu.stanford.pigir.irclientserver.JobHandle_I;
+import edu.stanford.pigir.irclientserver.PigService_I;
 
 public class NetworkListenerServer extends Listener {
 	
-	private PigService pigServer = null;
+	private PigService_I pigServer = null;
 	
-	public NetworkListenerServer(PigService parentIRServer) {
+	public NetworkListenerServer(PigService_I parentIRServer) {
 		super();
 		pigServer = parentIRServer;
 	}
@@ -43,10 +43,11 @@ public class NetworkListenerServer extends Listener {
 			return;
 		}
 		req.logMsg();
-		JobHandle callResult = pigServer.newPigServiceRequest(req);
+		JobHandle_I callResult = pigServer.newPigServiceRequest(req);
 		
 		ServiceResponsePacket resp = new ServiceResponsePacket();
 		resp.resultHandle = callResult;
+		resp.clientSideReqId = req.clientSideReqId;
 		Log.info("[Server] responding " + resp.resultHandle.toString());
 		conn.sendTCP(resp);
 	}

@@ -8,7 +8,8 @@ import com.esotericsoftware.kryonet.Client;
 import com.esotericsoftware.kryonet.Server;
 import com.esotericsoftware.minlog.Log;
 
-import edu.stanford.pigir.irclientserver.JobHandle.JobStatus;
+import edu.stanford.pigir.irclientserver.ClientSideReqID_I.Disposition;
+import edu.stanford.pigir.irclientserver.JobHandle_I.JobStatus;
 
 public class IRPacket {
 
@@ -20,6 +21,7 @@ public class IRPacket {
 	public static class ServiceRequestPacket {
 		public String operator;
 		public Map<String,String> params;
+		public ClientSideReqID_I clientSideReqId;
 		
 		public void logMsg() {
 			String operation = operator;
@@ -37,7 +39,8 @@ public class IRPacket {
 	};
 	
 	public static class ServiceResponsePacket {
-		public JobHandle resultHandle;
+		public JobHandle_I resultHandle;
+		public ClientSideReqID_I clientSideReqId;
 	};
 
 	/**
@@ -57,6 +60,9 @@ public class IRPacket {
 		kryo.register(PigServiceHandle.class);
 		kryo.register(JobStatus.class);
 		kryo.register(ArcspreadException.class);
+		kryo.register(ClientSideReqID_I.class);
+		kryo.register(ClientSideReqID.class);
+		kryo.register(Disposition.class);
 		//kryo.register(byte[].class);  // if you want to pass byte arrays, etc.
 	}
 
@@ -71,6 +77,9 @@ public class IRPacket {
 		kryo.register(PigServiceHandle.class);
 		kryo.register(JobStatus.class);
 		kryo.register(ArcspreadException.class);
+		kryo.register(ClientSideReqID_I.class);
+		kryo.register(ClientSideReqID.class);
+		kryo.register(Disposition.class);
 		//kryo.register(byte[].class);  // if you want to pass byte arrays, etc.
 	}
 }

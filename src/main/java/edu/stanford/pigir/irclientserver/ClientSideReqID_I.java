@@ -3,6 +3,7 @@
  */
 package edu.stanford.pigir.irclientserver;
 
+
 /**
  * @author paepcke
  * 
@@ -17,5 +18,16 @@ package edu.stanford.pigir.irclientserver;
  *
  */
 public interface ClientSideReqID_I {
-	public String id = "<null>";
+	
+	
+	public enum Disposition {
+		QUEUE_RESULTS,
+		DISCARD_RESULTS,
+		NOTIFY
+	}
+	
+	public String getID();
+	public String getRequestClass();
+	public Disposition getDisposition();
+	public ResultRecipient_I getResultRecipient();
 }

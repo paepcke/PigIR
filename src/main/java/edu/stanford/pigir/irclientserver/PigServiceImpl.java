@@ -2,8 +2,6 @@ package edu.stanford.pigir.irclientserver;
 
 import java.util.Map;
 
-import org.apache.pig.impl.PigContext;
-
 public interface PigServiceImpl {
 
 	// Must return quickly! Called from network service. Returns
