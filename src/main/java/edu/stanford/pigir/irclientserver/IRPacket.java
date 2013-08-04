@@ -5,7 +5,8 @@ import java.util.Map;
 
 import com.esotericsoftware.kryo.Kryo;
 import com.esotericsoftware.kryonet.Client;
-import com.esotericsoftware.kryonet.Server;
+//import com.esotericsoftware.kryonet.Server;
+import com.esotericsoftware.kryo.kryonet.Server;
 import com.esotericsoftware.minlog.Log;
 
 import edu.stanford.pigir.irclientserver.ClientSideReqID_I.Disposition;

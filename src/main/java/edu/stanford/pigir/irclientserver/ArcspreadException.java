@@ -53,7 +53,7 @@ public class ArcspreadException extends Exception {
 	public int getErrorCode() {
 		int res = -1;
 		try {
-			res = (int) this.getClass().getDeclaredField("errorCode").get(this);
+			res = (Integer) this.getClass().getDeclaredField("errorCode").get(this);
 		} catch (NoSuchFieldException | SecurityException e) {
 			// We guarantee that the field is defined (in each exception subclass)
 			e.printStackTrace();
