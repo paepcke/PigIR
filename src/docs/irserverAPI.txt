@@ -1,0 +1,25 @@
+Request		 ::= "{" OperatorSpec ClientSideReqID Parameters "}"
+OperatorSpec 	 ::= "operator" ":" (AdminRequest | IRRequest)
+
+AdminRequest 	 ::= "{" (SetPigRootDirReq | GetJobStatusReq) "}"
+SetPigRootDirReq ::= "setPigRootDir" ":" DirectoryPath
+DirectoryPath    ::= [a-zA-Z/]+[0-9a-zA-z/.]*
+GetJobStatusReq  ::= "getJobStatus" ":" GetJobStatusParameters
+GetJobStatusParameters ::= "{" "jobName" ":" JobName "}"
+JobName          ::= [a-ZA-Z0-9/.-]+
+
+ServiceHandle    ::= "{" JobName JobStatus ErrorCode Message "}"
+JobStatus        ::= ("FAILED" | 
+		      "KILLED" | 
+		      "PREP" | 
+		      "RUNNING" | 
+		      "SUCCEEDED" | 
+		      "UNKNOWN")
+ErrorCode        ::= [-]? [0-9]+
+Message		 ::= [http://www.w3.org/TR/xml#NT-Char]
+
+IRRequest    	 ::= (BuildWebBaseIndexReq | ConcatColumnsReq | 
+		      CullNgramsReq | JaccardSimReq | NgramFrequenciesReq | 
+		      SmoothNgramsReq | WarcFilterReq | WarcGetTextOnlyReq | 
+		      WarcNgramsReq | WarcRecordCountReq | WarcSetAsideReq | 
+		      WarcStripHTMLReq | WarcWordCountReq | WebBaseWordCountReq)

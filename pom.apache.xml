@@ -218,20 +218,25 @@
       <version>1.7.0</version>
     </dependency>
     <dependency>
-      <groupId>com.esotericsoftware.kryo</groupId>
-      <artifactId>kryo</artifactId>
-      <version>2.21</version>
+      <groupId>org.codehaus.jettison</groupId>
+      <artifactId>jettison</artifactId>
+      <version>1.0-alpha-1</version>
     </dependency>
-    <dependency>
-      <groupId>com.esotericsoftware.minlog</groupId>
-      <artifactId>minlog</artifactId>
-      <version>1.2</version>
-    </dependency>
-    <dependency>
-      <groupId>com.esotericsoftware.reflectasm</groupId>
-      <artifactId>reflectasm</artifactId>
-      <version>1.07</version>
-    </dependency>
+    <!-- <dependency> -->
+    <!--   <groupId>com.esotericsoftware.kryo</groupId> -->
+    <!--   <artifactId>kryo</artifactId> -->
+    <!--   <version>2.21</version> -->
+    <!-- </dependency> -->
+    <!-- <dependency> -->
+    <!--   <groupId>com.esotericsoftware.minlog</groupId> -->
+    <!--   <artifactId>minlog</artifactId> -->
+    <!--   <version>1.2</version> -->
+    <!-- </dependency> -->
+    <!-- <dependency> -->
+    <!--   <groupId>com.esotericsoftware.reflectasm</groupId> -->
+    <!--   <artifactId>reflectasm</artifactId> -->
+    <!--   <version>1.07</version> -->
+    <!-- </dependency> -->
             
   </dependencies>
 

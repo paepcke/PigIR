@@ -95,6 +95,7 @@ public class IRServer implements PigService_I {
 			}
 			break;
 		case "getJobStatus":
+			// TODO: parameters in req packet should be single attr/val: "jobName" : <name>"
 			ArcspreadException.NotImplementedException exc = new ArcspreadException.NotImplementedException();
 			resultHandle = exc;
 		}
