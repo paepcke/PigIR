@@ -1,12 +1,88 @@
-Request		 ::= "{" OperatorSpec ClientSideReqID Parameters "}"
-OperatorSpec 	 ::= "operator" ":" (AdminRequest | IRRequest)
+Request		 ::= "{" (AdminRequest | IRRequest) "}"
 
-AdminRequest 	 ::= "{" (SetPigRootDirReq | GetJobStatusReq) "}"
+AdminRequest 	 ::= (SetPigRootDirReq | GetJobStatusReq)
 SetPigRootDirReq ::= "setPigRootDir" ":" DirectoryPath
-DirectoryPath    ::= [a-zA-Z/]+[0-9a-zA-z/.]*
-GetJobStatusReq  ::= "getJobStatus" ":" GetJobStatusParameters
-GetJobStatusParameters ::= "{" "jobName" ":" JobName "}"
-JobName          ::= [a-ZA-Z0-9/.-]+
+GetJobStatusReq  ::= "getJobStatus" ":" GetJobStatusParms
+GetJobStatusParms ::= "{" "jobName" ":" JobName "}"
+JobName          ::= DirectoryPath
+
+IRRequest    	 ::= (BuildWebBaseIndexReq | ConcatColumnsReq | 
+		      CullNgramsReq | JaccardSimReq | NgramFrequenciesReq | 
+		      SmoothNgramsReq | WarcFilterReq | WarcGetTextOnlyReq | 
+		      WarcNgramsReq | WarcRecordCountReq | WarcSetAsideReq | 
+		      WarcStripHTMLReq | WarcWordCountReq | WebBaseWordCountReq)
+
+BuildWebBaseIndexReq ::= "buildWebBaseIndex" ":" BuildWBIndexParms
+BuildWBIndexParms    ::= ("execmode"  ":" ("mapreduce" | "local"))?
+		         ("destdir"  ":" DirectoryPath)?
+		         ("numpages" ":" Integer)?
+			 ("startsite" ":" DomainName)?
+			 ("endsite"   ":" DomainName)?
+			 ("crawlname" ":" String)
+
+CullNgramsReq ::= "cullNgrams" ":" CullNgramsParms
+CullNgramsParms    ::=   ("execmode"  ":" ("mapreduce" | "local"))?
+		   	 ("stopwords"  ":" Boolean)?
+		         ("minlength" ":" Integer)?
+		         ("maxlength" ":" Integer)?
+			 ("ngrampath" ":" FilePath)
+
+NgramFrequenciesReq   ::= "ngramFrequencies" ":" NgramFreqParms
+NgramFreqParms    ::=   ("execmode"  ":" ("mapreduce" | "local"))?
+		        ("ngrampath" ":" FilePath)
+
+SmoothNgramsReq   ::= "ngramFrequencies" ":" SmoothNgramsParms
+SmoothNgramsParms ::= ("execmode"  ":" ("mapreduce" | "local"))?
+		      ("destdir"  ":" DirectoryPath)?
+		      ("limit" ":" Integer)?
+		      ("ngrampath" ":" FilePath)
+		      ("resultpath" ":" DirectoryPath)
+
+WarcFilterReq   ::= "warcFilter" ":" WarcFilterParms
+WarcFilterParms ::= ("execmode"  ":" ("mapreduce" | "local"))?
+		    ("destdir"  ":" DirectoryPath)?
+		    ("warcpath" ":" FilePath)
+		    ("warcfieldname" ":" WarcHeaderFldChar+)
+		    ("regex" ":" String)
+
+
+WarcNgramsReq   ::= "warcNgrams" ":" WarcNgramsParms
+WarcNgramsParms ::=   ("execmode"  ":" ("mapreduce" | "local"))?
+		      ("stopwords"  ":" Boolean)?
+		      ("minlength" ":" Integer)?
+		      ("maxlength" ":" Integer)?
+		      ("warcpath" ":" FilePath)
+		      ("arity"    ":" Integer)
+
+WarcRecordCountReq   ::= "warcRecordCount" ":" WarcRecordCountParms
+WarcRecordCountParms ::= ("execmode"  ":" ("mapreduce" | "local"))?
+		         ("warcpath" ":" FilePath)
+
+WarcSetAsideReq   ::= "warcSetAside" ":" WarcSetAsideParms
+WarcFilterParms ::= ("execmode"  ":" ("mapreduce" | "local"))?
+		    ("destdir"  ":" DirectoryPath)?
+		    ("warcpath" ":" FilePath)
+		    ("percentage" ":" Integer)
+
+WarcStripHTMLReq   ::= "warcStripHTML" ":" WarcStripHTMLParms
+WarcStripHTMLParms ::= ("execmode"  ":" ("mapreduce" | "local"))?
+		       ("destdir"  ":" DirectoryPath)?
+		       ("warcpath" ":" FilePath)
+
+WarcWordCountReq   ::= "warcWordCount" ":" WarcWordCountParms
+WarcWordCountParms ::= ("execmode"  ":" ("mapreduce" | "local"))?
+		       ("destdir"  ":" DirectoryPath)?
+		       ("warcpath" ":" FilePath)
+
+
+WebBaseWordCountReq ::= "webBaseWordCount" ":" WebBaseWordCountParms
+WebBaseWordCountParms ::= ("execmode"  ":" ("mapreduce" | "local"))?
+		         ("destdir"  ":" DirectoryPath)?
+		         ("numpages" ":" Integer)?
+			 ("startsite" ":" DomainName)?
+			 ("endsite"   ":" DomainName)?
+			 ("crawlname" ":" String)
+
 
 ServiceHandle    ::= "{" JobName JobStatus ErrorCode Message "}"
 JobStatus        ::= ("FAILED" | 
@@ -16,10 +92,11 @@ JobStatus        ::= ("FAILED" |
 		      "SUCCEEDED" | 
 		      "UNKNOWN")
 ErrorCode        ::= [-]? [0-9]+
-Message		 ::= [http://www.w3.org/TR/xml#NT-Char]
-
-IRRequest    	 ::= (BuildWebBaseIndexReq | ConcatColumnsReq | 
-		      CullNgramsReq | JaccardSimReq | NgramFrequenciesReq | 
-		      SmoothNgramsReq | WarcFilterReq | WarcGetTextOnlyReq | 
-		      WarcNgramsReq | WarcRecordCountReq | WarcSetAsideReq | 
-		      WarcStripHTMLReq | WarcWordCountReq | WebBaseWordCountReq)
+Message		 ::= String
+String		 ::= [http://www.w3.org/TR/xml#NT-Char]
+Boolean          ::= ("true" | "false")
+DomainName       ::= DomainStartStopChar [0-9a-zA-Z-]
+DomainStartStopChar ::= [0-9a-zA-Z]
+DirectoryPath    ::= [0-9a-zA-z/._]+
+FilePath         ::= [0-9a-zA-z._]+
+WarcHeaderFldChar ::= [0-9a-zA-z._]
