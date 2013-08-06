@@ -9,6 +9,7 @@ import java.net.JarURLConnection;
 import java.net.Socket;
 import java.net.URL;
 import java.net.UnknownHostException;
+import java.util.GregorianCalendar;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 
@@ -491,6 +492,15 @@ public final class Common {
 		String newStr = inStr.replaceAll("\\b(http://|https://)[^\\s]*\\b", "");
 		return newStr;
 	}
+
+	/*-----------------------------------------------------
+	| getTimestamp()
+	------------------------*/
+	
+	public static long getTimestamp() {
+		return new GregorianCalendar().getTimeInMillis();
+	}
+	
 	
 	// ---------------------------------   Support Classes ---------------------------
 	

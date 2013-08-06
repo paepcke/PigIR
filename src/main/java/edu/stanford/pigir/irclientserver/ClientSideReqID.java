@@ -9,7 +9,7 @@ public class ClientSideReqID implements ClientSideReqID_I {
 	
 	private URI resultRecipientURI = null;
 	private String id = "<null>";
-	private String requestClass = "BUILT_IN";
+	private String requestClass = "GENERIC";
 	private Disposition responseDisposition = Disposition.DISCARD_RESULTS;
 	
 	public ClientSideReqID() {
@@ -55,13 +55,20 @@ public class ClientSideReqID implements ClientSideReqID_I {
 		return resultRecipientURI;
 	}
 	
+	public void setResultRecipientURI(URI theURI) {
+		resultRecipientURI = theURI;
+	}
+	
 	public JSONStringer toJSON(JSONStringer stringer) throws JSONException {
 		stringer.key("resultRecipientURI");
-		stringer.value(resultRecipientURI.toASCIIString());
+		if (resultRecipientURI != null)
+			stringer.value(resultRecipientURI.toASCIIString());
+		else
+			stringer.value("<null>");
 		stringer.key("id");
 		stringer.value(id);
 		stringer.key("requestClass");
-		stringer.key(requestClass);
+		stringer.value(requestClass);
 		stringer.key("responseDisposition");
 		stringer.value(responseDisposition);
 
