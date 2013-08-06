@@ -3,6 +3,9 @@
  */
 package edu.stanford.pigir.irclientserver;
 
+import org.codehaus.jettison.json.JSONException;
+import org.codehaus.jettison.json.JSONStringer;
+
 /**
  * @author paepcke
  *
@@ -26,4 +29,6 @@ public interface JobHandle_I {
 	public void setStatus(JobStatus newStatus);
 	public void setErrorCode(int newErrorCode);
 	public void setMessage(String newMessage);
+	public JSONStringer toJSON(JSONStringer stringer) throws JSONException;
 }
+

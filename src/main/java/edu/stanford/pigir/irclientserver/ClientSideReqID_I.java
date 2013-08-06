@@ -3,6 +3,11 @@
  */
 package edu.stanford.pigir.irclientserver;
 
+import java.net.URI;
+
+import org.codehaus.jettison.json.JSONException;
+import org.codehaus.jettison.json.JSONStringer;
+
 
 /**
  * @author paepcke
@@ -25,9 +30,10 @@ public interface ClientSideReqID_I {
 		DISCARD_RESULTS,
 		NOTIFY
 	}
-	
+
+	public URI getResultRecipientURI();
 	public String getID();
 	public String getRequestClass();
 	public Disposition getDisposition();
-	public ResultRecipient_I getResultRecipient();
+	public JSONStringer toJSON(JSONStringer stringer) throws JSONException;
 }

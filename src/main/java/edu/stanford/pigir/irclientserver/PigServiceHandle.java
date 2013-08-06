@@ -3,12 +3,15 @@ package edu.stanford.pigir.irclientserver;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
+import org.codehaus.jettison.json.JSONException;
+import org.codehaus.jettison.json.JSONStringer;
+
 public class PigServiceHandle implements JobHandle_I {
 
 	private static final SimpleDateFormat timestampFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ");
 	
-	JobStatus status 	= JobStatus.UNKNOWN;
 	String	  jobName 	= "null";
+	JobStatus status 	= JobStatus.UNKNOWN;
 	int       errorCode = -1;
 	String    message   = "";
 	
@@ -70,5 +73,18 @@ public class PigServiceHandle implements JobHandle_I {
 	
 	public static String getPigTimestamp() {
 		return PigServiceHandle.timestampFormat.format(new Date()); 
+	}
+	
+	public JSONStringer toJSON(JSONStringer stringer) throws JSONException {
+		stringer.key("jobName");
+		stringer.value(getJobName());
+		stringer.key("status");
+		stringer.value(getStatus());
+		stringer.key("errorCode");
+		stringer.value(getErrorCode());
+		stringer.key("message");
+		stringer.value(getMessage());
+		
+		return stringer;
 	}
 }

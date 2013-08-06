@@ -3,9 +3,11 @@
  */
 package edu.stanford.pigir.irclientserver;
 
+import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONStringer;
 
 import edu.stanford.pigir.irclientserver.IRPacket.ServiceRequestPacket;
+import edu.stanford.pigir.irclientserver.IRPacket.ServiceResponsePacket;
 
 /**
  * Generates JSON for requests/responses that need to
@@ -16,22 +18,24 @@ import edu.stanford.pigir.irclientserver.IRPacket.ServiceRequestPacket;
  */
 public class JSONizer {
 	
-	public static String convertServiceRequestPacket(ServiceRequestPacket reqPacket) {
-		//String res = String.format("{operator : %s, ", reqPacket.operator);
+	public static String convertServiceRequestPacket(ServiceRequestPacket reqPacket) throws JSONException {
 		
-		JSONStringer res = new JSONStringer();
-		res.object();
-		res.key("operator");
-		res.value(reqPacket.operator);
+		JSONStringer stringer = new JSONStringer();
+		stringer.object();
+		reqPacket.toJSON(stringer);
+		stringer.endObject();
 		
-		
-		return res;
+		return stringer.toString();
 	
+	}
+	
+	public static String convertServiceResponsePacket(ServiceResponsePacket responsePacket) throws JSONException {
 		
+		JSONStringer stringer = new JSONStringer();
+		stringer.object();
+		responsePacket.toJSON(stringer);
+		stringer.endObject();
 		
-/*		public String operator;
-		public Map<String,String> params;
-		public ClientSideReqID_I clientSideReqId;
-*/				
+		return stringer.toString();
 	}
 }

@@ -1,10 +1,9 @@
-Request		 ::= "{" (AdminRequest | IRRequest) "}"
+Request		 ::= "{" ClientSideRequestID (AdminRequest | IRRequest) "}"
 
 AdminRequest 	 ::= (SetPigRootDirReq | GetJobStatusReq)
 SetPigRootDirReq ::= "setPigRootDir" ":" DirectoryPath
 GetJobStatusReq  ::= "getJobStatus" ":" GetJobStatusParms
 GetJobStatusParms ::= "{" "jobName" ":" JobName "}"
-JobName          ::= DirectoryPath
 
 IRRequest    	 ::= (BuildWebBaseIndexReq | ConcatColumnsReq | 
 		      CullNgramsReq | JaccardSimReq | NgramFrequenciesReq | 
@@ -13,30 +12,38 @@ IRRequest    	 ::= (BuildWebBaseIndexReq | ConcatColumnsReq |
 		      WarcStripHTMLReq | WarcWordCountReq | WebBaseWordCountReq)
 
 BuildWebBaseIndexReq ::= "buildWebBaseIndex" ":" BuildWBIndexParms
-BuildWBIndexParms    ::= ("execmode"  ":" ("mapreduce" | "local"))?
+BuildWBIndexParms    ::= "{"
+		         ("execmode"  ":" ("mapreduce" | "local"))?
 		         ("destdir"  ":" DirectoryPath)?
 		         ("numpages" ":" Integer)?
 			 ("startsite" ":" DomainName)?
 			 ("endsite"   ":" DomainName)?
 			 ("crawlname" ":" String)
+			 "}"
 
 CullNgramsReq ::= "cullNgrams" ":" CullNgramsParms
-CullNgramsParms    ::=   ("execmode"  ":" ("mapreduce" | "local"))?
+CullNgramsParms    ::=   "{"
+		   	 ("execmode"  ":" ("mapreduce" | "local"))?
 		   	 ("stopwords"  ":" Boolean)?
 		         ("minlength" ":" Integer)?
 		         ("maxlength" ":" Integer)?
 			 ("ngrampath" ":" FilePath)
+			 "}"
 
 NgramFrequenciesReq   ::= "ngramFrequencies" ":" NgramFreqParms
-NgramFreqParms    ::=   ("execmode"  ":" ("mapreduce" | "local"))?
+NgramFreqParms    ::=   "{"
+		  	("execmode"  ":" ("mapreduce" | "local"))?
 		        ("ngrampath" ":" FilePath)
+			"}"
 
 SmoothNgramsReq   ::= "ngramFrequencies" ":" SmoothNgramsParms
-SmoothNgramsParms ::= ("execmode"  ":" ("mapreduce" | "local"))?
+SmoothNgramsParms ::= "{"
+		      ("execmode"  ":" ("mapreduce" | "local"))?
 		      ("destdir"  ":" DirectoryPath)?
 		      ("limit" ":" Integer)?
 		      ("ngrampath" ":" FilePath)
 		      ("resultpath" ":" DirectoryPath)
+		      "}"
 
 WarcFilterReq   ::= "warcFilter" ":" WarcFilterParms
 WarcFilterParms ::= ("execmode"  ":" ("mapreduce" | "local"))?
@@ -47,52 +54,84 @@ WarcFilterParms ::= ("execmode"  ":" ("mapreduce" | "local"))?
 
 
 WarcNgramsReq   ::= "warcNgrams" ":" WarcNgramsParms
-WarcNgramsParms ::=   ("execmode"  ":" ("mapreduce" | "local"))?
+WarcNgramsParms ::=   "{"
+		      ("execmode"  ":" ("mapreduce" | "local"))?
 		      ("stopwords"  ":" Boolean)?
 		      ("minlength" ":" Integer)?
 		      ("maxlength" ":" Integer)?
 		      ("warcpath" ":" FilePath)
 		      ("arity"    ":" Integer)
+		      "}"
 
 WarcRecordCountReq   ::= "warcRecordCount" ":" WarcRecordCountParms
-WarcRecordCountParms ::= ("execmode"  ":" ("mapreduce" | "local"))?
+WarcRecordCountParms ::= "{"
+		     	 ("execmode"  ":" ("mapreduce" | "local"))?
 		         ("warcpath" ":" FilePath)
+			 "}"
 
 WarcSetAsideReq   ::= "warcSetAside" ":" WarcSetAsideParms
-WarcFilterParms ::= ("execmode"  ":" ("mapreduce" | "local"))?
+WarcFilterParms ::= "{"
+		    ("execmode"  ":" ("mapreduce" | "local"))?
 		    ("destdir"  ":" DirectoryPath)?
 		    ("warcpath" ":" FilePath)
 		    ("percentage" ":" Integer)
+		    "}"
 
 WarcStripHTMLReq   ::= "warcStripHTML" ":" WarcStripHTMLParms
-WarcStripHTMLParms ::= ("execmode"  ":" ("mapreduce" | "local"))?
+WarcStripHTMLParms ::= "{"
+		       ("execmode"  ":" ("mapreduce" | "local"))?
 		       ("destdir"  ":" DirectoryPath)?
 		       ("warcpath" ":" FilePath)
+		       "}"
 
 WarcWordCountReq   ::= "warcWordCount" ":" WarcWordCountParms
-WarcWordCountParms ::= ("execmode"  ":" ("mapreduce" | "local"))?
+WarcWordCountParms ::= "{"
+		       ("execmode"  ":" ("mapreduce" | "local"))?
 		       ("destdir"  ":" DirectoryPath)?
 		       ("warcpath" ":" FilePath)
+		       "}"
 
 
 WebBaseWordCountReq ::= "webBaseWordCount" ":" WebBaseWordCountParms
-WebBaseWordCountParms ::= ("execmode"  ":" ("mapreduce" | "local"))?
-		         ("destdir"  ":" DirectoryPath)?
-		         ("numpages" ":" Integer)?
-			 ("startsite" ":" DomainName)?
-			 ("endsite"   ":" DomainName)?
-			 ("crawlname" ":" String)
+WebBaseWordCountParms ::= "{"
+		      	  ("execmode"  ":" ("mapreduce" | "local"))?
+			  ("destdir"  ":" DirectoryPath)?
+		          ("numpages" ":" Integer)?
+			  ("startsite" ":" DomainName)?
+			  ("endsite"   ":" DomainName)?
+			  ("crawlname" ":" String)
+			  "}"
+
+Response            ::= "{" ClientSideRequestID ServiceHandle "}"
+
+ClientSideRequestID ::= "{"
+		    	"resultRecipientURI" ":" URI
+			"id" ":" String
+			"requestClass" ":" String
+			"responseDisposition" ":" ResponseDisposition
+			"}"		        
 
 
 ServiceHandle    ::= "{" JobName JobStatus ErrorCode Message "}"
-JobStatus        ::= ("FAILED" | 
+
+JobName          ::= "jobName" ":" DirectoryPath
+
+ResponseDisposition ::= ("QUEUE_RESULTS" |
+		    	 "DISCARD_RESULTS" |
+			 "NOTIFY")
+
+JobStatus        ::= "jobStatus" ":" 
+		     ("FAILED" | 
 		      "KILLED" | 
 		      "PREP" | 
 		      "RUNNING" | 
 		      "SUCCEEDED" | 
 		      "UNKNOWN")
-ErrorCode        ::= [-]? [0-9]+
-Message		 ::= String
+
+
+ErrorCode        ::= "errorCode" ":" [-]? [0-9]+
+Message		 ::= "message" ":" String
+
 String		 ::= [http://www.w3.org/TR/xml#NT-Char]
 Boolean          ::= ("true" | "false")
 DomainName       ::= DomainStartStopChar [0-9a-zA-Z-]

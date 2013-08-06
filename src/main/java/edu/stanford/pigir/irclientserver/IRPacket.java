@@ -3,6 +3,9 @@ package edu.stanford.pigir.irclientserver;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.codehaus.jettison.json.JSONString;
+import org.codehaus.jettison.json.JSONStringer;
+
 import com.esotericsoftware.kryo.Kryo;
 import com.esotericsoftware.kryonet.Client;
 //import com.esotericsoftware.kryonet.Server;
@@ -20,9 +23,9 @@ public class IRPacket {
 */
 	
 	public static class ServiceRequestPacket {
+		public ClientSideReqID_I clientSideReqId;
 		public String operator;
 		public Map<String,String> params;
-		public ClientSideReqID_I clientSideReqId;
 		
 		public void logMsg() {
 			String operation = operator;
@@ -37,11 +40,35 @@ public class IRPacket {
 			operation += ")";
 			Log.info("[Server] " + operation);
 		}
+		
+		public JSONStringer toJSON(JSONStringer stringer) {
+			stringer.object();
+			clientSideReqId.toJSON(stringer);
+			stringer.endObject();
+			stringer.key(operator);
+			stringer.value(stringer.object());
+			for (String parmKey : params.keySet()) {
+				stringer.key(parmKey);
+				stringer.value(params.get(parmKey));
+			}
+			stringer.endObject();
+		}
 	};
 	
 	public static class ServiceResponsePacket {
-		public JobHandle_I resultHandle;
 		public ClientSideReqID_I clientSideReqId;
+		public JobHandle_I resultHandle;
+		
+		public JSONStringer toJSON(JSONStringer stringer) {
+			stringer.object();
+			clientSideReqId.toJSON(stringer);
+			stringer.endObject();
+			stringer.object();
+			resultHandle.toJSON(stringer);
+			stringer.endObject();
+			
+			return stringer;
+		}
 	};
 
 	/**

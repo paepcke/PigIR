@@ -1,11 +1,16 @@
 package edu.stanford.pigir.irclientserver;
 
+import java.net.URI;
+
+import org.codehaus.jettison.json.JSONException;
+import org.codehaus.jettison.json.JSONStringer;
+
 public class ClientSideReqID implements ClientSideReqID_I {
 	
+	private URI resultRecipientURI = null;
 	private String id = "<null>";
 	private String requestClass = "BUILT_IN";
 	private Disposition responseDisposition = Disposition.DISCARD_RESULTS;
-	private ResultRecipient_I resultRecipient = null;
 	
 	public ClientSideReqID() {
 	}
@@ -28,10 +33,10 @@ public class ClientSideReqID implements ClientSideReqID_I {
 		responseDisposition = theDisposition;
 	}
 	
-	public ClientSideReqID(String theRequestClass, String theId, Disposition theDisposition, ResultRecipient_I contactCallback) {
+	public ClientSideReqID(String theRequestClass, String theId, Disposition theDisposition, URI contactCallback) {
 		this(theRequestClass, theId);
 		responseDisposition = theDisposition;
-		resultRecipient = contactCallback;
+		resultRecipientURI = contactCallback;
 	}
 	
 	public String getID() {
@@ -46,7 +51,20 @@ public class ClientSideReqID implements ClientSideReqID_I {
 		return responseDisposition;
 	}
 	
-	public ResultRecipient_I getResultRecipient() {
-		return resultRecipient;
+	public URI getResultRecipientURI() {
+		return resultRecipientURI;
+	}
+	
+	public JSONStringer toJSON(JSONStringer stringer) throws JSONException {
+		stringer.key("resultRecipientURI");
+		stringer.value(resultRecipientURI.toASCIIString());
+		stringer.key("id");
+		stringer.value(id);
+		stringer.key("requestClass");
+		stringer.key(requestClass);
+		stringer.key("responseDisposition");
+		stringer.value(responseDisposition);
+
+		return stringer;
 	}
 }

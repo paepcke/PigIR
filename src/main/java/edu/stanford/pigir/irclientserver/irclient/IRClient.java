@@ -91,12 +91,12 @@ public class IRClient {
 			appropriateResultQueue.add(resp);
 			// ... and if a result callback recipient was included
 			// in the clientRequest then notify it:
-			if (clientReqId.getResultRecipient() != null)
-				clientReqId.getResultRecipient().resultAvailable(resp);
+			if (clientReqId.getResultRecipientURI() != null)
+				clientReqId.getResultRecipientURI().resultAvailable(resp);
 			return;
 		case NOTIFY:
-			if (clientReqId.getResultRecipient() != null)
-				clientReqId.getResultRecipient().resultAvailable(resp);
+			if (clientReqId.getResultRecipientURI() != null)
+				clientReqId.getResultRecipientURI().resultAvailable(resp);
 		}
 	}
 }
