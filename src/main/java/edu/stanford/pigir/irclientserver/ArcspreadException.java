@@ -24,6 +24,8 @@ public class ArcspreadException extends Exception {
 
 	private static String DEFAULT_JOBNAME = "<unnamed>";
 	protected String jobName = ArcspreadException.DEFAULT_JOBNAME;
+	protected static final int errorCode = 0;
+	protected static final String cause = "";
 	
 	public ArcspreadException() {
 		super();
@@ -33,11 +35,27 @@ public class ArcspreadException extends Exception {
 		super(msg);
 	}
 
+	public JSONStringer toJSON(JSONStringer stringer) {
+		try {
+			stringer.object();
+			stringer.key("errorCode");
+			stringer.value(Integer.toString(errorCode));
+			stringer.key("exceptionCause");
+			stringer.value(cause);
+			stringer.key("exceptionMsg");
+			stringer.value(getMessage());
+		} catch (JSONException e) {
+			throw new RuntimeException("Cannot convert NotImplementedException to JSON: " + e.getMessage());
+		}
+		return stringer;
+	}
+		
 	// -----------------------------  Each Exception is a Subclass ----------------------------------
 	
 	public static class NotImplementedException extends ArcspreadException implements JobHandle_I {
 		protected static final int errorCode = 1;
-		
+		protected static final String cause = "Not Implemented";
+	
 		public NotImplementedException(String msg) {
 			super(msg);
 		}
@@ -50,18 +68,23 @@ public class ArcspreadException extends Exception {
 		public NotImplementedException() {
 			super();
 		}
+	}
+
+	public static class CommIOException extends ArcspreadException implements JobHandle_I {
+		protected static final int errorCode = 2;
+		protected static final String cause = "IO Exception During Communication";
+	
+		public CommIOException(String msg) {
+			super(msg);
+		}
 		
-		public JSONStringer toJSON(JSONStringer stringer) {
-			try {
-				stringer.object();
-				stringer.key("errorCode");
-				stringer.value(Integer.toString(errorCode));
-				stringer.key("exceptionMsg");
-				stringer.value("Not Implemented");
-			} catch (JSONException e) {
-				throw new RuntimeException("Cannot convert NotImplementedException to JSON: " + e.getMessage());
-			}
-			return stringer;
+		public CommIOException(String theJobName, String msg) {
+			super(msg);
+			jobName = theJobName;
+		}
+		
+		public CommIOException() {
+			super();
 		}
 	}
 

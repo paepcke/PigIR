@@ -34,7 +34,7 @@ public class HTTPService {
 		jettyServer.setHandler(handler);
 	}
 	
-	public int sentPacket(String jsonStr, URI targetURI ) throws IOException { 
+	public int sendPacket(String jsonStr, URI targetURI ) throws IOException { 
 
 		HttpClient httpclient = new DefaultHttpClient();
 		HttpPost httppost = new HttpPost(targetURI);

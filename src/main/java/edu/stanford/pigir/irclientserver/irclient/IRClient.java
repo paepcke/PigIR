@@ -41,12 +41,12 @@ public class IRClient extends AbstractHandler {
 		httpService.registerMessageHandler(this);
 	}
 
-	public void sendProcessRequest(String operator, Map<String,String> params) {
+	public void sendProcessRequest(String operator, Map<String,String> params) throws IOException {
 		// Create default client side request. They go into the GENERIC response queue:
 		sendProcessRequestWorker(operator, params, new ClientSideReqID());
 	}
 	
-	public void sendProcessRequest(String operator, Map<String,String> params, ResultRecipient_I resultCallbackObj) {
+	public void sendProcessRequest(String operator, Map<String,String> params, ResultRecipient_I resultCallbackObj) throws IOException {
 		String timestamp = java.lang.String.valueOf(Common.getTimestamp());
 		// Event queue for results: "generic". ID: timestamp 
 		ClientSideReqID reqID = new ClientSideReqID("GENERIC", timestamp); // ID is the timestamp of this request
@@ -55,7 +55,7 @@ public class IRClient extends AbstractHandler {
 		sendProcessRequestWorker(operator, params, reqID);
 	}
 	
-	public void sendProcessRequest(String operator, Map<String,String> params, Disposition disposition) {
+	public void sendProcessRequest(String operator, Map<String,String> params, Disposition disposition) throws IOException {
 		// Event queue for results: "generic". ID: timestamp 
 		ClientSideReqID reqID = new ClientSideReqID("GENERIC",
 													"<null>", // no callback id
@@ -66,7 +66,7 @@ public class IRClient extends AbstractHandler {
 		sendProcessRequestWorker(operator, params, reqID);
 	}
 	
-	public void sendProcessRequest(String operator, Map<String,String> params, ResultRecipient_I resultCallbackObj, Disposition disposition) {
+	public void sendProcessRequest(String operator, Map<String,String> params, ResultRecipient_I resultCallbackObj, Disposition disposition) throws IOException {
 		String timestamp = java.lang.String.valueOf(Common.getTimestamp());
 		// Event queue for results: "generic". ID: timestamp 
 		ClientSideReqID reqID = new ClientSideReqID("GENERIC", timestamp, disposition); // ID is the timestamp of this request
@@ -88,7 +88,7 @@ public class IRClient extends AbstractHandler {
 		return result;
 	}
 	
-	private void sendProcessRequestWorker(String operator, Map<String,String> params, ClientSideReqID_I reqID) {	
+	private void sendProcessRequestWorker(String operator, Map<String,String> params, ClientSideReqID_I reqID) throws IOException {	
 		Log.info("[Client] Sending process request: " + operator);
 		
 		// Which result queue should the response go to?
@@ -103,7 +103,7 @@ public class IRClient extends AbstractHandler {
 		httpService.sendPacket(reqPaket.toJSON().toString(), IRServiceConfiguration.IR_SERVICE_URI);
 	}
 	
-	public void setScriptRootDir(String dir) {
+	public void setScriptRootDir(String dir) throws IOException {
 		Map<String,String> params = new HashMap<String,String>();
 		params.put("scriptRoot", dir);
 		sendProcessRequest("setPigScriptRoot", params);
