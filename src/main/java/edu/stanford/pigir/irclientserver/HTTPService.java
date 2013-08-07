@@ -1,40 +1,59 @@
 package edu.stanford.pigir.irclientserver;
 
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.net.URI;
+
+import org.apache.http.HttpResponse;
+import org.apache.http.StatusLine;
+import org.apache.http.client.ClientProtocolException;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.StringEntity;
+import org.apache.http.impl.client.DefaultHttpClient;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.handler.AbstractHandler;
 
 public class HTTPService {
-	
-	public static Server serverForRequests = null;
-	public static Server serverForResponses = null;
-	
-	public HTTPService() {
-		
-		try {
-			if (serverForRequests == null) { 
-				serverForRequests = new Server(IRServiceConfiguration.IR_SERVICE_REQUEST_PORT);
-				serverForRequests.start();
-			}
-			if (serverForResponses == null) {
-				serverForResponses = new Server(IRServiceConfiguration.IR_SERVICE_RESPONSE_PORT);
-				serverForResponses.start();
-			}
 
-			// Wait for both servers to be finished:
-			serverForRequests.join();
-			serverForResponses.join();
+	private static Server jettyServer = null;
+	
+	public HTTPService(int listeningPort) {
 
-		} catch (Exception e) {
-			throw new RuntimeException("Could not start the HTTP (i.e. Jetty) server: " + e.getMessage());
+		if (jettyServer == null) {
+			try {
+				jettyServer = new Server(listeningPort);
+				jettyServer.start();
+			} catch (Exception e) {
+				throw new RuntimeException("Could not start the HTTP (i.e. Jetty) server: " + e.getMessage());
+			}
 		}
 	}
 	
-	public void registerRequestHandler(AbstractHandler handler) {
-		serverForRequests.setHandler(handler);
+	public void registerMessageHandler(AbstractHandler handler) {
+		jettyServer.setHandler(handler);
 	}
 	
-	public void registerResponseHandler(AbstractHandler handler) {
-		serverForResponses.setHandler(handler);
+	public int sentPacket(String jsonStr, URI targetURI ) throws IOException { 
+
+		HttpClient httpclient = new DefaultHttpClient();
+		HttpPost httppost = new HttpPost(targetURI);
+
+		try {
+			httppost.setEntity(new StringEntity(jsonStr));
+		} catch (UnsupportedEncodingException e) {
+			throw new RuntimeException("Cannot place JSON message string into HTTP POST request: " + e.getMessage());
+		}
+
+		//Execute and get the response.
+		HttpResponse response;
+		try {
+			response = httpclient.execute(httppost);
+		} catch (ClientProtocolException e) {
+			throw new RuntimeException("Cannot send HTTP POST request (ClientProtocolException): " + e.getMessage());
+		}
+		StatusLine status = response.getStatusLine();
+		int statusCode = status.getStatusCode();
+		return statusCode;
 	}
-	
 }

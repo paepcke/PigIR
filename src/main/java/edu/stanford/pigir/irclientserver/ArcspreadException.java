@@ -1,5 +1,8 @@
 package edu.stanford.pigir.irclientserver;
 
+import org.codehaus.jettison.json.JSONException;
+import org.codehaus.jettison.json.JSONStringer;
+
 import edu.stanford.pigir.irclientserver.JobHandle_I.JobStatus;
 
 /**
@@ -46,6 +49,19 @@ public class ArcspreadException extends Exception {
 		
 		public NotImplementedException() {
 			super();
+		}
+		
+		public JSONStringer toJSON(JSONStringer stringer) {
+			try {
+				stringer.object();
+				stringer.key("errorCode");
+				stringer.value(Integer.toString(errorCode));
+				stringer.key("exceptionMsg");
+				stringer.value("Not Implemented");
+			} catch (JSONException e) {
+				throw new RuntimeException("Cannot convert NotImplementedException to JSON: " + e.getMessage());
+			}
+			return stringer;
 		}
 	}
 

@@ -1,9 +1,9 @@
 package edu.stanford.pigir.irclientserver.irclient;
 
 import java.io.IOException;
+import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.UnknownHostException;
-import java.rmi.RemoteException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Queue;
@@ -23,21 +23,22 @@ import edu.stanford.pigir.irclientserver.ClientSideReqID;
 import edu.stanford.pigir.irclientserver.ClientSideReqID_I;
 import edu.stanford.pigir.irclientserver.ClientSideReqID_I.Disposition;
 import edu.stanford.pigir.irclientserver.HTTPService;
+import edu.stanford.pigir.irclientserver.IRPacket.ServiceRequestPacket;
 import edu.stanford.pigir.irclientserver.IRPacket.ServiceResponsePacket;
 import edu.stanford.pigir.irclientserver.IRServiceConfiguration;
-import edu.stanford.pigir.irclientserver.PigClient_I;
+import edu.stanford.pigir.irclientserver.ResultRecipient_I;
 import edu.stanford.pigir.irclientserver.Utils;
 
 public class IRClient extends AbstractHandler {
 	
 	private static Map<String, ConcurrentLinkedQueue<ServiceResponsePacket>> resultQueues =
 			new HashMap<String,ConcurrentLinkedQueue<ServiceResponsePacket>>();
-	private static Map<String, PigClient_I> resultListeners = new HashMap<String, PigClient_I>();
+	private static Map<String, ResultRecipient_I> resultListeners = new HashMap<String, ResultRecipient_I>();
 	HTTPService httpService = null;
 	
 	public IRClient() {
 		httpService = new HTTPService(IRServiceConfiguration.IR_SERVICE_REQUEST_PORT);
-		httpService.registerResponseHandler(this);
+		httpService.registerMessageHandler(this);
 	}
 
 	public void sendProcessRequest(String operator, Map<String,String> params) {
@@ -45,16 +46,12 @@ public class IRClient extends AbstractHandler {
 		sendProcessRequestWorker(operator, params, new ClientSideReqID());
 	}
 	
-	public void sendProcessRequest(String operator, Map<String,String> params, PigClient_I resultCallbackObj) {
+	public void sendProcessRequest(String operator, Map<String,String> params, ResultRecipient_I resultCallbackObj) {
 		String timestamp = java.lang.String.valueOf(Common.getTimestamp());
 		// Event queue for results: "generic". ID: timestamp 
 		ClientSideReqID reqID = new ClientSideReqID("GENERIC", timestamp); // ID is the timestamp of this request
 		resultListeners.put(timestamp, resultCallbackObj);
-		try {
-			reqID.setResultRecipientURI(Utils.getURI(IRServiceConfiguration.IR_RESPONSE_CONTEXT + "/" + timestamp));
-		} catch (UnknownHostException | URISyntaxException e) {
-			throw new RuntimeException("Trouble creating a response URI: " + e.getMessage());			
-		}
+		reqID.setResultRecipientURI(getResponseURI(timestamp));
 		sendProcessRequestWorker(operator, params, reqID);
 	}
 	
@@ -64,28 +61,31 @@ public class IRClient extends AbstractHandler {
 													"<null>", // no callback id
 													disposition);
 		if (disposition != Disposition.DISCARD_RESULTS) {
-			try {
-				reqID.setResultRecipientURI(Utils.getURI(IRServiceConfiguration.IR_RESPONSE_CONTEXT));
-			} catch (UnknownHostException | URISyntaxException e) {
-				throw new RuntimeException("Trouble creating a response URI: " + e.getMessage());
-			}
+			reqID.setResultRecipientURI(getResponseURI(java.lang.String.valueOf(Common.getTimestamp())));
 		}
 		sendProcessRequestWorker(operator, params, reqID);
 	}
 	
-	public void sendProcessRequest(String operator, Map<String,String> params, PigClient_I resultCallbackObj, Disposition disposition) {
+	public void sendProcessRequest(String operator, Map<String,String> params, ResultRecipient_I resultCallbackObj, Disposition disposition) {
 		String timestamp = java.lang.String.valueOf(Common.getTimestamp());
 		// Event queue for results: "generic". ID: timestamp 
 		ClientSideReqID reqID = new ClientSideReqID("GENERIC", timestamp, disposition); // ID is the timestamp of this request
 		resultListeners.put(timestamp, resultCallbackObj);
 		if (disposition != Disposition.DISCARD_RESULTS) {
-			try {
-				reqID.setResultRecipientURI(Utils.getURI(IRServiceConfiguration.IR_RESPONSE_CONTEXT + "/" + timestamp));
-			} catch (UnknownHostException | URISyntaxException e) {
-				throw new RuntimeException("Trouble creating a response URI: " + e.getMessage());			
-			}
+			reqID.setResultRecipientURI(getResponseURI(timestamp));
 		}
 		sendProcessRequestWorker(operator, params, reqID);
+	}
+	
+	private URI getResponseURI(String responseID) {
+		URI result = null;
+		try {
+			Utils.getURI(IRServiceConfiguration.IR_SERVICE_RESPONSE_PORT,
+					IRServiceConfiguration.IR_RESPONSE_CONTEXT + "/" + responseID);
+		} catch (UnknownHostException | URISyntaxException e) {
+			throw new RuntimeException("Trouble creating a response URI: " + e.getMessage());			
+		}
+		return result;
 	}
 	
 	private void sendProcessRequestWorker(String operator, Map<String,String> params, ClientSideReqID_I reqID) {	
@@ -97,8 +97,10 @@ public class IRClient extends AbstractHandler {
 		if (!resultQueues.containsKey(reqClass))
 			resultQueues.put(reqClass,  new ConcurrentLinkedQueue<ServiceResponsePacket>());
 		
+		ServiceRequestPacket reqPaket = new ServiceRequestPacket(operator, params, reqID);
+		
 		// Ship the request to the server:
-		netListener.sendPacket(operator, params, reqID);
+		httpService.sendPacket(reqPaket.toJSON().toString(), IRServiceConfiguration.IR_SERVICE_URI);
 	}
 	
 	public void setScriptRootDir(String dir) {
@@ -125,17 +127,23 @@ public class IRClient extends AbstractHandler {
 			// Queue the result...
 			appropriateResultQueue.add(resp);
 			// ... and if a result callback recipient was included
-			// in the clientRequest then notify it:
-			String requestID = clientReqId.getID();
-			if ( (requestID != null) && (resultListerners. resultListeners)
-				clientReqId.getResultRecipientURI().resultAvailable(resp);
+			// in the clientRequest then notify it in addition to queueing:
+			notifyListener(clientReqId, resp);
 			return;
 		case NOTIFY:
-			if (clientReqId.getResultRecipientURI() != null)
-				clientReqId.getResultRecipientURI().resultAvailable(resp);
+			notifyListener(clientReqId, resp);
+			return;
 		}
 	}
 
+	private void notifyListener(ClientSideReqID_I reqID, ServiceResponsePacket resp) {
+		String requestID = reqID.getID();
+		ResultRecipient_I resultRecipient = IRClient.resultListeners.get(requestID);
+		if ( (requestID != null) && (resultRecipient != null) )
+			// Notify the result listener:
+			resultRecipient.resultAvailable(resp);
+	}
+	
 	@Override
 	public void handle(String target, 
 					   Request baseRequest, 
