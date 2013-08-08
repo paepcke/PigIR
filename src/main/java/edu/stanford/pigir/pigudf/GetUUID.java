@@ -3,7 +3,6 @@ package edu.stanford.pigir.pigudf;
 import java.io.IOException;
 import java.util.UUID;
 
-
 import org.apache.pig.EvalFunc;
 import org.apache.pig.data.Tuple;
 

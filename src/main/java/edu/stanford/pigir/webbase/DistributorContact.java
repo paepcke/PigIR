@@ -18,9 +18,8 @@ import org.apache.commons.io.FileUtils;
 import org.apache.hadoop.io.Writable;
 import org.apache.log4j.Logger;
 
-import edu.stanford.pigir.pigudf.AsciiStringOutputStream;
-
 import edu.stanford.pigir.pigudf.AsciiStringInputStream;
+import edu.stanford.pigir.pigudf.AsciiStringOutputStream;
 
 /**
  * Obtains and stores the contact information for one crawl's

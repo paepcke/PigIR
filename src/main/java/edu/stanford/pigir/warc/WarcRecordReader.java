@@ -17,7 +17,6 @@ import org.apache.hadoop.mapreduce.lib.input.FileSplit;
 import org.apache.log4j.Logger;
 
 import edu.stanford.pigir.pigudf.LineAndChunkReader;
-import edu.stanford.pigir.warc.WarcLoader;
 
 /**
  * Treats keys as offset wbRecordReader file and value as one Warc record. 

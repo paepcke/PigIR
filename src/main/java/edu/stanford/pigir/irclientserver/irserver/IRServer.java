@@ -1,17 +1,18 @@
 package edu.stanford.pigir.irclientserver.irserver;
 
 import java.io.IOException;
-import java.util.HashSet;
 import java.util.Set;
+import java.util.HashSet;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.log4j.BasicConfigurator;
+import org.apache.log4j.Level;
+import org.apache.log4j.Logger;
 import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.server.handler.AbstractHandler;
-
-import com.esotericsoftware.minlog.Log;
 
 import edu.stanford.pigir.irclientserver.ArcspreadException;
 import edu.stanford.pigir.irclientserver.HTTPService;
@@ -30,6 +31,7 @@ public class IRServer extends AbstractHandler implements PigService_I {
 
 	private static HTTPService httpService = null;
 	private static IRServer theInstance = null;
+	private static Logger log = Logger.getLogger("edu.stanford.pigir.irclientserver.irserver.IRServer");
 
 	@SuppressWarnings("serial")
 	private static Set<String> adminOps = new HashSet<String>() {{
@@ -81,7 +83,7 @@ public class IRServer extends AbstractHandler implements PigService_I {
 		ServiceResponsePacket resp = new ServiceResponsePacket();
 		resp.resultHandle = callResult;
 		resp.clientSideReqId = req.clientSideReqId;
-		Log.info("[Server] responding " + resp.resultHandle.toString());
+		log.info("[Server] responding " + resp.resultHandle.toString());
 		servletResponse.getWriter().println("<h1>Got response</h1>");
 		newPigServiceRequest(req);
 	}	
@@ -131,12 +133,13 @@ public class IRServer extends AbstractHandler implements PigService_I {
 	 * @param args
 	 */
 	public static void main(String[] args) {
-		Log.set(Log.LEVEL_DEBUG);
+		IRServer.log.setLevel(Level.DEBUG);
+		BasicConfigurator.configure();
 		try {
 			IRServer.getInstance();
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		Log.info("IR Server running at " + IRServiceConfiguration.IR_SERVICE_REQUEST_PORT);
+		log.info("IR Server running at " + IRServiceConfiguration.IR_SERVICE_REQUEST_PORT);
 	}
 }

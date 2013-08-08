@@ -10,10 +10,9 @@ import org.apache.pig.backend.executionengine.ExecException;
 import org.apache.pig.data.Tuple;
 import org.apache.pig.data.TupleFactory;
 
+import edu.stanford.pigir.Common;
 import edu.stanford.pigir.pigudf.GetUUID;
 import edu.stanford.pigir.pigudf.IndexOneDoc;
-
-import edu.stanford.pigir.Common;
 
 public class TestIndexOneDoc {
 	

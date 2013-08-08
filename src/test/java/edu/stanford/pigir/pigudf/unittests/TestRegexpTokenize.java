@@ -1,7 +1,8 @@
 package edu.stanford.pigir.pigudf.unittests;
 
+import static org.junit.Assert.assertEquals;
+
 import java.io.IOException;
-import static org.junit.Assert.*;
 
 import org.apache.pig.data.Tuple;
 import org.apache.pig.data.TupleFactory;

@@ -22,8 +22,6 @@ import org.apache.pig.data.Tuple;
 import org.apache.pig.impl.logicalLayer.FrontendException;
 import org.apache.pig.impl.logicalLayer.schema.Schema;
 
-import edu.stanford.pigir.pigudf.IsStopword;
-
 public class HasStopwordNgram extends FilterFunc {
 	
 	// This constant is merely informational. The only limitation

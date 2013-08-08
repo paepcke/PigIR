@@ -16,7 +16,9 @@ import javax.servlet.http.HttpServletResponse;
 import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.server.handler.AbstractHandler;
 
-import com.esotericsoftware.minlog.Log;
+import org.apache.log4j.BasicConfigurator;
+import org.apache.log4j.Level;
+import org.apache.log4j.Logger;
 
 import edu.stanford.pigir.Common;
 import edu.stanford.pigir.irclientserver.ClientSideReqID;
@@ -34,10 +36,17 @@ public class IRClient extends AbstractHandler {
 	private static Map<String, ConcurrentLinkedQueue<ServiceResponsePacket>> resultQueues =
 			new HashMap<String,ConcurrentLinkedQueue<ServiceResponsePacket>>();
 	private static Map<String, ResultRecipient_I> resultListeners = new HashMap<String, ResultRecipient_I>();
+	private static Logger log = Logger.getLogger("edu.stanford.pigir.irclientserver.irclient.IRClient");
+	
+	
 	HTTPService httpService = null;
 	
 	public IRClient() {
+		IRClient.log.setLevel(Level.DEBUG);
+		BasicConfigurator.configure();
+		
 		httpService = new HTTPService(IRServiceConfiguration.IR_SERVICE_RESPONSE_PORT, this);
+		log.info("IR client response service running at " + IRServiceConfiguration.IR_SERVICE_RESPONSE_PORT);		
 	}
 
 	public void sendProcessRequest(String operator, Map<String,String> params) throws IOException {
@@ -79,7 +88,7 @@ public class IRClient extends AbstractHandler {
 	private URI getResponseURI(String responseID) {
 		URI result = null;
 		try {
-			Utils.getURI(IRServiceConfiguration.IR_SERVICE_RESPONSE_PORT,
+			Utils.getSelfURI(IRServiceConfiguration.IR_SERVICE_RESPONSE_PORT,
 					IRServiceConfiguration.IR_RESPONSE_CONTEXT + "/" + responseID);
 		} catch (UnknownHostException | URISyntaxException e) {
 			throw new RuntimeException("Trouble creating a response URI: " + e.getMessage());			
@@ -88,7 +97,7 @@ public class IRClient extends AbstractHandler {
 	}
 	
 	private void sendProcessRequestWorker(String operator, Map<String,String> params, ClientSideReqID_I reqID) throws IOException {	
-		Log.info("[Client] Sending process request: " + operator);
+		log.info("[Client] Sending process request: " + operator);
 		
 		// Which result queue should the response go to?
 		String reqClass = reqID.getRequestClass();
@@ -111,7 +120,7 @@ public class IRClient extends AbstractHandler {
 	public void newPigResponse(ServiceResponsePacket resp) {
 		ClientSideReqID_I clientReqId = resp.clientSideReqId;
 		Disposition disposition = clientReqId.getDisposition();
-		Log.info(String.format("[Client] received response: %s; Disposition: %s, ReqClass: %s, ReqID: %s.",
+		log.info(String.format("[Client] received response: %s; Disposition: %s, ReqClass: %s, ReqID: %s.",
 				resp.resultHandle.getStatus(), disposition, clientReqId.getRequestClass(), clientReqId.getID()));
 		switch (disposition) {
 		case DISCARD_RESULTS:

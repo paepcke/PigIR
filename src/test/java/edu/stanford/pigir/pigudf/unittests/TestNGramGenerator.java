@@ -12,7 +12,6 @@ import org.apache.pig.data.DefaultDataBag;
 import org.apache.pig.data.SortedDataBag;
 import org.apache.pig.data.Tuple;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import edu.stanford.pigir.pigudf.NGramGenerator;

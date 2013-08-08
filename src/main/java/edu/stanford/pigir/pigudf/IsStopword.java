@@ -5,7 +5,6 @@ import java.util.HashMap;
 
 import org.apache.pig.FilterFunc;
 import org.apache.pig.data.Tuple;
-//import org.apache.pig.data.TupleFactory;
 
 
 public class IsStopword extends FilterFunc {

@@ -41,8 +41,12 @@ public class Utils {
 	 * @throws URISyntaxException
 	 * @throws UnknownHostException
 	 */
-	public static URI getURI(int port, String contextStr) throws URISyntaxException, UnknownHostException {
+	public static URI getSelfURI(int port, String contextStr) throws URISyntaxException, UnknownHostException {
 		String hostname = InetAddress.getLocalHost().getHostName();
+		// Context string must have a leading slash:
+		if ((contextStr != null) && (contextStr.length() != 0) && (! contextStr.startsWith("/"))) {
+			contextStr = "/" + contextStr;
+		}
 		String hostWithDomain = InetAddress.getByName(hostname).getCanonicalHostName();
 		URI res = new URI("http",
 						  null, // no user into

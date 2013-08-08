@@ -10,9 +10,8 @@ import org.apache.pig.ExecType;
 import org.apache.pig.PigServer;
 import org.apache.pig.backend.executionengine.ExecException;
 
-import edu.stanford.pigir.pigudf.RegexpTokenize;
-
 import edu.stanford.pigir.Common;
+import edu.stanford.pigir.pigudf.RegexpTokenize;
 
 public class TestTFIDF{
 	
