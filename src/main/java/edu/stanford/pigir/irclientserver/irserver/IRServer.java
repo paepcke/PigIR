@@ -11,11 +11,9 @@ import javax.servlet.http.HttpServletResponse;
 import org.apache.log4j.BasicConfigurator;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
-import org.eclipse.jetty.server.Request;
-import org.eclipse.jetty.server.handler.AbstractHandler;
 
 import edu.stanford.pigir.irclientserver.ArcspreadException;
-import edu.stanford.pigir.irclientserver.HTTPService;
+import edu.stanford.pigir.irclientserver.irserver.HTTPD;
 import edu.stanford.pigir.irclientserver.IRPacket.ServiceRequestPacket;
 import edu.stanford.pigir.irclientserver.IRPacket.ServiceResponsePacket;
 import edu.stanford.pigir.irclientserver.IRServiceConfiguration;
@@ -26,10 +24,10 @@ import edu.stanford.pigir.irclientserver.PigServiceImpl;
 import edu.stanford.pigir.irclientserver.PigService_I;
 import edu.stanford.pigir.irclientserver.hadoop.PigScriptRunner;
 
-public class IRServer extends AbstractHandler implements PigService_I {
+public class IRServer implements PigService_I {
 
 
-	private static HTTPService httpService = null;
+	private static HTTPD httpService = null;
 	private static IRServer theInstance = null;
 	private static Logger log = Logger.getLogger("edu.stanford.pigir.irclientserver.irserver.IRServer");
 
@@ -61,39 +59,27 @@ public class IRServer extends AbstractHandler implements PigService_I {
 	private IRServer() {
 		// Create a Jetty service, and set the incoming-packet
 		// handler to be this instance:
-		httpService = new HTTPService(IRServiceConfiguration.IR_SERVICE_REQUEST_PORT, this);
+		httpService = new HTTPD(IRServiceConfiguration.IR_SERVICE_REQUEST_PORT, this);
 	}
 
-	@Override
-	public void handle(String target, 
-			Request baseRequest, 
-			HttpServletRequest servletRequest,
-			HttpServletResponse servletResponse) throws IOException, ServletException {
-		servletResponse.setContentType("text/html;charset=utf-8");
-		servletResponse.setStatus(HttpServletResponse.SC_OK);
-		baseRequest.setHandled(true);
-
-		ServiceRequestPacket req = null;
-		//******************
-		System.out.println(baseRequest);
-		//******************		
-		//******req.logMsg();
-		JobHandle_I callResult = newPigServiceRequest(req);
-
-		ServiceResponsePacket resp = new ServiceResponsePacket();
-		resp.resultHandle = callResult;
-		resp.clientSideReqId = req.clientSideReqId;
-		log.info("[Server] responding " + resp.resultHandle.toString());
-		servletResponse.getWriter().println("<h1>Got response</h1>");
-		newPigServiceRequest(req);
-	}	
 	
 	public JobHandle_I newPigServiceRequest(ServiceRequestPacket req) {
+		
 		PigServiceImpl pigServiceImpl = new PigScriptRunner();
+		JobHandle_I res = null;
+		
 		if (IRServer.adminOps.contains(req.operator))
-			return processAdminOp(pigServiceImpl, req.operator, req);
+			res = processAdminOp(pigServiceImpl, req.operator, req);
 		else
-			return pigServiceImpl.asyncPigRequest(req.operator, req.params);
+			res = pigServiceImpl.asyncPigRequest(req.operator, req.params);
+		
+		ServiceResponsePacket resp = new ServiceResponsePacket();
+		resp.resultHandle = res; 
+		resp.clientSideReqId = req.clientSideReqId;
+		
+		log.info("[Server] responding " + resp.resultHandle.toString());
+		
+		return res;
 	}
 
 	public String getJobName() {

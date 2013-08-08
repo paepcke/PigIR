@@ -1,4 +1,4 @@
-package edu.stanford.pigir.irclientserver;
+package edu.stanford.pigir.irclientserver.irclient;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
@@ -11,30 +11,9 @@ import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.DefaultHttpClient;
-import org.eclipse.jetty.server.Server;
-import org.eclipse.jetty.server.handler.AbstractHandler;
 
-public class HTTPService {
+public class HTTPSender {
 
-	private static Server jettyServer = null;
-	
-	public HTTPService(int listeningPort, AbstractHandler requestHandler) {
-
-		if (jettyServer == null) {
-			try {
-				jettyServer = new Server(listeningPort);
-				registerMessageHandler(requestHandler);
-				jettyServer.start();
-			} catch (Exception e) {
-				throw new RuntimeException("Could not start the HTTP (i.e. Jetty) server: " + e.getMessage());
-			}
-		}
-	}
-	
-	public void registerMessageHandler(AbstractHandler handler) {
-		jettyServer.setHandler(handler);
-	}
-	
 	public int sendPacket(String jsonStr, URI targetURI ) throws IOException { 
 
 		HttpClient httpclient = new DefaultHttpClient();

@@ -24,7 +24,6 @@ import edu.stanford.pigir.Common;
 import edu.stanford.pigir.irclientserver.ClientSideReqID;
 import edu.stanford.pigir.irclientserver.ClientSideReqID_I;
 import edu.stanford.pigir.irclientserver.ClientSideReqID_I.Disposition;
-import edu.stanford.pigir.irclientserver.HTTPService;
 import edu.stanford.pigir.irclientserver.IRPacket.ServiceRequestPacket;
 import edu.stanford.pigir.irclientserver.IRPacket.ServiceResponsePacket;
 import edu.stanford.pigir.irclientserver.IRServiceConfiguration;
@@ -39,13 +38,13 @@ public class IRClient extends AbstractHandler {
 	private static Logger log = Logger.getLogger("edu.stanford.pigir.irclientserver.irclient.IRClient");
 	
 	
-	HTTPService httpService = null;
+	HTTPSender httpService = null;
 	
 	public IRClient() {
 		IRClient.log.setLevel(Level.DEBUG);
 		BasicConfigurator.configure();
 		
-		httpService = new HTTPService(IRServiceConfiguration.IR_SERVICE_RESPONSE_PORT, this);
+		//*****httpService = new HTTPSender(IRServiceConfiguration.IR_SERVICE_RESPONSE_PORT, this);
 		log.info("IR client response service running at " + IRServiceConfiguration.IR_SERVICE_RESPONSE_PORT);		
 	}
 
