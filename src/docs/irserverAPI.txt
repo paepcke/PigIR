@@ -1,4 +1,4 @@
-Request		 ::= "{" ClientSideRequestID (AdminRequest | IRRequest) "}"
+Request		 ::= "{" "request" ClientSideRequestID (AdminRequest | IRRequest) "}"
 
 AdminRequest 	 ::= (SetPigRootDirReq | GetJobStatusReq)
 SetPigRootDirReq ::= "setPigRootDir" ":" DirectoryPath
@@ -102,7 +102,7 @@ WebBaseWordCountParms ::= "{"
 			  ("crawlname" ":" String)
 			  "}"
 
-Response            ::= "{" ClientSideRequestID ServiceHandle "}"
+Response            ::= "{" "response" ClientSideRequestID ServiceHandle "}"
 
 ClientSideRequestID ::= "{"
 		    	"resultRecipientURI" ":" URI

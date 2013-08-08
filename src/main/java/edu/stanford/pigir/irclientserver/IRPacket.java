@@ -38,16 +38,28 @@ public class IRPacket {
 			JSONStringer stringer = new JSONStringer();
 			try {
 				stringer.object(); // outermost JSON obj
-				stringer.object();
-				clientSideReqId.toJSON(stringer);
-				stringer.endObject();
+				stringer.key("request");
+				
+				// Build the client side request ID object: 
+				JSONStringer subStringer = new JSONStringer();
+				subStringer.object();
+				clientSideReqId.toJSON(subStringer);
+				subStringer.endObject();
+				
+				stringer.value(subStringer.toString());
+				
 				stringer.key(operator);
-				stringer.value(stringer.object());
+				
+				// Build the parameter object:
+				subStringer = new JSONStringer();
+				subStringer.object();
 				for (String parmKey : params.keySet()) {
-					stringer.key(parmKey);
-					stringer.value(params.get(parmKey));
+					subStringer.key(parmKey);
+					subStringer.value(params.get(parmKey));
 				}
-				stringer.endObject();
+				subStringer.endObject();
+				
+				stringer.value(subStringer.toString());
 				stringer.endObject(); // close outermost JSON obj
 			} catch (JSONException e) {
 				throw new RuntimeException("Trouble creating JSON serialization: " + e.getMessage());

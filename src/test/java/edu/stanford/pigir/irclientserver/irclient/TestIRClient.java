@@ -9,7 +9,6 @@ import java.util.Iterator;
 
 import org.apache.commons.io.FileUtils;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.python.modules.time.Time;
 
@@ -51,7 +50,6 @@ public class TestIRClient {
 	}
 
 	@Test
-	@Ignore
 	public void test() throws IOException {
 		FileUtils.deleteQuietly(new File(resultFile));
 		pigClient.sendProcessRequest("pigtestStoreResult", null);

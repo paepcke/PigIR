@@ -18,11 +18,12 @@ public class HTTPService {
 
 	private static Server jettyServer = null;
 	
-	public HTTPService(int listeningPort) {
+	public HTTPService(int listeningPort, AbstractHandler requestHandler) {
 
 		if (jettyServer == null) {
 			try {
 				jettyServer = new Server(listeningPort);
+				registerMessageHandler(requestHandler);
 				jettyServer.start();
 			} catch (Exception e) {
 				throw new RuntimeException("Could not start the HTTP (i.e. Jetty) server: " + e.getMessage());

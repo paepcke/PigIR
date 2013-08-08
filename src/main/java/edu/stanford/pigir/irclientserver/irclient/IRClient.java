@@ -37,8 +37,7 @@ public class IRClient extends AbstractHandler {
 	HTTPService httpService = null;
 	
 	public IRClient() {
-		httpService = new HTTPService(IRServiceConfiguration.IR_SERVICE_REQUEST_PORT);
-		httpService.registerMessageHandler(this);
+		httpService = new HTTPService(IRServiceConfiguration.IR_SERVICE_RESPONSE_PORT, this);
 	}
 
 	public void sendProcessRequest(String operator, Map<String,String> params) throws IOException {
