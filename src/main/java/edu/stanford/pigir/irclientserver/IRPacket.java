@@ -9,6 +9,11 @@ import com.esotericsoftware.minlog.Log;
 
 public class IRPacket {
 
+	
+	/*--------------------------
+	 * ServiceRequestPacket
+	 * -------------------------*/
+	
 	public static class ServiceRequestPacket {
 		public ClientSideReqID_I clientSideReqId;
 		public String operator;
@@ -32,6 +37,10 @@ public class IRPacket {
 			}
 			operation += ")";
 			Log.info("[Server] " + operation);
+		}
+		
+		public void setParameters(Map<String,String> theParams) {
+			params = theParams;
 		}
 		
 		public JSONStringer toJSON() {
@@ -67,6 +76,10 @@ public class IRPacket {
 			return stringer;
 		}
 	};
+	
+	/*--------------------------
+	 * ServiceResponsePacket
+	 * -------------------------*/
 	
 	public static class ServiceResponsePacket {
 		public ClientSideReqID_I clientSideReqId;

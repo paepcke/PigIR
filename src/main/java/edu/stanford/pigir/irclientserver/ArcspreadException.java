@@ -58,6 +58,10 @@ public class ArcspreadException extends Exception {
 		
 	// -----------------------------  Each Exception is a Subclass ----------------------------------
 	
+	/*--------------------------
+	 * NotImplementedException
+	 * -------------------------*/
+	
 	public static class NotImplementedException extends ArcspreadException implements JobHandle_I {
 		protected static final int errorCode = 1;
 		protected static final String cause = "Not Implemented";
@@ -76,6 +80,9 @@ public class ArcspreadException extends Exception {
 		}
 	}
 
+	/*--------------------------
+	 * CommIOException
+	 * -------------------------*/
 	public static class CommIOException extends ArcspreadException implements JobHandle_I {
 		protected static final int errorCode = 2;
 		protected static final String cause = "IO Exception During Communication";
@@ -94,6 +101,10 @@ public class ArcspreadException extends Exception {
 		}
 	}
 
+	/*--------------------------
+	 * ParameterException
+	 * -------------------------*/
+	
 	public static class ParameterException extends ArcspreadException implements JobHandle_I {
 		protected static final int errorCode = 3;
 		protected static final String cause = "Bad or Missing Parameter";
