@@ -1,32 +1,28 @@
 package edu.stanford.pigir.irclientserver.irserver;
 
 import java.io.IOException;
-import java.util.Set;
 import java.util.HashSet;
-
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import java.util.Set;
 
 import org.apache.log4j.BasicConfigurator;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 
 import edu.stanford.pigir.irclientserver.ArcspreadException;
-import edu.stanford.pigir.irclientserver.irserver.HTTPD;
 import edu.stanford.pigir.irclientserver.IRPacket.ServiceRequestPacket;
 import edu.stanford.pigir.irclientserver.IRPacket.ServiceResponsePacket;
 import edu.stanford.pigir.irclientserver.IRServiceConfiguration;
 import edu.stanford.pigir.irclientserver.JobHandle_I;
 import edu.stanford.pigir.irclientserver.JobHandle_I.JobStatus;
 import edu.stanford.pigir.irclientserver.PigServiceHandle;
-import edu.stanford.pigir.irclientserver.PigServiceImpl;
+import edu.stanford.pigir.irclientserver.PigServiceImpl_I;
 import edu.stanford.pigir.irclientserver.PigService_I;
 import edu.stanford.pigir.irclientserver.hadoop.PigScriptRunner;
 
 public class IRServer implements PigService_I {
 
 
+	@SuppressWarnings("unused")
 	private static HTTPD httpService = null;
 	private static IRServer theInstance = null;
 	private static Logger log = Logger.getLogger("edu.stanford.pigir.irclientserver.irserver.IRServer");
@@ -57,7 +53,7 @@ public class IRServer implements PigService_I {
 	
 	// IRServer is a singleton:
 	private IRServer() {
-		// Create a Jetty service, and set the incoming-packet
+		// Create an HTTPD and set the incoming-packet
 		// handler to be this instance:
 		httpService = new HTTPD(IRServiceConfiguration.IR_SERVICE_REQUEST_PORT, this);
 	}
@@ -65,13 +61,13 @@ public class IRServer implements PigService_I {
 	
 	public JobHandle_I newPigServiceRequest(ServiceRequestPacket req) {
 		
-		PigServiceImpl pigServiceImpl = new PigScriptRunner();
+		PigServiceImpl_I pigServiceImpl_I = new PigScriptRunner();
 		JobHandle_I res = null;
 		
 		if (IRServer.adminOps.contains(req.operator))
-			res = processAdminOp(pigServiceImpl, req.operator, req);
+			res = processAdminOp(pigServiceImpl_I, req.operator, req);
 		else
-			res = pigServiceImpl.asyncPigRequest(req.operator, req.params);
+			res = pigServiceImpl_I.asyncPigRequest(req.operator, req.params);
 		
 		ServiceResponsePacket resp = new ServiceResponsePacket();
 		resp.resultHandle = res; 
@@ -97,7 +93,7 @@ public class IRServer implements PigService_I {
 		return 0;
 	}
 
-	private JobHandle_I processAdminOp(PigServiceImpl pigService, String operator, ServiceRequestPacket req) {
+	private JobHandle_I processAdminOp(PigServiceImpl_I pigService, String operator, ServiceRequestPacket req) {
 		JobHandle_I resultHandle = new PigServiceHandle("pigServiceAdmin", JobStatus.SUCCEEDED);
 		switch (operator) {
 		case "setPigScriptRoot":

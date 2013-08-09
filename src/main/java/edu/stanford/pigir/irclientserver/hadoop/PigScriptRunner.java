@@ -15,6 +15,7 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -31,11 +32,13 @@ import org.apache.pig.impl.plan.VisitorException;
 
 import com.esotericsoftware.minlog.Log;
 
+import edu.stanford.pigir.irclientserver.ArcspreadException;
+import edu.stanford.pigir.irclientserver.JobHandle_I;
 import edu.stanford.pigir.irclientserver.JobHandle_I.JobStatus;
 import edu.stanford.pigir.irclientserver.PigServiceHandle;
-import edu.stanford.pigir.irclientserver.PigServiceImpl;
+import edu.stanford.pigir.irclientserver.PigServiceImpl_I;
 
-public class PigScriptRunner implements PigServiceImpl {
+public class PigScriptRunner implements PigServiceImpl_I {
 
 	private static String DEFAULT_SCRIPT_ROOT_DIR = "src/main/";
 	private static String scriptRootDir = PigScriptRunner.DEFAULT_SCRIPT_ROOT_DIR;
@@ -56,50 +59,7 @@ public class PigScriptRunner implements PigServiceImpl {
 		// Used only if subsequently using the asynchronous servicePigRequest() method.
 		// For constructors appropriate for synchronous use, see below.
 	}
-	
-	public PigServiceHandle asyncPigRequest(String operator, Map<String, String> theParams) {
-		
-		// Build a jobname
-		String jobName = "arcspread_" + PigServiceHandle.getPigTimestamp();
-		PigServiceHandle resultHandle = new PigServiceHandle(jobName, JobStatus.RUNNING);
-		
-		String pigScriptPath = knownOperators.get(operator);
-		if (pigScriptPath == null) {
-			// If this script name is not found, try updating
-			// our cached list of scripts in known places:
-			initAvailablePigScripts();
-			pigScriptPath = knownOperators.get(operator);
-		}
-		// Script still not found?
-		if (pigScriptPath == null)  {
-			String errMsg = String.format("Pig request '%s' is not known; no Pig script implementation found.", operator);
-			Log.error(errMsg);
-			return new PigServiceHandle(jobName, JobStatus.FAILED, errMsg);
-		}
-		params = theParams;
-		PigScriptRunner runner = null;
-		try {
-			runner = new PigScriptRunner(new File(pigScriptPath), params);
-		} catch (IOException e) {
-			String errMsg = String.format("Pig request '%s': could not start PigScriptRunner with script '%s'; reason: %s", 
-								           operator, pigScriptPath, e.getMessage());
-			Log.error(errMsg);
-			return new PigServiceHandle(jobName, JobStatus.FAILED, errMsg);
-		}
-		
-		// Start a new thread to run this script:
-		createPigServer();
-		PigRunThread scriptThread = runner.new PigRunThread(); 
-		scriptThread.start(runner, pserver, params);
-		runner.runningThread = scriptThread;
-		
-		//PigContext context = pserver.getPigContext();
-		//Properties props = context.getProperties();
-		
-		return resultHandle;
-	}
-	
-	
+				
 	public PigScriptRunner(File theScriptFile, Map<String,String> theParams) throws IOException {
 		ensureScriptFileOK(theScriptFile);
 		params = theParams;
@@ -128,6 +88,68 @@ public class PigScriptRunner implements PigServiceImpl {
 		params = theParams;
 	}	
 	
+public JobHandle_I asyncPigRequest(String operator, Map<String, String> theParams) {
+		
+		// Build a jobname
+		String jobName = "arcspread_" + PigServiceHandle.getPigTimestamp();
+		PigServiceHandle resultHandle = new PigServiceHandle(jobName, JobStatus.RUNNING);
+		
+		String pigScriptPath = knownOperators.get(operator);
+		if (pigScriptPath == null) {
+			// If this script name is not found, try updating
+			// our cached list of scripts in known places:
+			initAvailablePigScripts();
+			pigScriptPath = knownOperators.get(operator);
+		}
+		
+		// Script still not found?
+		if (pigScriptPath == null)
+			return new ArcspreadException.NotImplementedException(String.format("Pig request '%s' is not known; no Pig script implementation found.", operator));
+		params = theParams;
+		
+		// If the path to the Pigscript is empty, this means
+		// the implementation of the operation is within this
+		// Runner class. That is true in particular for the
+		// testCall() method:
+		if (pigScriptPath.length() == 0) {
+			switch (operator) {
+			case "testCall":
+				if ((params == null) || params.get("msgToEcho") == null)
+					return new ArcspreadException.ParameterException("Test procedure testCall() requires parameter 'msgToEcho', which was not provided.");
+				return testCall(params.get("msgToEcho"));
+			default:
+				return new ArcspreadException.NotImplementedException(String.format("Pig request '%s' is not known; no Pig script implementation found.", operator));
+			}
+		}
+		
+		PigScriptRunner runner = null;
+		try {
+			runner = new PigScriptRunner(new File(pigScriptPath), params);
+		} catch (IOException e) {
+			String errMsg = String.format("Pig request '%s': could not start PigScriptRunner with script '%s'; reason: %s", 
+								           operator, pigScriptPath, e.getMessage());
+			Log.error(errMsg);
+			return new PigServiceHandle(jobName, JobStatus.FAILED, errMsg);
+		}
+		
+		// Start a new thread to run this script:
+		createPigServer();
+		PigRunThread scriptThread = runner.new PigRunThread(); 
+		scriptThread.start(runner, pserver, params);
+		runner.runningThread = scriptThread;
+		
+		//PigContext context = pserver.getPigContext();
+		//Properties props = context.getProperties();
+		
+		return resultHandle;
+	}
+
+	public PigServiceHandle testCall(String strToEcho) {
+		PigServiceHandle resultHandle = new PigServiceHandle("FakeTestJobName", JobStatus.SUCCEEDED);
+		resultHandle.setMessage(new Date().toString() + ":" + strToEcho);
+		return resultHandle;
+	}
+
 	public void addScriptCallParam(String paramName, String paramValue) {
 		props.setProperty(paramName, paramValue);
 	}
@@ -226,6 +248,10 @@ public class PigScriptRunner implements PigServiceImpl {
 				knownOperators.put(FilenameUtils.getBaseName(file.getAbsolutePath()), file.getAbsolutePath());
 			}
 		}	
+		// The special callTest() "script". It's actually not a Pig script, but
+		// a loopback test handled within PigScriptRunner: associate this method
+		// with an empty script path:
+		knownOperators.put("testCall", "");
 	}
 
 	@Override

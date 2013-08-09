@@ -35,6 +35,12 @@ public class ArcspreadException extends Exception {
 		super(msg);
 	}
 
+	public ArcspreadException(String theJobName, String msg) {
+		super(msg);
+		jobName = theJobName;
+	}
+	
+	
 	public JSONStringer toJSON(JSONStringer stringer) {
 		try {
 			stringer.object();
@@ -88,7 +94,25 @@ public class ArcspreadException extends Exception {
 		}
 	}
 
-	// ----------------------------  Methods Inherited By all Excpetion Subclasses Above ---------
+	public static class ParameterException extends ArcspreadException implements JobHandle_I {
+		protected static final int errorCode = 3;
+		protected static final String cause = "Bad or Missing Parameter";
+	
+		public ParameterException(String msg) {
+			super(msg);
+		}
+		
+		public ParameterException(String theJobName, String msg) {
+			super(msg);
+			jobName = theJobName;
+		}
+		
+		public ParameterException() {
+			super();
+		}
+	}
+	
+	// ----------------------------  Methods Inherited By all Exception Subclasses Above ---------
 	public int getErrorCode() {
 		int res = -1;
 		try {
