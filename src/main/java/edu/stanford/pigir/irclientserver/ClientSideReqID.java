@@ -74,9 +74,13 @@ public class ClientSideReqID implements ClientSideReqID_I {
 		stringer.key("requestClass");
 		stringer.value(requestClass);
 		stringer.key("responseDisposition");
-		stringer.value(responseDisposition);
+		stringer.value(responseDisposition.toJSONValue());
 
 		return stringer;
+	}
+	
+	public ClientSideReqID fromJSON(String jsonStr) {
+		
 	}
 	
 	private URI ensurePortPresent(URI uri) {

@@ -28,7 +28,19 @@ public interface ClientSideReqID_I {
 	public enum Disposition {
 		QUEUE_RESULTS,
 		DISCARD_RESULTS,
-		NOTIFY
+		NOTIFY;
+
+		public String toJSONValue() {
+			return this.name();
+		}
+		
+		public static Disposition fromJSONValue(String jsonValue) {
+			for (Disposition anEnumValue : Disposition.values()) {
+				if (anEnumValue.toJSONValue() == jsonValue)
+					return anEnumValue;
+			}
+			return null;
+		}
 	}
 
 	public URI getResultRecipientURI();

@@ -2,15 +2,21 @@ package edu.stanford.pigir.irclientserver.irserver;
 
 import static org.junit.Assert.assertEquals;
 
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.codehaus.jettison.json.JSONException;
+import org.codehaus.jettison.json.JSONStringer;
 import org.junit.Before;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import edu.stanford.pigir.irclientserver.ClientSideReqID;
 import edu.stanford.pigir.irclientserver.ClientSideReqID_I;
+import edu.stanford.pigir.irclientserver.ClientSideReqID_I.Disposition;
 import edu.stanford.pigir.irclientserver.IRPacket.ServiceRequestPacket;
 import edu.stanford.pigir.irclientserver.JobHandle_I;
 import edu.stanford.pigir.irclientserver.JobHandle_I.JobStatus;
@@ -32,6 +38,7 @@ public class TestIRServer {
 
 	@SuppressWarnings("serial")
 	@Test
+	@Ignore
 	public void testCallTest() {
 		ClientSideReqID_I reqID = new ClientSideReqID();
 		// Set parameters to null, though parm "msgToEcho" is expected:
@@ -48,5 +55,16 @@ public class TestIRServer {
 		assertEquals(JobStatus.SUCCEEDED, jobHandle.getStatus());
 		assertEquals("FakeTestJobName", jobHandle.getJobName());
 		//System.out.println(jobHandle);
+	}
+	
+	@Test
+	public void testJSONIZation() throws URISyntaxException, JSONException {
+		ClientSideReqID_I reqID = new ClientSideReqID("spreadSheetCell", "A4", Disposition.DISCARD_RESULTS, new URI("mono.stanford.edu/foo"));
+		JSONStringer stringer = new JSONStringer();
+		stringer.object();
+		stringer = reqID.toJSON(stringer);
+		stringer.endObject();
+		System.out.println(stringer.toString());
+		
 	}
 }
