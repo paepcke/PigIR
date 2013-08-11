@@ -23,14 +23,13 @@ import java.util.Properties;
 
 import org.apache.commons.io.FilenameUtils;
 import org.apache.hadoop.mapred.FileAlreadyExistsException;
+import org.apache.log4j.Logger;
 import org.apache.pig.ExecType;
 import org.apache.pig.PigException;
 import org.apache.pig.PigServer;
 import org.apache.pig.backend.executionengine.ExecException;
 import org.apache.pig.data.Tuple;
 import org.apache.pig.impl.plan.VisitorException;
-
-import com.esotericsoftware.minlog.Log;
 
 import edu.stanford.pigir.irclientserver.ArcspreadException;
 import edu.stanford.pigir.irclientserver.JobHandle_I;
@@ -39,6 +38,9 @@ import edu.stanford.pigir.irclientserver.PigServiceHandle;
 import edu.stanford.pigir.irclientserver.PigServiceImpl_I;
 
 public class PigScriptRunner implements PigServiceImpl_I {
+
+
+	public static Logger log = Logger.getLogger("edu.stanford.pigir.irclientserver.hadoop");	
 
 	private static String DEFAULT_SCRIPT_ROOT_DIR = "src/main/";
 	private static String scriptRootDir = PigScriptRunner.DEFAULT_SCRIPT_ROOT_DIR;
@@ -128,7 +130,7 @@ public JobHandle_I asyncPigRequest(String operator, Map<String, String> theParam
 		} catch (IOException e) {
 			String errMsg = String.format("Pig request '%s': could not start PigScriptRunner with script '%s'; reason: %s", 
 								           operator, pigScriptPath, e.getMessage());
-			Log.error(errMsg);
+			log.error(errMsg);
 			return new PigServiceHandle(jobName, JobStatus.FAILED, errMsg);
 		}
 		
@@ -162,7 +164,7 @@ public JobHandle_I asyncPigRequest(String operator, Map<String, String> theParam
 
 	public boolean store() throws IOException {
 		if (outFilePath == null) {
-			Log.error("Output file path is null; use one of the PigScriptRunner constructors that take an out file.");
+			log.error("Output file path is null; use one of the PigScriptRunner constructors that take an out file.");
 			return false;
 		}
 		createPigServer();
@@ -179,7 +181,7 @@ public JobHandle_I asyncPigRequest(String operator, Map<String, String> theParam
 				// just ignore that message.
 				return true;
 			} else {
-			Log.error("During pigserver 'store': " + e.getMessage());
+			log.error("During pigserver 'store': " + e.getMessage());
 			return false;
 			}
 		}
@@ -226,7 +228,7 @@ public JobHandle_I asyncPigRequest(String operator, Map<String, String> theParam
 				pserver = new PigServer(ExecType.MAPREDUCE, props);
 			pserver.debugOn();
 		} catch (ExecException e) {
-			Log.error("Thread could not start a PigServer instance: " + e.getMessage());
+			log.error("Thread could not start a PigServer instance: " + e.getMessage());
 			return;
 		}
 	}
@@ -240,7 +242,7 @@ public JobHandle_I asyncPigRequest(String operator, Map<String, String> theParam
 		
 		File[] files = new File(FilenameUtils.concat(PigScriptRunner.scriptRootDir, "PigScripts/CommandLineUtils/Pig/")).listFiles();
 		if (files == null) {
-			Log.error("Found no Pig scripts in " + FilenameUtils.concat(PigScriptRunner.scriptRootDir, "PigScripts/CommandLineUtils/Pig/"));
+			log.error("Found no Pig scripts in " + FilenameUtils.concat(PigScriptRunner.scriptRootDir, "PigScripts/CommandLineUtils/Pig/"));
 			return;
 		}
 		for (File file : files) {
@@ -296,7 +298,7 @@ public JobHandle_I asyncPigRequest(String operator, Map<String, String> theParam
 					pserver.registerScript(scriptInStream, params);
 				} catch (IOException e) {
 					String errMsg = String.format("Cannot run script '%s': %s", scriptFile, e.getMessage());
-					Log.error(errMsg);
+					log.error(errMsg);
 					return;
 				}
 			} finally {
@@ -324,7 +326,7 @@ public JobHandle_I asyncPigRequest(String operator, Map<String, String> theParam
 					} catch (UnknownHostException e1) {
 						errMsg = String.format("Pig script file '%s' not found on Pig host.", scriptFile);
 					}
-					Log.error(errMsg);
+					log.error(errMsg);
 					return;
 				}
 				// TODO: try running a script file again, then pass in parameters:
@@ -335,7 +337,7 @@ public JobHandle_I asyncPigRequest(String operator, Map<String, String> theParam
 					} catch (IOException e) {
 						String errMsg = String.format("Cannot submit Pig code line '%s' to the Pig server; aborting script run: %s",
 								scriptCodeLine, e.getMessage());
-						Log.error(errMsg);
+						log.error(errMsg);
 						return;
 					}
 				}
@@ -347,7 +349,7 @@ public JobHandle_I asyncPigRequest(String operator, Map<String, String> theParam
 		public void shutdown() {
 			keepRunning = false;
 			shutDownPigRequest();
-			Log.info("Pig script server thread shutting down cleanly upon request.");
+			log.info("Pig script server thread shutting down cleanly upon request.");
 		}
 	}
 	

@@ -25,7 +25,7 @@ public class IRServer implements PigService_I {
 	@SuppressWarnings("unused")
 	private static HTTPD httpService = null;
 	private static IRServer theInstance = null;
-	private static Logger log = Logger.getLogger("edu.stanford.pigir.irclientserver.irserver.IRServer");
+	public static Logger log = Logger.getLogger("edu.stanford.pigir.irclientserver.irserver.IRServer");
 
 	@SuppressWarnings("serial")
 	private static Set<String> adminOps = new HashSet<String>() {{
@@ -61,13 +61,13 @@ public class IRServer implements PigService_I {
 	
 	public ServiceResponsePacket newPigServiceRequest(ServiceRequestPacket req) {
 		
-		PigServiceImpl_I pigServiceImpl_I = new PigScriptRunner();
+		PigServiceImpl_I pigServiceImpl = new PigScriptRunner();
 		JobHandle_I res = null;
 		
 		if (IRServer.adminOps.contains(req.operator))
-			res = processAdminOp(pigServiceImpl_I, req.operator, req);
+			res = processAdminOp(pigServiceImpl, req.operator, req);
 		else
-			res = pigServiceImpl_I.asyncPigRequest(req.operator, req.params);
+			res = pigServiceImpl.asyncPigRequest(req.operator, req.params);
 		
 		ServiceResponsePacket resp = new ServiceResponsePacket(req.clientSideReqId, res);
 		
@@ -113,7 +113,7 @@ public class IRServer implements PigService_I {
 	 * @param args
 	 */
 	public static void main(String[] args) {
-		IRServer.log.setLevel(Level.DEBUG);
+		Logger.getRootLogger().setLevel(Level.INFO);
 		BasicConfigurator.configure();
 		try {
 			// The following call will hang till

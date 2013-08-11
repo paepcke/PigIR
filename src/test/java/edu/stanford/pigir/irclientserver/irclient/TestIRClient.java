@@ -73,6 +73,4 @@ public class TestIRClient {
 			assertEquals(expectedLine, actualLine);
 		}
 	}
-	
-	
 }

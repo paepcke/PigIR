@@ -4,15 +4,15 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
+import org.apache.log4j.Logger;
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
 import org.codehaus.jettison.json.JSONStringer;
 
-import com.esotericsoftware.minlog.Log;
-
 public class IRPacket {
 
-	
+	public static Logger log = Logger.getLogger("edu.stanford.pigir.irclientserver.IRPacket");	
+
 	/*--------------------------
 	 * ServiceRequestPacket
 	 * -------------------------*/
@@ -21,7 +21,7 @@ public class IRPacket {
 		public ClientSideReqID_I clientSideReqId;
 		public String operator;
 		public Map<String,String> params;
-		
+				
 		private enum ServiceReqPacketJSONDecodeStates {
 			GET_REQUEST_BODY,			
 			GET_OPERATOR,
@@ -58,7 +58,7 @@ public class IRPacket {
 					operation = operation.substring(0,operation.length()-1);
 			}
 			operation += ")";
-			Log.info("[Server] " + operation);
+			log.info("[Server] " + operation);
 		}
 		
 		public void setParameters(Map<String,String> theParams) {
@@ -87,9 +87,11 @@ public class IRPacket {
 				// Build the parameter object:
 				subStringer = new JSONStringer();
 				subStringer.object();
-				for (String parmKey : params.keySet()) {
-					subStringer.key(parmKey);
-					subStringer.value(params.get(parmKey));
+				if (params != null) {
+					for (String parmKey : params.keySet()) {
+						subStringer.key(parmKey);
+						subStringer.value(params.get(parmKey));
+					}
 				}
 				subStringer.endObject();
 				

@@ -9,15 +9,7 @@ import java.util.Map;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
-import org.eclipse.jetty.server.Request;
-import org.eclipse.jetty.server.handler.AbstractHandler;
-
 import org.apache.log4j.BasicConfigurator;
-import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 
 import edu.stanford.pigir.Common;
@@ -30,7 +22,8 @@ import edu.stanford.pigir.irclientserver.IRServiceConfiguration;
 import edu.stanford.pigir.irclientserver.ResultRecipient_I;
 import edu.stanford.pigir.irclientserver.Utils;
 
-public class IRClient extends AbstractHandler {
+//public class IRClient extends AbstractHandler {
+public class IRClient {
 	
 	private static Map<String, ConcurrentLinkedQueue<ServiceResponsePacket>> resultQueues =
 			new HashMap<String,ConcurrentLinkedQueue<ServiceResponsePacket>>();
@@ -39,7 +32,6 @@ public class IRClient extends AbstractHandler {
 	
 	
 	public IRClient() {
-		IRClient.log.setLevel(Level.DEBUG);
 		BasicConfigurator.configure();
 		
 		log.info("IR client response service running at " + IRServiceConfiguration.IR_SERVICE_RESPONSE_PORT);		
@@ -147,16 +139,4 @@ public class IRClient extends AbstractHandler {
 			// Notify the result listener:
 			resultRecipient.resultAvailable(resp);
 	}
-	
-	@Override
-	public void handle(String target, 
-					   Request baseRequest, 
-					   HttpServletRequest servletRequest,
-					   HttpServletResponse servletResponse) throws IOException, ServletException {
-		servletResponse.setContentType("text/html;charset=utf-8");
-		servletResponse.setStatus(HttpServletResponse.SC_OK);
-		baseRequest.setHandled(true);
-		servletResponse.getWriter().println("<h1>Got response</h1>");
-	}
-	
 }

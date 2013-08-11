@@ -9,6 +9,7 @@ import org.apache.http.StatusLine;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpPost;
+import org.apache.http.conn.HttpHostConnectException;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.DefaultHttpClient;
 
@@ -34,7 +35,10 @@ public class HTTPSender {
 			response = httpclient.execute(httppost);
 		} catch (ClientProtocolException e) {
 			throw new RuntimeException("Cannot send HTTP POST request (ClientProtocolException): " + e.getMessage());
+		} catch (HttpHostConnectException e) {
+			throw new IOException(String.format("Could not contact IR Server at %s: %s", targetURI, e.getMessage()));
 		}
+		
 		StatusLine status = response.getStatusLine();
 		int statusCode = status.getStatusCode();
 		return statusCode;
