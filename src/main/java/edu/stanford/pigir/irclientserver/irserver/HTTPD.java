@@ -13,11 +13,9 @@ import java.net.Socket;
 import org.apache.log4j.BasicConfigurator;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
-import org.codehaus.jettison.json.JSONException;
-import org.codehaus.jettison.json.JSONStringer;
 
 import edu.stanford.pigir.irclientserver.IRPacket.ServiceRequestPacket;
-import edu.stanford.pigir.irclientserver.JobHandle_I;
+import edu.stanford.pigir.irclientserver.IRPacket.ServiceResponsePacket;
 import edu.stanford.pigir.irclientserver.PigService_I;
 
 /**
@@ -34,7 +32,14 @@ public class HTTPD {
 		postReqServer = thePostReqServer;
 		HTTPD.log.setLevel(Level.DEBUG);
 		BasicConfigurator.configure();
-		new RequestListener().start(port);
+		RequestListener listenerThread = new RequestListener().start(port);
+		HTTPD.log.info("IR Server running at " + port);
+		try {
+			listenerThread.join();
+		} catch (InterruptedException e) {
+			// TODO Maybe needs to re-join on interrupt?
+			e.printStackTrace();
+		}
 	}
 	
 	/**
@@ -46,13 +51,15 @@ public class HTTPD {
 		
 		ServerSocket serverSock = null;
 		
-		public void start(int port) {
+		public RequestListener start(int port) {
+			super.start();
 			try {
 				serverSock = new ServerSocket(port);
 			} catch(IOException ioe) {
 				System.err.println("ServerSocket()");
 				System.exit(1);
 			}
+			return this;
 		}
 		
 		
@@ -92,12 +99,12 @@ public class HTTPD {
 				OutputStream os = mySocket.getOutputStream();
 				OutputStreamWriter osw = new OutputStreamWriter(os);
 				BufferedWriter bw = new BufferedWriter(osw);
+				ServiceResponsePacket reqResult = null;
 
 				String command[] = br.readLine().split("\\s+");
 				if (3 == command.length) {
 					if ("POST".equals(command[0])) {
 						ServiceRequestPacket reqPacket = null;
-						JobHandle_I reqResult = null;
 						try {
 						reqPacket = new ServiceRequestPacket("foo", null, null); // ******
 						reqResult = postReqServer.newPigServiceRequest(reqPacket);
@@ -105,19 +112,15 @@ public class HTTPD {
 							returnHTTPError(bw, 500, "Internal Server Error", e.getMessage());
 							return;
 						}
-						JSONStringer stringer = new JSONStringer();
-						stringer.object();
-						stringer = reqResult.toJSON(stringer);
-						stringer.endObject();
-						String res = stringer.toString();
+						String jsonResp = reqResult.toJSON();
 						bw.write("HTTP/1.0 200 Ok");
 						bw.newLine();
 						bw.write(String.format("Content-Type: %s", "application/json"));
 						bw.newLine();
-						bw.write(String.format("Content-Length: %d", res.length()));
+						bw.write(String.format("Content-Length: %d", jsonResp.length()));
 						bw.newLine();
 						bw.newLine();
-						bw.write(res);
+						bw.write(jsonResp);
 						bw.flush();
 					}
 					else {
@@ -127,8 +130,6 @@ public class HTTPD {
 
 			} catch(IOException ioe) {
 				log.error("IOError while handling HTTP request: " + ioe.getMessage());
-			} catch (JSONException e) {
-				log.error("JSON construction exception while handling HTTP request: " + e.getMessage());
 			} finally {
 				try {
 					mySocket.close();

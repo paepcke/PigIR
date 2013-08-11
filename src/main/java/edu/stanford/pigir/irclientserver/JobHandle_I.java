@@ -18,7 +18,19 @@ public interface JobHandle_I {
 		PREP,
 		RUNNING,
 		SUCCEEDED,
-		UNKNOWN
+		UNKNOWN;
+		
+		public String toJSONValue() {
+			return this.name();
+		}
+		
+		public static JobStatus fromJSONValue(String jsonValue) {
+			for (JobStatus anEnumValue : JobStatus.values()) {
+				if (anEnumValue.toJSONValue().equals(jsonValue))
+					return anEnumValue;
+			}
+			return null;
+		}
 	}
 	
 	

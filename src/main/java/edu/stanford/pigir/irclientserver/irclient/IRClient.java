@@ -38,13 +38,10 @@ public class IRClient extends AbstractHandler {
 	private static Logger log = Logger.getLogger("edu.stanford.pigir.irclientserver.irclient.IRClient");
 	
 	
-	HTTPSender httpService = null;
-	
 	public IRClient() {
 		IRClient.log.setLevel(Level.DEBUG);
 		BasicConfigurator.configure();
 		
-		//*****httpService = new HTTPSender(IRServiceConfiguration.IR_SERVICE_RESPONSE_PORT, this);
 		log.info("IR client response service running at " + IRServiceConfiguration.IR_SERVICE_RESPONSE_PORT);		
 	}
 
@@ -107,7 +104,7 @@ public class IRClient extends AbstractHandler {
 		ServiceRequestPacket reqPaket = new ServiceRequestPacket(operator, params, reqID);
 		
 		// Ship the request to the server:
-		httpService.sendPacket(reqPaket.toJSON().toString(), IRServiceConfiguration.IR_SERVICE_URI);
+		HTTPSender.sendPacket(reqPaket, IRServiceConfiguration.IR_SERVICE_URI);
 	}
 	
 	public void setScriptRootDir(String dir) throws IOException {

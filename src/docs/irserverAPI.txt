@@ -11,7 +11,8 @@ IRRequest    	 ::= (BuildWebBaseIndexReq | ConcatColumnsReq |
 		      WarcNgramsReq | WarcRecordCountReq | WarcSetAsideReq | 
 		      WarcStripHTMLReq | WarcWordCountReq | WebBaseWordCountReq)
 
-BuildWebBaseIndexReq ::= "buildWebBaseIndex" ":" BuildWBIndexParms
+BuildWebBaseIndexReq ::= ("operator" ":" "buildWebBaseIndex")
+		         ("params"   ":" BuildWBIndexParms)
 BuildWBIndexParms    ::= "{"
 		         ("execmode"  ":" ("mapreduce" | "local"))?
 		         ("destdir"  ":" DirectoryPath)?
@@ -21,7 +22,8 @@ BuildWBIndexParms    ::= "{"
 			 ("crawlname" ":" String)
 			 "}"
 
-CullNgramsReq ::= "cullNgrams" ":" CullNgramsParms
+CullNgramsReq      ::=   ("operator" ":" "cullNgrams")
+		   	 ("params"   ":" CullNgramsParms)
 CullNgramsParms    ::=   "{"
 		   	 ("execmode"  ":" ("mapreduce" | "local"))?
 		   	 ("stopwords"  ":" Boolean)?
@@ -30,13 +32,15 @@ CullNgramsParms    ::=   "{"
 			 ("ngrampath" ":" FilePath)
 			 "}"
 
-NgramFrequenciesReq   ::= "ngramFrequencies" ":" NgramFreqParms
+NgramFrequenciesReq   ::= ("operator" ":" "ngramFrequencies")
+		      	  ("params"   ":" NgramFreqParms)
 NgramFreqParms    ::=   "{"
 		  	("execmode"  ":" ("mapreduce" | "local"))?
 		        ("ngrampath" ":" FilePath)
 			"}"
 
-SmoothNgramsReq   ::= "ngramFrequencies" ":" SmoothNgramsParms
+SmoothNgramsReq   ::= ("operator" ":" "ngramFrequencies") 
+		      ("params"   ":" SmoothNgramsParms)
 SmoothNgramsParms ::= "{"
 		      ("execmode"  ":" ("mapreduce" | "local"))?
 		      ("destdir"  ":" DirectoryPath)?
@@ -45,7 +49,8 @@ SmoothNgramsParms ::= "{"
 		      ("resultpath" ":" DirectoryPath)
 		      "}"
 
-WarcFilterReq   ::= "warcFilter" ":" WarcFilterParms
+WarcFilterReq   ::= ("operator" ":" "warcFilter")
+		    ("params"   ":" WarcFilterParms)
 WarcFilterParms ::= ("execmode"  ":" ("mapreduce" | "local"))?
 		    ("destdir"  ":" DirectoryPath)?
 		    ("warcpath" ":" FilePath)
@@ -53,7 +58,8 @@ WarcFilterParms ::= ("execmode"  ":" ("mapreduce" | "local"))?
 		    ("regex" ":" String)
 
 
-WarcNgramsReq   ::= "warcNgrams" ":" WarcNgramsParms
+WarcNgramsReq   ::= ("operator" ":" "warcNgrams")
+		    ("params"   ":" WarcNgramsParms)
 WarcNgramsParms ::=   "{"
 		      ("execmode"  ":" ("mapreduce" | "local"))?
 		      ("stopwords"  ":" Boolean)?
@@ -63,13 +69,15 @@ WarcNgramsParms ::=   "{"
 		      ("arity"    ":" Integer)
 		      "}"
 
-WarcRecordCountReq   ::= "warcRecordCount" ":" WarcRecordCountParms
+WarcRecordCountReq   ::= ("operator" ":" "warcRecordCount")
+		         ("params"   ":" WarcRecordCountParms)
 WarcRecordCountParms ::= "{"
 		     	 ("execmode"  ":" ("mapreduce" | "local"))?
 		         ("warcpath" ":" FilePath)
 			 "}"
 
-WarcSetAsideReq   ::= "warcSetAside" ":" WarcSetAsideParms
+WarcSetAsideReq   ::= ("operator" ":" "warcSetAside")
+		      ("params"   ":" WarcSetAsideParms)
 WarcFilterParms ::= "{"
 		    ("execmode"  ":" ("mapreduce" | "local"))?
 		    ("destdir"  ":" DirectoryPath)?
@@ -77,14 +85,16 @@ WarcFilterParms ::= "{"
 		    ("percentage" ":" Integer)
 		    "}"
 
-WarcStripHTMLReq   ::= "warcStripHTML" ":" WarcStripHTMLParms
+WarcStripHTMLReq   ::= ("operator" ":" "warcStripHTML")
+		       ("params"   ":" WarcStripHTMLParms)
 WarcStripHTMLParms ::= "{"
 		       ("execmode"  ":" ("mapreduce" | "local"))?
 		       ("destdir"  ":" DirectoryPath)?
 		       ("warcpath" ":" FilePath)
 		       "}"
 
-WarcWordCountReq   ::= "warcWordCount" ":" WarcWordCountParms
+WarcWordCountReq   ::= ("operator" ":" "warcWordCount")
+		       ("params"   ":" WarcWordCountParms)
 WarcWordCountParms ::= "{"
 		       ("execmode"  ":" ("mapreduce" | "local"))?
 		       ("destdir"  ":" DirectoryPath)?
@@ -92,7 +102,8 @@ WarcWordCountParms ::= "{"
 		       "}"
 
 
-WebBaseWordCountReq ::= "webBaseWordCount" ":" WebBaseWordCountParms
+WebBaseWordCountReq ::= ("operator" ":" "webBaseWordCount")
+		    	("params"   ":" WebBaseWordCountParms)
 WebBaseWordCountParms ::= "{"
 		      	  ("execmode"  ":" ("mapreduce" | "local"))?
 			  ("destdir"  ":" DirectoryPath)?
@@ -102,7 +113,7 @@ WebBaseWordCountParms ::= "{"
 			  ("crawlname" ":" String)
 			  "}"
 
-Response            ::= "{" "response" ClientSideRequestID ServiceHandle "}"
+Response            ::= "{" "request" ":" ClientSideRequestID "serviceHandle" ":" ServiceHandle "}"
 
 ClientSideRequestID ::= "{"
 		    	"resultRecipientURI" ":" URI

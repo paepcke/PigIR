@@ -36,7 +36,7 @@ public interface ClientSideReqID_I {
 		
 		public static Disposition fromJSONValue(String jsonValue) {
 			for (Disposition anEnumValue : Disposition.values()) {
-				if (anEnumValue.toJSONValue() == jsonValue)
+				if (anEnumValue.toJSONValue().equals(jsonValue))
 					return anEnumValue;
 			}
 			return null;

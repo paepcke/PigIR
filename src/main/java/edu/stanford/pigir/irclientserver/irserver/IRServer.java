@@ -51,7 +51,7 @@ public class IRServer implements PigService_I {
 		return IRServer.theInstance;
 	}
 	
-	// IRServer is a singleton:
+	// IRServer is a singleton (so declared private):
 	private IRServer() {
 		// Create an HTTPD and set the incoming-packet
 		// handler to be this instance:
@@ -59,7 +59,7 @@ public class IRServer implements PigService_I {
 	}
 
 	
-	public JobHandle_I newPigServiceRequest(ServiceRequestPacket req) {
+	public ServiceResponsePacket newPigServiceRequest(ServiceRequestPacket req) {
 		
 		PigServiceImpl_I pigServiceImpl_I = new PigScriptRunner();
 		JobHandle_I res = null;
@@ -69,13 +69,11 @@ public class IRServer implements PigService_I {
 		else
 			res = pigServiceImpl_I.asyncPigRequest(req.operator, req.params);
 		
-		ServiceResponsePacket resp = new ServiceResponsePacket();
-		resp.resultHandle = res; 
-		resp.clientSideReqId = req.clientSideReqId;
+		ServiceResponsePacket resp = new ServiceResponsePacket(req.clientSideReqId, res);
 		
 		log.info("[Server] responding " + resp.resultHandle.toString());
 		
-		return res;
+		return resp;
 	}
 
 	public String getJobName() {
@@ -118,10 +116,11 @@ public class IRServer implements PigService_I {
 		IRServer.log.setLevel(Level.DEBUG);
 		BasicConfigurator.configure();
 		try {
+			// The following call will hang till
+			// the server is terminated:
 			IRServer.getInstance();
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		log.info("IR Server running at " + IRServiceConfiguration.IR_SERVICE_REQUEST_PORT);
 	}
 }

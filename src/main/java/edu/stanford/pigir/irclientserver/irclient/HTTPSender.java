@@ -12,12 +12,15 @@ import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.DefaultHttpClient;
 
+import edu.stanford.pigir.irclientserver.IRPacket.ServiceRequestPacket;
+
 public class HTTPSender {
 
-	public int sendPacket(String jsonStr, URI targetURI ) throws IOException { 
+	public static int sendPacket(ServiceRequestPacket reqPack, URI targetURI ) throws IOException { 
 
 		HttpClient httpclient = new DefaultHttpClient();
 		HttpPost httppost = new HttpPost(targetURI);
+		String jsonStr = reqPack.toJSON();
 
 		try {
 			httppost.setEntity(new StringEntity(jsonStr));
