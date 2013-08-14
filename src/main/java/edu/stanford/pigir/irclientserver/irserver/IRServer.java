@@ -75,6 +75,12 @@ public class IRServer implements PigService_I {
 		
 		return resp;
 	}
+	
+	public ServiceResponsePacket newPigServiceResponse(ServiceResponsePacket resp) {
+		ServiceResponsePacket res = new ServiceResponsePacket(resp.getClientSideReqId(),
+								    new ArcspreadException.NotImplementedException("IR service does not expect response packets for its result missives to clients."));
+		return res;
+	}
 
 	public String getJobName() {
 		// TODO Auto-generated method stub

@@ -13,30 +13,36 @@ import org.apache.log4j.BasicConfigurator;
 import org.apache.log4j.Logger;
 
 import edu.stanford.pigir.Common;
+import edu.stanford.pigir.irclientserver.ArcspreadException;
 import edu.stanford.pigir.irclientserver.ClientSideReqID;
 import edu.stanford.pigir.irclientserver.ClientSideReqID_I;
 import edu.stanford.pigir.irclientserver.ClientSideReqID_I.Disposition;
 import edu.stanford.pigir.irclientserver.IRPacket.ServiceRequestPacket;
 import edu.stanford.pigir.irclientserver.IRPacket.ServiceResponsePacket;
 import edu.stanford.pigir.irclientserver.IRServiceConfiguration;
+import edu.stanford.pigir.irclientserver.JobHandle_I;
+import edu.stanford.pigir.irclientserver.JobHandle_I.JobStatus;
+import edu.stanford.pigir.irclientserver.PigService_I;
 import edu.stanford.pigir.irclientserver.ResultRecipient_I;
 import edu.stanford.pigir.irclientserver.Utils;
+import edu.stanford.pigir.irclientserver.irserver.HTTPD;
 
-//public class IRClient extends AbstractHandler {
-public class IRClient {
+public class IRClient extends Thread implements PigService_I {
 	
 	private static Map<String, ConcurrentLinkedQueue<ServiceResponsePacket>> resultQueues =
 			new HashMap<String,ConcurrentLinkedQueue<ServiceResponsePacket>>();
 	private static Map<String, ResultRecipient_I> resultListeners = new HashMap<String, ResultRecipient_I>();
 	private static Logger log = Logger.getLogger("edu.stanford.pigir.irclientserver.irclient.IRClient");
+	@SuppressWarnings("unused")
+	private HTTPD httpd = null;
 	
 	
 	public IRClient() {
 		BasicConfigurator.configure();
-		
-		log.info("IR client response service running at " + IRServiceConfiguration.IR_SERVICE_RESPONSE_PORT);		
+		start();
+		log.info("IR client response service running at " + IRServiceConfiguration.IR_SERVICE_RESPONSE_PORT);
 	}
-
+	
 	public ServiceResponsePacket sendProcessRequest(String operator, Map<String,String> params) throws IOException {
 		// Create default client side request. They go into the GENERIC response queue:
 		return sendProcessRequestWorker(operator, params, new ClientSideReqID());
@@ -106,14 +112,24 @@ public class IRClient {
 		return sendProcessRequest("setPigScriptRoot", params);
 	}
 	
-	public void newPigResponse(ServiceResponsePacket resp) {
+	/**
+	 * Called by HTTPD when a response packet arrives
+	 * for an earlier request. We build a response indicating
+	 * that we properly received the response from the server.
+	 * @param resp
+	 */
+	public ServiceResponsePacket newPigServiceResponse(ServiceResponsePacket resp) {
 		ClientSideReqID_I clientReqId = resp.clientSideReqId;
+		JobHandle_I respJobHandle = resp.getJobHandle();
+		respJobHandle.setStatus(JobStatus.SUCCEEDED);
+		ServiceResponsePacket respToRespPack = new ServiceResponsePacket(clientReqId, respJobHandle);
+
 		Disposition disposition = clientReqId.getDisposition();
 		log.info(String.format("[Client] received response: %s; Disposition: %s, ReqClass: %s, ReqID: %s.",
 				resp.resultHandle.getStatus(), disposition, clientReqId.getRequestClass(), clientReqId.getID()));
 		switch (disposition) {
 		case DISCARD_RESULTS:
-			return;
+			return respToRespPack;
 		case QUEUE_RESULTS:
 			String reqClass = clientReqId.getRequestClass();
 			Queue<ServiceResponsePacket> appropriateResultQueue = resultQueues.get(reqClass);
@@ -126,11 +142,19 @@ public class IRClient {
 			// ... and if a result callback recipient was included
 			// in the clientRequest then notify it in addition to queueing:
 			notifyListener(clientReqId, resp);
-			return;
+			return respToRespPack;
 		case NOTIFY:
 			notifyListener(clientReqId, resp);
-			return;
+			return respToRespPack;
 		}
+		return respToRespPack;
+	}
+	
+
+	public ServiceResponsePacket newPigServiceRequest(ServiceRequestPacket req) {
+		ServiceResponsePacket res = new ServiceResponsePacket(req.getClientSideReqId(),
+								    new ArcspreadException.NotImplementedException("IR clients do not expect request packets, only responses to its requests to server."));
+		return res;
 	}
 
 	private void notifyListener(ClientSideReqID_I reqID, ServiceResponsePacket resp) {
@@ -139,5 +163,12 @@ public class IRClient {
 		if ( (requestID != null) && (resultRecipient != null) )
 			// Notify the result listener:
 			resultRecipient.resultAvailable(resp);
+	}
+	
+	public void run() {
+		super.run();
+		// Start the http demon. This call doesn't return until the demon
+		// quits, which is why this is a thread:
+		httpd = new HTTPD(IRServiceConfiguration.IR_SERVICE_RESPONSE_PORT, this);
 	}
 }

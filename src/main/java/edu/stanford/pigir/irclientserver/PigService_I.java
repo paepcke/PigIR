@@ -14,4 +14,5 @@ public interface PigService_I {
 	// Must return quickly! Called from network service. Returns
 	// handle to use for subsequent status requests.
 	public ServiceResponsePacket newPigServiceRequest(ServiceRequestPacket req);
+	public ServiceResponsePacket newPigServiceResponse(ServiceResponsePacket resp);
 }

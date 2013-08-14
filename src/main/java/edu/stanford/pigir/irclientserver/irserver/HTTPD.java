@@ -15,10 +15,11 @@ import java.util.regex.Pattern;
 import org.apache.log4j.BasicConfigurator;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
+import org.codehaus.jettison.json.JSONObject;
 
+import edu.stanford.pigir.irclientserver.ArcspreadException;
 import edu.stanford.pigir.irclientserver.IRPacket.ServiceRequestPacket;
 import edu.stanford.pigir.irclientserver.IRPacket.ServiceResponsePacket;
-import edu.stanford.pigir.irclientserver.JobHandle_I.JobStatus;
 import edu.stanford.pigir.irclientserver.PigService_I;
 
 /**
@@ -28,14 +29,14 @@ import edu.stanford.pigir.irclientserver.PigService_I;
  */
 public class HTTPD {
 	
-	PigService_I postReqServer = null;
+	PigService_I postServer = null;
 	private static Logger log = Logger.getLogger("edu.stanford.pigir.irclientserver.irserver.HTTPD");
 	
 	private String contentLenRegex = "[\\s]*Content-Length[^\\d]*([\\d]+)";
 	private Pattern contentLenPattern = Pattern.compile(contentLenRegex, Pattern.CASE_INSENSITIVE);
 	
-	public HTTPD (int port, PigService_I thePostReqServer) {
-		postReqServer = thePostReqServer;
+	public HTTPD (int port, PigService_I thePostServer) {
+		postServer = thePostServer;
 		HTTPD.log.setLevel(Level.DEBUG);
 		BasicConfigurator.configure();
 		
@@ -116,6 +117,7 @@ public class HTTPD {
 				if (3 == command.length) {
 					if ("POST".equals(command[0])) {
 						ServiceRequestPacket reqPacket = null;
+						ServiceResponsePacket respPacket = null;
 						try {
 							// Get content length, and place
 							// buffer cursor past end of HTTP header:
@@ -128,8 +130,30 @@ public class HTTPD {
 								returnHTTPError(bw,400,"Bad Request",errMsg);
 							}
 							String jsonStr = new String(jsonBytes);
-							reqPacket = ServiceRequestPacket.fromJSON(jsonStr);
-							reqResult = postReqServer.newPigServiceRequest(reqPacket);
+							// Is this incoming HTTP packet a request from a client
+							// to this impl, which acts as a server, or is the HTTP packet
+							// the response to an earlier request, meaning this impl is
+							// a client:
+							JSONObject jObj = new JSONObject(jsonStr);
+							if (jObj.has("request")) {
+								reqPacket = ServiceRequestPacket.fromJSON(jsonStr);
+								reqResult = postServer.newPigServiceRequest(reqPacket);
+							}
+							else if (jObj.has("response")) {
+								respPacket = ServiceResponsePacket.fromJSON(jsonStr);
+								postServer.newPigServiceResponse(respPacket);
+							}
+							else {
+								HTTPD.log.error(String.format("Bad JSON over HTTP: '%s'", jsonStr));
+								Throwable cause = new Throwable(jsonStr);
+								ArcspreadException exc = new ArcspreadException.NotImplementedException("Received HTTP packet with JSON that is neither a request nor a response",
+																										cause);
+								// The following throw is currently caught by the
+								// catch below. So the the cause will be lost. Leaving
+								// the cause setting above intact for possible future use.
+								throw exc; 
+							}
+							
 						} catch (Exception e) {
 							returnHTTPError(bw, 500, "Internal Server Error", e.getMessage() + " (cause: " + e.getClass().getCanonicalName() + ")");
 							return;

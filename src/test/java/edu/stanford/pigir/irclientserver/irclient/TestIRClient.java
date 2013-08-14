@@ -10,7 +10,6 @@ import java.util.Iterator;
 import org.apache.commons.io.FileUtils;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import org.python.modules.time.Time;
 
 import edu.stanford.pigir.irclientserver.IRPacket.ServiceResponsePacket;
 

@@ -35,6 +35,10 @@ public class ArcspreadException extends Exception {
 		super(msg);
 	}
 
+	public ArcspreadException(String msg, Throwable cause) {
+		super(msg,cause);
+	}
+	
 	public ArcspreadException(String theJobName, String msg) {
 		super(msg);
 		jobName = theJobName;
@@ -66,8 +70,13 @@ public class ArcspreadException extends Exception {
 		protected static final int errorCode = 1;
 		protected static final String cause = "Not Implemented";
 	
+		
 		public NotImplementedException(String msg) {
 			super(msg);
+		}
+		
+		public NotImplementedException(String msg, Throwable cause) {
+			super(msg,cause);
 		}
 		
 		public NotImplementedException(String theJobName, String msg) {
