@@ -9,6 +9,8 @@ import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
 import org.codehaus.jettison.json.JSONStringer;
 
+import edu.stanford.pigir.irclientserver.JobHandle_I.JobStatus;
+
 public class IRPacket {
 
 	public static Logger log = Logger.getLogger("edu.stanford.pigir.irclientserver.IRPacket");	
@@ -47,6 +49,10 @@ public class IRPacket {
 			return params;
 		}
 
+		public String toString() {
+			return "<IRRequest " + getOperator() + " " + hashCode() + ">";
+		}
+		
 		public void logMsg() {
 			String operation = operator;
 			if (params != null) {
@@ -177,6 +183,16 @@ public class IRPacket {
 		
 		public JobHandle_I getJobHandle() {
 			return resultHandle;
+		}
+
+		public String toString() {
+			JobStatus status;
+			try {
+				status = getJobHandle().getStatus();
+			} catch (Exception e) {
+				status = JobStatus.UNKNOWN;
+			}
+			return "<IRResponse " + status + " " + hashCode() + ">";
 		}
 		
 		public String toJSON() {

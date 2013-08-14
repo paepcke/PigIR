@@ -18,6 +18,7 @@ import org.apache.log4j.Logger;
 
 import edu.stanford.pigir.irclientserver.IRPacket.ServiceRequestPacket;
 import edu.stanford.pigir.irclientserver.IRPacket.ServiceResponsePacket;
+import edu.stanford.pigir.irclientserver.JobHandle_I.JobStatus;
 import edu.stanford.pigir.irclientserver.PigService_I;
 
 /**
@@ -116,25 +117,17 @@ public class HTTPD {
 					if ("POST".equals(command[0])) {
 						ServiceRequestPacket reqPacket = null;
 						try {
-							String jsonStr = "";
 							// Get content length, and place
 							// buffer cursor past end of HTTP header:
 							int contentLen = readHTTPHeader(br);
 							char[] jsonBytes = new char[contentLen];
 							int bytesRead    = br.read(jsonBytes, 0, contentLen);
 							if (bytesRead != contentLen) {
-								HTTPD.log.warn(String.format("HTTP request wrong content length (%d); actual len: %d", contentLen, bytesRead));
-								returnHTTPError(bw,**** COMPLETE THIS. Then test TestIRClient again. )
+								String errMsg = String.format("HTTP request wrong content length (%d); actual len: %d", contentLen, bytesRead);
+								HTTPD.log.warn(errMsg);
+								returnHTTPError(bw,400,"Bad Request",errMsg);
 							}
-/*							String nxtLine = null;
-							while (br.ready()) {
-								nxtLine = br.readLine();
-								jsonStr += nxtLine;
-								nxtLine = br.readLine();
-							}
-*/							if (jsonStr.length() != contentLen) {
-								HTTPD.log.warn(String.format("HTTP request wrong content length (%d) for %s", contentLen, jsonStr));  
-							}
+							String jsonStr = new String(jsonBytes);
 							reqPacket = ServiceRequestPacket.fromJSON(jsonStr);
 							reqResult = postReqServer.newPigServiceRequest(reqPacket);
 						} catch (Exception e) {

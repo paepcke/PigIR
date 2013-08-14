@@ -37,21 +37,21 @@ public class IRClient {
 		log.info("IR client response service running at " + IRServiceConfiguration.IR_SERVICE_RESPONSE_PORT);		
 	}
 
-	public void sendProcessRequest(String operator, Map<String,String> params) throws IOException {
+	public ServiceResponsePacket sendProcessRequest(String operator, Map<String,String> params) throws IOException {
 		// Create default client side request. They go into the GENERIC response queue:
-		sendProcessRequestWorker(operator, params, new ClientSideReqID());
+		return sendProcessRequestWorker(operator, params, new ClientSideReqID());
 	}
 	
-	public void sendProcessRequest(String operator, Map<String,String> params, ResultRecipient_I resultCallbackObj) throws IOException {
+	public ServiceResponsePacket  sendProcessRequest(String operator, Map<String,String> params, ResultRecipient_I resultCallbackObj) throws IOException {
 		String timestamp = java.lang.String.valueOf(Common.getTimestamp());
 		// Event queue for results: "generic". ID: timestamp 
 		ClientSideReqID reqID = new ClientSideReqID("GENERIC", timestamp); // ID is the timestamp of this request
 		resultListeners.put(timestamp, resultCallbackObj);
 		reqID.setResultRecipientURI(getResponseURI(timestamp));
-		sendProcessRequestWorker(operator, params, reqID);
+		return sendProcessRequestWorker(operator, params, reqID);
 	}
 	
-	public void sendProcessRequest(String operator, Map<String,String> params, Disposition disposition) throws IOException {
+	public ServiceResponsePacket  sendProcessRequest(String operator, Map<String,String> params, Disposition disposition) throws IOException {
 		// Event queue for results: "generic". ID: timestamp 
 		ClientSideReqID reqID = new ClientSideReqID("GENERIC",
 													"<null>", // no callback id
@@ -59,10 +59,10 @@ public class IRClient {
 		if (disposition != Disposition.DISCARD_RESULTS) {
 			reqID.setResultRecipientURI(getResponseURI(java.lang.String.valueOf(Common.getTimestamp())));
 		}
-		sendProcessRequestWorker(operator, params, reqID);
+		return sendProcessRequestWorker(operator, params, reqID);
 	}
 	
-	public void sendProcessRequest(String operator, Map<String,String> params, ResultRecipient_I resultCallbackObj, Disposition disposition) throws IOException {
+	public ServiceResponsePacket  sendProcessRequest(String operator, Map<String,String> params, ResultRecipient_I resultCallbackObj, Disposition disposition) throws IOException {
 		String timestamp = java.lang.String.valueOf(Common.getTimestamp());
 		// Event queue for results: "generic". ID: timestamp 
 		ClientSideReqID reqID = new ClientSideReqID("GENERIC", timestamp, disposition); // ID is the timestamp of this request
@@ -70,7 +70,7 @@ public class IRClient {
 		if (disposition != Disposition.DISCARD_RESULTS) {
 			reqID.setResultRecipientURI(getResponseURI(timestamp));
 		}
-		sendProcessRequestWorker(operator, params, reqID);
+		return sendProcessRequestWorker(operator, params, reqID);
 	}
 	
 	private URI getResponseURI(String responseID) {
@@ -84,7 +84,7 @@ public class IRClient {
 		return result;
 	}
 	
-	private void sendProcessRequestWorker(String operator, Map<String,String> params, ClientSideReqID_I reqID) throws IOException {	
+	private ServiceResponsePacket sendProcessRequestWorker(String operator, Map<String,String> params, ClientSideReqID_I reqID) throws IOException {	
 		log.info("[Client] Sending process request: " + operator);
 		
 		// Which result queue should the response go to?
@@ -96,13 +96,14 @@ public class IRClient {
 		ServiceRequestPacket reqPaket = new ServiceRequestPacket(operator, params, reqID);
 		
 		// Ship the request to the server:
-		HTTPSender.sendPacket(reqPaket, IRServiceConfiguration.IR_SERVICE_URI);
+		ServiceResponsePacket resp = HTTPSender.sendPacket(reqPaket, IRServiceConfiguration.IR_SERVICE_URI);
+		return resp;
 	}
 	
-	public void setScriptRootDir(String dir) throws IOException {
+	public ServiceResponsePacket setScriptRootDir(String dir) throws IOException {
 		Map<String,String> params = new HashMap<String,String>();
 		params.put("scriptRoot", dir);
-		sendProcessRequest("setPigScriptRoot", params);
+		return sendProcessRequest("setPigScriptRoot", params);
 	}
 	
 	public void newPigResponse(ServiceResponsePacket resp) {

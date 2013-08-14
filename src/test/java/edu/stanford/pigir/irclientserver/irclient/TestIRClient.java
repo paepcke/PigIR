@@ -12,6 +12,8 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.python.modules.time.Time;
 
+import edu.stanford.pigir.irclientserver.IRPacket.ServiceResponsePacket;
+
 public class TestIRClient {
 	
 	static IRClient pigClient = null;
@@ -44,9 +46,8 @@ public class TestIRClient {
 		pigClient = new IRClient();
 		// Tell PigScriptRunner.java where to look for the 
 		// Script files.
-		pigClient.setScriptRootDir("src/test/");
-		// Allow time for the response from server to be processed:
-		Time.sleep(4000); 
+		@SuppressWarnings("unused")
+		ServiceResponsePacket response = pigClient.setScriptRootDir("src/test/");
 	}
 
 	@Test
