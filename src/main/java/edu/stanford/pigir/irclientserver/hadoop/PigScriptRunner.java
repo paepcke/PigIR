@@ -28,8 +28,11 @@ import org.apache.pig.ExecType;
 import org.apache.pig.PigException;
 import org.apache.pig.PigServer;
 import org.apache.pig.backend.executionengine.ExecException;
+import org.apache.pig.backend.hadoop.executionengine.mapReduceLayer.plans.MROperPlan;
 import org.apache.pig.data.Tuple;
 import org.apache.pig.impl.plan.VisitorException;
+import org.apache.pig.tools.pigstats.JobStats;
+import org.apache.pig.tools.pigstats.OutputStats;
 
 import edu.stanford.pigir.irclientserver.ArcspreadException;
 import edu.stanford.pigir.irclientserver.JobHandle_I;
@@ -90,7 +93,7 @@ public class PigScriptRunner implements PigServiceImpl_I {
 		params = theParams;
 	}	
 	
-public JobHandle_I asyncPigRequest(String operator, Map<String, String> theParams) {
+	public JobHandle_I asyncPigRequest(String operator, Map<String, String> theParams) {
 		
 		// Build a jobname
 		String jobName = "arcspread_" + PigServiceHandle.getPigTimestamp();
@@ -192,6 +195,55 @@ public JobHandle_I asyncPigRequest(String operator, Map<String, String> theParam
 		if (pserver != null)
 			pserver.shutdown();
 	}
+	
+	// ------------------------- Pig Reporting Callback Methods ----------------
+	
+	public void initialPlanNotification(String scriptId, MROperPlan plan) {
+		// TODO Auto-generated method stub
+	}
+
+
+	public void launchStartedNotification(String scriptId, int numJobsToLaunch) {
+		System.out.println(String.format("********Launched; scriptID: %s; numJobsLaunched: %d", scriptId, numJobsToLaunch));
+	}
+
+
+	public void jobsSubmittedNotification(String scriptId, int numJobsSubmitted) {
+		System.out.println(String.format("********Submitted; scriptID: %s; numJobsSubmitted: %d", scriptId, numJobsSubmitted));
+	}
+
+
+	public void jobStartedNotification(String scriptId, String assignedJobId) {
+		System.out.println(String.format("********Started; scriptID: %s; jobID: %s", scriptId, assignedJobId));
+		
+	}
+
+
+	public void jobFinishedNotification(String scriptId, JobStats jobStats) {
+		System.out.println(String.format("********Finished; scriptID: %s; jobStats: %s", scriptId, jobStats));		
+	}
+
+
+	public void jobFailedNotification(String scriptId, JobStats jobStats) {
+		System.out.println(String.format("********Failed; scriptID: %s; jobStats: %s", scriptId, jobStats));		
+		
+	}
+	
+	public void outputCompletedNotification(String scriptId, OutputStats outputStats) {
+		System.out.println(String.format("********Output complete; scriptID: %s; outputStats: %s", scriptId, outputStats));		
+	}
+
+	public void progressUpdatedNotification(String scriptId, int progress) {
+		System.out.println(String.format("********Progress %s: %d", scriptId, progress));		
+	}
+
+
+	public void launchCompletedNotification(String scriptId, int numJobsSucceeded) {
+		System.out.println(String.format("********Launch completed for %s; numJobsSucceeded: %d", scriptId, numJobsSucceeded));		
+		
+	}
+	
+	// ------------------------- End Pig Reporting Callback Methods ----------------
 	
 	private void ensureScriptFileOK(File theScriptFile) throws FileNotFoundException {
 		if (theScriptFile == null) {
