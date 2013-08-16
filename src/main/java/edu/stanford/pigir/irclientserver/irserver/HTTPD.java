@@ -15,7 +15,7 @@ import java.util.regex.Pattern;
 import org.apache.log4j.BasicConfigurator;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
-import org.codehaus.jettison.json.JSONObject;
+import org.json.JSONObject;
 
 import edu.stanford.pigir.irclientserver.ArcspreadException;
 import edu.stanford.pigir.irclientserver.IRPacket.ServiceRequestPacket;

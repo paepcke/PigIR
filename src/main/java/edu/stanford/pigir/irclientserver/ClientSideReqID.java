@@ -3,9 +3,9 @@ package edu.stanford.pigir.irclientserver;
 import java.net.URI;
 import java.net.URISyntaxException;
 
-import org.codehaus.jettison.json.JSONException;
-import org.codehaus.jettison.json.JSONObject;
-import org.codehaus.jettison.json.JSONStringer;
+import org.json.JSONException;
+import org.json.JSONObject;
+import org.json.JSONStringer;
 
 public class ClientSideReqID implements ClientSideReqID_I {
 	

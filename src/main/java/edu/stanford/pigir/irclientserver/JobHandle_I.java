@@ -3,8 +3,8 @@
  */
 package edu.stanford.pigir.irclientserver;
 
-import org.codehaus.jettison.json.JSONException;
-import org.codehaus.jettison.json.JSONStringer;
+import org.json.JSONException;
+import org.json.JSONStringer;
 
 /**
  * @author paepcke

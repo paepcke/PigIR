@@ -11,8 +11,10 @@ import java.util.Map;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.pig.data.Tuple;
+import org.junit.Ignore;
 import org.junit.Test;
-import org.python.modules.time.Time;
+
+import edu.stanford.pigir.irclientserver.JobHandle_I;
 
 public class TestPigScriptRunner {
 	
@@ -45,6 +47,7 @@ public class TestPigScriptRunner {
 	
 	
 	@Test
+	@Ignore
 	public void testScriptProgrammaticStore() throws IOException {
 		FileUtils.deleteQuietly(new File(resultFile));
 		PigScriptRunner runner = new PigScriptRunner(scriptFileNoStore, resultFile, "theCount", params);
@@ -53,6 +56,7 @@ public class TestPigScriptRunner {
 	}
 
 	@Test
+	@Ignore
 	public void testSimpleScriptIteration() throws IOException {
 		PigScriptRunner runner = new PigScriptRunner(scriptFileNoStore, "theCount", params);
 		try {
@@ -72,6 +76,7 @@ public class TestPigScriptRunner {
 	}
 	
 	@Test
+	@Ignore
 	public void testScriptRunFromStore() throws IOException {
 		FileUtils.deleteQuietly(new File(resultFile));
 		PigScriptRunner runner = new PigScriptRunner(scriptFileDoStore, resultFile, "theCount", params);
@@ -85,17 +90,18 @@ public class TestPigScriptRunner {
 	}
 	
 	@Test
-	public void testScriptRunViaServicePigRequest() throws IOException {
+	@Ignore
+	public void testScriptRunViaServicePigRequest() throws IOException, InterruptedException {
 		FileUtils.deleteQuietly(new File(resultFile));
 		PigScriptRunner runner = new PigScriptRunner();
 		try {
 			runner.setScriptRootDir("src/test");
 			runner.asyncPigRequest("pigtestStoreResult", null); // null: no args
 			while (! new File(resultFile).canRead()) {
-				Time.sleep(3);
+				Thread.sleep(3000);
 			}
 			System.out.println("Output file available; waiting for it to be written.");
-			Time.sleep(5);
+			Thread.sleep(5);
 			ensureFileAsExpected();
 		} finally {
 			runner.shutDownPigRequest();
@@ -103,20 +109,26 @@ public class TestPigScriptRunner {
 	}
 	
 	@Test
-	public void testScriptWithParm() throws IOException {
+	public void testScriptWithParm() throws IOException, InterruptedException {
 		FileUtils.deleteQuietly(new File(resultFile));
 		PigScriptRunner runner = new PigScriptRunner();
 		params = new HashMap<String,String>();
 		params.put("INFILE", "src/test/resources/mary.txt");
+		params.put("exectype", "local");
 		try {
 			runner.setScriptRootDir("src/test");
-			runner.asyncPigRequest("pigtestStoreResultOutfileParm", params); // null: no args
+			JobHandle_I jobHandle = runner.asyncPigRequest("pigtestStoreResultOutfileParm", params); // null: no args
 			while (! new File(resultFile).canRead()) {
-				Time.sleep(3);
+				jobHandle = runner.getProgress(jobHandle);
+				System.out.println(String.format("Status: %s; NumJobsRunning: %s", jobHandle.getStatus(), jobHandle.getMessage()));
+				//***Thread.sleep(3000);
+				Thread.sleep(50);
 			}
 			System.out.println("Output file available; waiting for it to be written.");
-			Time.sleep(5);
+			Thread.sleep(2000);
 			ensureFileAsExpected();
+			jobHandle = runner.getProgress(jobHandle);
+			System.out.println(String.format("Status: %s; NumJobsRunning: %s", jobHandle.getStatus(), jobHandle.getMessage()));
 		} finally {
 			runner.shutDownPigRequest();
 		}

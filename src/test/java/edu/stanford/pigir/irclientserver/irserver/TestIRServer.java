@@ -7,8 +7,8 @@ import java.net.URISyntaxException;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.codehaus.jettison.json.JSONException;
-import org.codehaus.jettison.json.JSONStringer;
+import org.json.JSONException;
+import org.json.JSONStringer;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;

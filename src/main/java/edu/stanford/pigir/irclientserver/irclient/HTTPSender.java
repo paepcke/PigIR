@@ -5,16 +5,17 @@ import java.io.UnsupportedEncodingException;
 import java.net.URI;
 
 import org.apache.http.HttpEntity;
-import org.apache.http.HttpResponse;
-import org.apache.http.StatusLine;
-import org.apache.http.client.ClientProtocolException;
-import org.apache.http.client.HttpClient;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.conn.HttpHostConnectException;
+import org.apache.http.HttpException;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.util.EntityUtils;
-import org.codehaus.jettison.json.JSONException;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.conn.HttpHostConnectException;
+import org.apache.http.HttpResponse;
+//import org.apache.http.client.ClientProtocolException;
+
+import org.json.JSONException;
 
 import edu.stanford.pigir.irclientserver.ClientSideReqID_I;
 import edu.stanford.pigir.irclientserver.IRPacket.ServiceRequestPacket;
@@ -40,11 +41,11 @@ public class HTTPSender {
 		//Execute and get the response.
 		HttpResponse response;
 		try {
-			response = httpclient.execute(httppost);
-		} catch (ClientProtocolException e) {
-			throw new RuntimeException("Cannot send HTTP POST request (ClientProtocolException): " + e.getMessage());
+			response = (HttpResponse) httpclient.execute(httppost);
 		} catch (HttpHostConnectException e) {
 			throw new IOException(String.format("Could not contact IR Server at %s: %s", targetURI, e.getMessage()));
+		} catch (HttpException e) {
+			throw new RuntimeException("Cannot send HTTP POST response (HttpException): " + e.getMessage());
 		}
 		// Get body of HTTP response, which should be a JSONized 
 		// ServiceResponsePacket:

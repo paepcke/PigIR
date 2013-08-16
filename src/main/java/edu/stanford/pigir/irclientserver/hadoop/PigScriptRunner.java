@@ -6,8 +6,8 @@ package edu.stanford.pigir.irclientserver.hadoop;
 /**
  * @author paepcke
  *    
- *    TODO: thread should get hold of job ID, and make it available
- *    TODO: servicePigRequest needs to return job ID 
+ *    TODO: Ensure that very old PigProgressListener instances are eventually removed from PigScriptRunner.progressListeners.
+ *    TODO: JobHandle should get fields for progress and numJobs running (see current version, which puts those into a string
  */
 
 import java.io.File;
@@ -15,17 +15,21 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
 import org.apache.commons.io.FilenameUtils;
 import org.apache.hadoop.mapred.FileAlreadyExistsException;
+import org.apache.log4j.BasicConfigurator;
 import org.apache.log4j.Logger;
 import org.apache.pig.ExecType;
 import org.apache.pig.PigException;
+import org.apache.pig.PigRunner;
 import org.apache.pig.PigServer;
 import org.apache.pig.backend.executionengine.ExecException;
 import org.apache.pig.backend.hadoop.executionengine.mapReduceLayer.plans.MROperPlan;
@@ -33,6 +37,8 @@ import org.apache.pig.data.Tuple;
 import org.apache.pig.impl.plan.VisitorException;
 import org.apache.pig.tools.pigstats.JobStats;
 import org.apache.pig.tools.pigstats.OutputStats;
+import org.apache.pig.tools.pigstats.PigProgressNotificationListener;
+import org.apache.pig.tools.pigstats.PigStats;
 
 import edu.stanford.pigir.irclientserver.ArcspreadException;
 import edu.stanford.pigir.irclientserver.JobHandle_I;
@@ -40,6 +46,15 @@ import edu.stanford.pigir.irclientserver.JobHandle_I.JobStatus;
 import edu.stanford.pigir.irclientserver.PigServiceHandle;
 import edu.stanford.pigir.irclientserver.PigServiceImpl_I;
 
+import org.joda.time.DateTime;
+
+// The following is used in PigRunner.run(). Without this import
+// we get a RuntimeException. Supposedly, later Pig versions don't
+// use jline any more, but we are stuck with it. See also comments
+// with jline dependency in pom.xml:
+import jline.ConsoleReaderInputStream;
+
+@SuppressWarnings("unused")
 public class PigScriptRunner implements PigServiceImpl_I {
 
 
@@ -51,8 +66,12 @@ public class PigScriptRunner implements PigServiceImpl_I {
 	// their respective full pathnanmes:
 	static Map<String,String> knownOperators = new HashMap<String,String>();
 	
+	// Keeping track of PigProgressListeners that we started in
+	// asyncPigRequest():
+	private static Map<String,PigProgressListener> progressListeners = new HashMap<String,PigProgressListener>();
+	
 	Properties props = new Properties();
-	Map<String,String> params = null;
+	Map<String,String> params = new HashMap<String,String>();
 	PigServer pserver;   // The Pig server that comes with Pig
 	File scriptFile  = null;
 	String outFilePath = null;
@@ -61,25 +80,31 @@ public class PigScriptRunner implements PigServiceImpl_I {
 	PigRunThread runningThread = null;
 
 	public PigScriptRunner() {
-		// Used only if subsequently using the asynchronous servicePigRequest() method.
-		// For constructors appropriate for synchronous use, see below.
+		// This constructor is used directly by clients when the asynchronous servicePigRequest() method.
+		// is subsequently used. For constructors appropriate for synchronous use, see below.
+		BasicConfigurator.configure();
 	}
 				
 	public PigScriptRunner(File theScriptFile, Map<String,String> theParams) throws IOException {
+		this();
 		ensureScriptFileOK(theScriptFile);
-		params = theParams;
+		if (params != null)
+			params = theParams;
 	}
 	
 	public PigScriptRunner(File theScriptFile, String theVarToIterate, Map<String,String> theParams) throws IOException {
+		this();
 		ensureScriptFileOK(theScriptFile);
 		if (theVarToIterate == null) {
 		   throw new IllegalArgumentException("Script variable to print or iterate over must be provided; null was passed instead.");
 		}
 		pigVar = theVarToIterate;
-		params = theParams;
+		if (params != null)
+			params = theParams;
 	}
 	
 	public PigScriptRunner(File theScriptFile, String theOutfile, String varToStore, Map<String,String> theParams) throws IOException {
+		this();
 		ensureScriptFileOK(theScriptFile);
 		if (varToStore == null) {
 			throw new IllegalArgumentException("Script variable to store must be provided; null was passed instead.");
@@ -90,12 +115,14 @@ public class PigScriptRunner implements PigServiceImpl_I {
 		}
 		outFilePath = theOutfile;
 		pigVar  = varToStore;
-		params = theParams;
+		if (params != null)
+			params = theParams;
 	}	
 	
 	public JobHandle_I asyncPigRequest(String operator, Map<String, String> theParams) {
 		
-		// Build a jobname
+		// Build a human-readable jobname to pass back to
+		// caller for referencing this job:
 		String jobName = "arcspread_" + PigServiceHandle.getPigTimestamp();
 		PigServiceHandle resultHandle = new PigServiceHandle(jobName, JobStatus.RUNNING);
 		
@@ -110,7 +137,8 @@ public class PigScriptRunner implements PigServiceImpl_I {
 		// Script still not found?
 		if (pigScriptPath == null)
 			return new ArcspreadException.NotImplementedException(String.format("Pig request '%s' is not known; no Pig script implementation found.", operator));
-		params = theParams;
+		if (params != null)
+			params = theParams;
 		
 		// If the path to the Pigscript is empty, this means
 		// the implementation of the operation is within this
@@ -138,13 +166,11 @@ public class PigScriptRunner implements PigServiceImpl_I {
 		}
 		
 		// Start a new thread to run this script:
-		createPigServer();
-		PigRunThread scriptThread = runner.new PigRunThread(); 
-		scriptThread.start(runner, pserver, params);
+		PigRunThread scriptThread = runner.new PigRunThread();
+		PigProgressListener progressListener = new PigProgressListener();
+		PigScriptRunner.progressListeners.put(jobName, progressListener);
+		scriptThread.start(progressListener, pigScriptPath, params);
 		runner.runningThread = scriptThread;
-		
-		//PigContext context = pserver.getPigContext();
-		//Properties props = context.getProperties();
 		
 		return resultHandle;
 	}
@@ -196,54 +222,6 @@ public class PigScriptRunner implements PigServiceImpl_I {
 			pserver.shutdown();
 	}
 	
-	// ------------------------- Pig Reporting Callback Methods ----------------
-	
-	public void initialPlanNotification(String scriptId, MROperPlan plan) {
-		// TODO Auto-generated method stub
-	}
-
-
-	public void launchStartedNotification(String scriptId, int numJobsToLaunch) {
-		System.out.println(String.format("********Launched; scriptID: %s; numJobsLaunched: %d", scriptId, numJobsToLaunch));
-	}
-
-
-	public void jobsSubmittedNotification(String scriptId, int numJobsSubmitted) {
-		System.out.println(String.format("********Submitted; scriptID: %s; numJobsSubmitted: %d", scriptId, numJobsSubmitted));
-	}
-
-
-	public void jobStartedNotification(String scriptId, String assignedJobId) {
-		System.out.println(String.format("********Started; scriptID: %s; jobID: %s", scriptId, assignedJobId));
-		
-	}
-
-
-	public void jobFinishedNotification(String scriptId, JobStats jobStats) {
-		System.out.println(String.format("********Finished; scriptID: %s; jobStats: %s", scriptId, jobStats));		
-	}
-
-
-	public void jobFailedNotification(String scriptId, JobStats jobStats) {
-		System.out.println(String.format("********Failed; scriptID: %s; jobStats: %s", scriptId, jobStats));		
-		
-	}
-	
-	public void outputCompletedNotification(String scriptId, OutputStats outputStats) {
-		System.out.println(String.format("********Output complete; scriptID: %s; outputStats: %s", scriptId, outputStats));		
-	}
-
-	public void progressUpdatedNotification(String scriptId, int progress) {
-		System.out.println(String.format("********Progress %s: %d", scriptId, progress));		
-	}
-
-
-	public void launchCompletedNotification(String scriptId, int numJobsSucceeded) {
-		System.out.println(String.format("********Launch completed for %s; numJobsSucceeded: %d", scriptId, numJobsSucceeded));		
-		
-	}
-	
-	// ------------------------- End Pig Reporting Callback Methods ----------------
 	
 	private void ensureScriptFileOK(File theScriptFile) throws FileNotFoundException {
 		if (theScriptFile == null) {
@@ -309,9 +287,17 @@ public class PigScriptRunner implements PigServiceImpl_I {
 	}
 
 	@Override
-	public PigServiceHandle getProgress(PigServiceHandle service) {
-		// TODO Auto-generated method stub
-		return null;
+	public JobHandle_I getProgress(JobHandle_I jobHandle) {
+		String jobName = jobHandle.getJobName();
+		PigProgressListener listener = PigScriptRunner.progressListeners.get(jobName);
+		if (listener == null) {
+			jobHandle.setStatus(JobStatus.UNKNOWN);
+			return jobHandle;
+		}
+		int subjobs = listener.getNumSubjobsRunning();
+		String msg = String.format("{progress:%d, subjobsRunning: %d}",listener.getProgress(), listener.getNumSubjobsRunning()); 
+		jobHandle.setMessage(msg);
+		return jobHandle;
 	}
 	
 	/**
@@ -325,34 +311,42 @@ public class PigScriptRunner implements PigServiceImpl_I {
 	
 	class PigRunThread extends Thread {
 
-		PigScriptRunner parent = null;
+		PigProgressNotificationListener progressListener = null;
 		boolean keepRunning    = true;
-		PigServer pserver      = null;
 		Map<String,String> params = null;
+		List<String> cmd = new ArrayList<String>();
+		PigStats pigStats = null;
+		String pigScriptPath = null;
 		
-		public void start(PigScriptRunner threadStarter, PigServer thePserver, Map<String,String> theParams) {
+		public void start(PigProgressNotificationListener threadStarter, String thePigScriptPath,  Map<String,String> theParams) {
 			super.start();
-			parent  = threadStarter;
-			pserver = thePserver;
+			progressListener  = threadStarter;
 			params  = theParams;
+			pigScriptPath = thePigScriptPath;
+			if (params == null)
+				params = new HashMap<String,String>();
+			// Create the commandline call:
+			for (String paramKey : params.keySet()) {
+				if (paramKey == "exectype") {
+					cmd.add("-x");
+					cmd.add(params.get(paramKey));
+					continue;
+				} else {
+					cmd.add("-param");
+					cmd.add(paramKey + "=" + params.get(paramKey));
+				}
+			}
+			cmd.add("-f");
+			cmd.add(pigScriptPath);
 		}
 
 		public void run() {
-			
 			try {
-				try {
-					scriptInStream = new FileInputStream(scriptFile);
-				} catch (FileNotFoundException e) {
-					// We checked for this before instantiating the thread:
-					e.printStackTrace();
-				}
-				try {
-					pserver.registerScript(scriptInStream, params);
-				} catch (IOException e) {
-					String errMsg = String.format("Cannot run script '%s': %s", scriptFile, e.getMessage());
-					log.error(errMsg);
-					return;
-				}
+				String[] cmdArr = new String[cmd.size()];
+				cmd.toArray(cmdArr);
+				pigStats = PigRunner.run(cmdArr, progressListener);
+			} catch (Exception e) {
+				PigScriptRunner.log.error(String.format("Error while running script %s: %s", pigScriptPath, e.getMessage()));
 			} finally {
 				shutdown();
 			}

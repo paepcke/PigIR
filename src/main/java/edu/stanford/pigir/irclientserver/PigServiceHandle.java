@@ -3,9 +3,9 @@ package edu.stanford.pigir.irclientserver;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
-import org.codehaus.jettison.json.JSONException;
-import org.codehaus.jettison.json.JSONObject;
-import org.codehaus.jettison.json.JSONStringer;
+import org.json.JSONException;
+import org.json.JSONObject;
+import org.json.JSONStringer;
 
 public class PigServiceHandle implements JobHandle_I {
 
