@@ -7,7 +7,7 @@ package edu.stanford.pigir.irclientserver.hadoop;
  * @author paepcke
  *    
  *    TODO: Ensure that very old PigProgressListener instances are eventually removed from PigScriptRunner.progressListeners.
- *    TODO: JobHandle should get fields for progress and numJobs running (see current version, which puts those into a string
+ *    TODO: Test that we detect failures that occur without Hadoop being started. (Already have testpigBadPig.pig.)
  */
 
 import java.io.File;
@@ -32,11 +32,8 @@ import org.apache.pig.PigException;
 import org.apache.pig.PigRunner;
 import org.apache.pig.PigServer;
 import org.apache.pig.backend.executionengine.ExecException;
-import org.apache.pig.backend.hadoop.executionengine.mapReduceLayer.plans.MROperPlan;
 import org.apache.pig.data.Tuple;
 import org.apache.pig.impl.plan.VisitorException;
-import org.apache.pig.tools.pigstats.JobStats;
-import org.apache.pig.tools.pigstats.OutputStats;
 import org.apache.pig.tools.pigstats.PigProgressNotificationListener;
 import org.apache.pig.tools.pigstats.PigStats;
 
@@ -46,17 +43,7 @@ import edu.stanford.pigir.irclientserver.JobHandle_I.JobStatus;
 import edu.stanford.pigir.irclientserver.PigServiceHandle;
 import edu.stanford.pigir.irclientserver.PigServiceImpl_I;
 
-import org.joda.time.DateTime;
-
-// The following is used in PigRunner.run(). Without this import
-// we get a RuntimeException. Supposedly, later Pig versions don't
-// use jline any more, but we are stuck with it. See also comments
-// with jline dependency in pom.xml:
-import jline.ConsoleReaderInputStream;
-
-@SuppressWarnings("unused")
 public class PigScriptRunner implements PigServiceImpl_I {
-
 
 	public static Logger log = Logger.getLogger("edu.stanford.pigir.irclientserver.hadoop");	
 
@@ -294,9 +281,20 @@ public class PigScriptRunner implements PigServiceImpl_I {
 			jobHandle.setStatus(JobStatus.UNKNOWN);
 			return jobHandle;
 		}
-		int subjobs = listener.getNumSubjobsRunning();
-		String msg = String.format("{progress:%d, subjobsRunning: %d}",listener.getProgress(), listener.getNumSubjobsRunning()); 
-		jobHandle.setMessage(msg);
+		jobHandle.setProgress(listener.getProgress());
+		jobHandle.setNumJobsRunning(listener.getNumSubjobsRunning());
+		jobHandle.setRuntime(listener.getRuntime());
+		jobHandle.setBytesWritten(listener.getBytesWritten());
+		
+		// Try to detect where the Pig processor found an error
+		// before submitting any work to Hadoop. Example: No Hadoop
+		// config file found, nor "-x local" specified:
+		if ((jobHandle.getProgress() == 0) &&
+			(jobHandle.getNumJobsRunning() == 0) &&
+			(jobHandle.getBytesWritten() == 0) &&
+			(jobHandle.getRuntime() > 15000))  // 15 seconds without signs of life
+			jobHandle.setStatus(JobStatus.FAILED);
+		
 		return jobHandle;
 	}
 	
@@ -318,9 +316,9 @@ public class PigScriptRunner implements PigServiceImpl_I {
 		PigStats pigStats = null;
 		String pigScriptPath = null;
 		
-		public void start(PigProgressNotificationListener threadStarter, String thePigScriptPath,  Map<String,String> theParams) {
+		public void start(PigProgressNotificationListener theProgressListener, String thePigScriptPath,  Map<String,String> theParams) {
 			super.start();
-			progressListener  = threadStarter;
+			progressListener  = theProgressListener;
 			params  = theParams;
 			pigScriptPath = thePigScriptPath;
 			if (params == null)
@@ -345,6 +343,8 @@ public class PigScriptRunner implements PigServiceImpl_I {
 				String[] cmdArr = new String[cmd.size()];
 				cmd.toArray(cmdArr);
 				pigStats = PigRunner.run(cmdArr, progressListener);
+				// Make this job's stats available to the progress listener:
+				((PigProgressListener)progressListener).setJobPigStats(pigStats);
 			} catch (Exception e) {
 				PigScriptRunner.log.error(String.format("Error while running script %s: %s", pigScriptPath, e.getMessage()));
 			} finally {

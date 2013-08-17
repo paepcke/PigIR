@@ -122,14 +122,13 @@ ClientSideRequestID ::= "{"
 			"responseDisposition" ":" ResponseDisposition
 			"}"		        
 
-
-ServiceHandle    ::= "{" JobName JobStatus ErrorCode Message "}"
-
-JobName          ::= "jobName" ":" DirectoryPath
-
 ResponseDisposition ::= ("QUEUE_RESULTS" |
 		    	 "DISCARD_RESULTS" |
 			 "NOTIFY")
+
+ServiceHandle    ::= "{" JobName JobStatus Progress NumJobsRunning Runtime BytesWritten  ErrorCode Message "}"
+
+JobName          ::= "jobName" ":" DirectoryPath
 
 JobStatus        ::= "jobStatus" ":" 
 		     ("FAILED" | 
@@ -139,11 +138,17 @@ JobStatus        ::= "jobStatus" ":"
 		      "SUCCEEDED" | 
 		      "UNKNOWN")
 
+Progress	 ::= "progress" ":" PosInteger
+NumJobsRunning   ::= "numJobsRunning" ":" PosInteger
+BytesWritten     ::= "bytesWritten" ":" PosInteger
+Runtime          ::= "runtime" ":" PosInteger
+
 
 ErrorCode        ::= "errorCode" ":" [-]? [0-9]+
 Message		 ::= "message" ":" String
 
 String		 ::= [http://www.w3.org/TR/xml#NT-Char]
+PosInteger       ::= [0-9]+
 Boolean          ::= ("true" | "false")
 DomainName       ::= DomainStartStopChar [0-9a-zA-Z-]
 DomainStartStopChar ::= [0-9a-zA-Z]

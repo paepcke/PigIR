@@ -44,6 +44,38 @@ public class ArcspreadException extends Exception {
 		jobName = theJobName;
 	}
 	
+	public int getProgress() {
+		throw new RuntimeException(new NotImplementedException());
+	}
+	
+	public int getNumJobsRunning() {
+		throw new RuntimeException(new NotImplementedException());
+	}
+
+	public long getRuntime() {
+		throw new RuntimeException(new NotImplementedException());
+	}
+
+	public long getBytesWritten() {
+		throw new RuntimeException(new NotImplementedException());
+	}
+
+	public void setProgress(int progress) {
+		throw new RuntimeException(new NotImplementedException());
+	}
+	
+	public void setNumJobsRunning(int numJobsRunning) {
+		throw new RuntimeException(new NotImplementedException());
+	}
+
+	public void setRuntime(long runtime) {
+		throw new RuntimeException(new NotImplementedException());
+	}
+
+	public void setBytesWritten(long bytesWritten) {
+		throw new RuntimeException(new NotImplementedException());
+	}
+	
 	
 	public JSONStringer toJSON(JSONStringer stringer) {
 		try {

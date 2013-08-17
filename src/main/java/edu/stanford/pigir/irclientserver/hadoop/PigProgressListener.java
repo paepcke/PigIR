@@ -3,11 +3,14 @@
  */
 package edu.stanford.pigir.irclientserver.hadoop;
 
+import java.util.List;
+
 import org.apache.log4j.BasicConfigurator;
 import org.apache.log4j.Logger;
 import org.apache.pig.backend.hadoop.executionengine.mapReduceLayer.plans.MROperPlan;
 import org.apache.pig.tools.pigstats.JobStats;
 import org.apache.pig.tools.pigstats.OutputStats;
+import org.apache.pig.tools.pigstats.PigStats;
 
 /**
  * @author paepcke
@@ -23,7 +26,12 @@ public class PigProgressListener implements org.apache.pig.tools.pigstats.PigPro
 	// One logger for all progress listeners:
 	public static Logger log = Logger.getLogger("edu.stanford.pigir.irclientserver.hadoop");
 	
+	long startTime = System.currentTimeMillis();
+	long endTime = -1;
 	String scriptID = "";
+	
+	PigStats jobPigStats = null;
+	boolean jobComplete = false;
 	int progress = 0;
 	int numJobsCompleted = 0;
 	
@@ -37,6 +45,24 @@ public class PigProgressListener implements org.apache.pig.tools.pigstats.PigPro
 	public PigProgressListener() {
 		BasicConfigurator.configure();
 	}
+
+	/**
+	 * Called from thread in PigScriptRunner. That thread receives
+	 * the PigStats for the Pig job that it submits to the Pig
+	 * server. 
+	 * @param thePigStats
+	 */
+	public void setJobPigStats(PigStats thePigStats) {
+		jobPigStats = thePigStats;
+	}
+	
+	/**
+	 * Return the latest progress percentage number.
+	 * @return percentage complete.
+	 */
+	public int getProgress() {
+		return progress;
+	}
 	
 	/**
 	 * Get total number of jobs that are still unfinished.
@@ -47,11 +73,30 @@ public class PigProgressListener implements org.apache.pig.tools.pigstats.PigPro
 	}
 	
 	/**
-	 * Return the latest progress percentage number.
-	 * @return percentage complete.
+	 * Return either total amount of time taken to finish
+	 * the Pig job or, if job is not yet finished, return
+	 * runtime so far:
+	 * @return
 	 */
-	public int getProgress() {
-		return progress;
+	public long getRuntime() {
+		long timeNow = System.currentTimeMillis();
+		if (endTime > -1)
+			return (endTime - startTime);
+		else
+			return (timeNow - startTime);
+	}
+	
+	public long getBytesWritten() {
+		if ((jobPigStats == null) && (outputStats == null))
+			return -1;
+		if (outputStats != null)
+			return outputStats.getBytes();
+		List<OutputStats> allOutStats = jobPigStats.getOutputStats();
+		long written = 0;
+		for (OutputStats outStats : allOutStats) {
+			written += outStats.getBytes();
+		}
+		return written;
 	}
 	
 	/**
@@ -133,6 +178,8 @@ public class PigProgressListener implements org.apache.pig.tools.pigstats.PigPro
      */
     public void launchCompletedNotification(String scriptId, int theNumJobsSucceeded) {
     	numJobsCompleted += theNumJobsSucceeded;
+    	jobComplete = true;
+    	endTime = System.currentTimeMillis();
     	PigProgressListener.log.info(String.format("Launch completed for %s; numJobsCompleted: %d", scriptId, theNumJobsSucceeded));
     }
 

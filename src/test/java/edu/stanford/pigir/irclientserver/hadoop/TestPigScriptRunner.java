@@ -14,7 +14,9 @@ import org.apache.pig.data.Tuple;
 import org.junit.Ignore;
 import org.junit.Test;
 
+import edu.stanford.pigir.irclientserver.ArcspreadException;
 import edu.stanford.pigir.irclientserver.JobHandle_I;
+import edu.stanford.pigir.irclientserver.JobHandle_I.JobStatus;
 
 public class TestPigScriptRunner {
 	
@@ -96,8 +98,9 @@ public class TestPigScriptRunner {
 		PigScriptRunner runner = new PigScriptRunner();
 		try {
 			runner.setScriptRootDir("src/test");
-			runner.asyncPigRequest("pigtestStoreResult", null); // null: no args
+			JobHandle_I jobHandle = runner.asyncPigRequest("pigtestStoreResult", null); // null: no args
 			while (! new File(resultFile).canRead()) {
+				JobStatus jobStatus = jobHandle.getStatus();
 				Thread.sleep(3000);
 			}
 			System.out.println("Output file available; waiting for it to be written.");
@@ -109,6 +112,28 @@ public class TestPigScriptRunner {
 	}
 	
 	@Test
+	@Ignore
+	public void testNonImplementedPigMethod() {
+		PigScriptRunner runner = new PigScriptRunner();
+		// Non-existent Pig script:
+		JobHandle_I jobHandle = runner.asyncPigRequest("foobarbumboodle", null);
+		assertEquals(jobHandle.getClass().getName(), "edu.stanford.pigir.irclientserver.ArcspreadException$NotImplementedException");
+	}
+	
+	@Test
+	public void testEarlyDeath() throws InterruptedException {
+		PigScriptRunner runner = new PigScriptRunner();
+		JobHandle_I jobHandle = runner.asyncPigRequest("pigtestBadPig", null);
+		
+		JobStatus jobStatus = null;
+		while (jobHandle.getStatus() == JobStatus.RUNNING) {
+			jobStatus = jobHandle.getStatus();
+			Thread.sleep(1000);
+		}
+	}
+	
+	@Test
+	@Ignore
 	public void testScriptWithParm() throws IOException, InterruptedException {
 		FileUtils.deleteQuietly(new File(resultFile));
 		PigScriptRunner runner = new PigScriptRunner();
@@ -117,10 +142,10 @@ public class TestPigScriptRunner {
 		params.put("exectype", "local");
 		try {
 			runner.setScriptRootDir("src/test");
-			JobHandle_I jobHandle = runner.asyncPigRequest("pigtestStoreResultOutfileParm", params); // null: no args
+			JobHandle_I jobHandle = runner.asyncPigRequest("pigtestStoreResultOutfileParm", params);
 			while (! new File(resultFile).canRead()) {
 				jobHandle = runner.getProgress(jobHandle);
-				System.out.println(String.format("Status: %s; NumJobsRunning: %s", jobHandle.getStatus(), jobHandle.getMessage()));
+				printPigStatus(jobHandle);
 				//***Thread.sleep(3000);
 				Thread.sleep(50);
 			}
@@ -128,13 +153,31 @@ public class TestPigScriptRunner {
 			Thread.sleep(2000);
 			ensureFileAsExpected();
 			jobHandle = runner.getProgress(jobHandle);
-			System.out.println(String.format("Status: %s; NumJobsRunning: %s", jobHandle.getStatus(), jobHandle.getMessage()));
+			long lastRuntime = jobHandle.getRuntime();
+			printPigStatus(jobHandle);
+			// Since the job is finished the runtime should no longer
+			// change:
+			Thread.sleep(1000);
+			jobHandle = runner.getProgress(jobHandle);
+			assertEquals(lastRuntime, jobHandle.getRuntime());
+			assertEquals(100, jobHandle.getProgress());
 		} finally {
 			runner.shutDownPigRequest();
 		}
 	}
 	
 	// ------------------------------------ Utility Methods -----------------------
+	
+	private void printPigStatus(JobHandle_I jobHandle) {
+		System.out.println(String.format("Status: %s; Progress: %d; NumJobsRunning: %d, Runtime: %d, Bytes written: %d; Msg: %s", 
+				jobHandle.getStatus(), 
+				jobHandle.getProgress(),
+				jobHandle.getNumJobsRunning(),
+				jobHandle.getRuntime(),
+				jobHandle.getBytesWritten(),
+				jobHandle.getMessage()));
+	}
+	
 	private void ensureFileAsExpected() throws IOException {
 		Iterator<String> resultIt = null;		
 		try {
