@@ -7,7 +7,7 @@ package edu.stanford.pigir.irclientserver.hadoop;
  * @author paepcke
  *    
  *    TODO: Ensure that very old PigProgressListener instances are eventually removed from PigScriptRunner.progressListeners.
- *    TODO: Test that we detect failures that occur without Hadoop being started. (Already have testpigBadPig.pig.)
+ *    TODO: While getProgress() is still unimplemented in IRServer, ensure that the ArcSpreadExceptions are returned from IRServer to IRClient correctly. (Aren't right now).
  */
 
 import java.io.File;
@@ -38,11 +38,36 @@ import org.apache.pig.tools.pigstats.PigProgressNotificationListener;
 import org.apache.pig.tools.pigstats.PigStats;
 
 import edu.stanford.pigir.irclientserver.ArcspreadException;
+import edu.stanford.pigir.irclientserver.IRServiceConfiguration;
 import edu.stanford.pigir.irclientserver.JobHandle_I;
 import edu.stanford.pigir.irclientserver.JobHandle_I.JobStatus;
 import edu.stanford.pigir.irclientserver.PigServiceHandle;
 import edu.stanford.pigir.irclientserver.PigServiceImpl_I;
 
+/**
+ * @author paepcke
+ * 
+ * Class to invoke particular Pig scripts. The class is
+ * instantiated for each Pig script run. These instances
+ * normally operate on the server side of a client-server
+ * arrangement. The instances are created from IRServer.java.   
+ * The class provides several options for running scripts. 
+ * <ul>
+ * <li>Invoke asynchronously via asyncPigRequest(), and get
+ *     progress information via getProgress(). Use the argument-less
+ *     constructor for this mode.
+ *     </li>
+ * <li>Create an iterator that will provide successive tuples
+ *     of the Pig run. Use one of the constructors that take
+ *     arguments, and then call the iterator() method.
+ *     </li>
+ * <li>Invoke a Pig script that does not contain a DUMP or STORE
+ *     statement, thereby 'staging' it. Pig will not run such a script.
+ *     Then call the store() method on your PigScriptRunner instance to
+ *     kick off the run. (likely less useful option; might be removed in future). 
+ * </ul>
+ *
+ */
 public class PigScriptRunner implements PigServiceImpl_I {
 
 	public static Logger log = Logger.getLogger("edu.stanford.pigir.irclientserver.hadoop");	
@@ -162,22 +187,68 @@ public class PigScriptRunner implements PigServiceImpl_I {
 		return resultHandle;
 	}
 
-	public PigServiceHandle testCall(String strToEcho) {
-		PigServiceHandle resultHandle = new PigServiceHandle("FakeTestJobName", JobStatus.SUCCEEDED);
-		resultHandle.setMessage(new Date().toString() + ":" + strToEcho);
-		return resultHandle;
+	/* (non-Javadoc)
+	 * @see edu.stanford.pigir.irclientserver.PigServiceImpl_I#getProgress(edu.stanford.pigir.irclientserver.JobHandle_I)
+	 */
+	@Override
+	public JobHandle_I getProgress(JobHandle_I jobHandle) {
+		String jobName = jobHandle.getJobName();
+		PigProgressListener listener = PigScriptRunner.progressListeners.get(jobName);
+		if (listener == null) {
+			jobHandle.setStatus(JobStatus.UNKNOWN);
+			return jobHandle;
+		}
+		// Try to detect where the Pig processor found an error
+		// before submitting any work to Hadoop. Example: No Hadoop
+		// config file found, nor "-x local" specified. In that case
+		// Pig never calls any of the callbacks in PigProgressListener,
+		// so we use heuristics:
+		if ((listener.getLatestActivityTime() == -1) &&
+			(listener.getRuntime() > IRServiceConfiguration.STARTUP_TIME_MAX)) {
+			jobHandle.setStatus(JobStatus.FAILED);
+			return jobHandle;
+		}
+		
+		
+		jobHandle.setProgress(listener.getProgress());
+		jobHandle.setNumJobsRunning(listener.getNumSubjobsRunning());
+		jobHandle.setRuntime(listener.getRuntime()); // runtime so far
+		jobHandle.setBytesWritten(listener.getBytesWritten());
+		
+		return jobHandle;
 	}
-
+	
+    //-------------------------   End Asyncronous Script Invocation Facilities -------------------	
+	
+	//-------------------------   Begin syncronous Script Invocation Facilities -------------------	
+	
+	/**
+	 * Add a parameter to the params passed in when creating this instance
+	 * @param paramName
+	 * @param paramValue
+	 */
 	public void addScriptCallParam(String paramName, String paramValue) {
 		props.setProperty(paramName, paramValue);
 	}
 	
+	/**
+	 * Obtain an iterator over the script result tuples
+	 * @return tuple iterator; use standard hasNext()/next() calls on it.
+	 * @throws IOException
+	 */
 	public Iterator<Tuple> iterator() throws IOException {
 		createPigServer();
 		pserver.registerScript(scriptInStream, params);
 		return pserver.openIterator(pigVar);
 	}
 
+	/**
+	 * If script does not include a dump or store command, Pig won't
+	 * execute at all. In that case, must use this method to trigger
+	 * execution.
+	 * @return success indicator.
+	 * @throws IOException
+	 */
 	public boolean store() throws IOException {
 		if (outFilePath == null) {
 			log.error("Output file path is null; use one of the PigScriptRunner constructors that take an out file.");
@@ -204,11 +275,23 @@ public class PigScriptRunner implements PigServiceImpl_I {
 		return true;
 	}
 
+	/**
+	 * Free Pig Server resources.
+	 */
 	public void shutDownPigRequest() {
 		if (pserver != null)
 			pserver.shutdown();
 	}
 	
+	//-------------------------   T E S T I N G -------------------	
+	
+	public PigServiceHandle testCall(String strToEcho) {
+		PigServiceHandle resultHandle = new PigServiceHandle("FakeTestJobName", JobStatus.SUCCEEDED);
+		resultHandle.setMessage(new Date().toString() + ":" + strToEcho);
+		return resultHandle;
+	}
+
+	//-------------------------   P R I V A T E  -------------------
 	
 	private void ensureScriptFileOK(File theScriptFile) throws FileNotFoundException {
 		if (theScriptFile == null) {
@@ -273,31 +356,6 @@ public class PigScriptRunner implements PigServiceImpl_I {
 		knownOperators.put("testCall", "");
 	}
 
-	@Override
-	public JobHandle_I getProgress(JobHandle_I jobHandle) {
-		String jobName = jobHandle.getJobName();
-		PigProgressListener listener = PigScriptRunner.progressListeners.get(jobName);
-		if (listener == null) {
-			jobHandle.setStatus(JobStatus.UNKNOWN);
-			return jobHandle;
-		}
-		jobHandle.setProgress(listener.getProgress());
-		jobHandle.setNumJobsRunning(listener.getNumSubjobsRunning());
-		jobHandle.setRuntime(listener.getRuntime());
-		jobHandle.setBytesWritten(listener.getBytesWritten());
-		
-		// Try to detect where the Pig processor found an error
-		// before submitting any work to Hadoop. Example: No Hadoop
-		// config file found, nor "-x local" specified:
-		if ((jobHandle.getProgress() == 0) &&
-			(jobHandle.getNumJobsRunning() == 0) &&
-			(jobHandle.getBytesWritten() == 0) &&
-			(jobHandle.getRuntime() > 15000))  // 15 seconds without signs of life
-			jobHandle.setStatus(JobStatus.FAILED);
-		
-		return jobHandle;
-	}
-	
 	/**
 	 * Used by unit tests to point to the root of the Maven 'test' 
 	 * branch rather than the 'main' branch.

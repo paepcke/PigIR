@@ -1,6 +1,7 @@
 package edu.stanford.pigir.irclientserver.hadoop;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import java.io.File;
@@ -14,7 +15,7 @@ import org.apache.pig.data.Tuple;
 import org.junit.Ignore;
 import org.junit.Test;
 
-import edu.stanford.pigir.irclientserver.ArcspreadException;
+import edu.stanford.pigir.irclientserver.IRServiceConfiguration;
 import edu.stanford.pigir.irclientserver.JobHandle_I;
 import edu.stanford.pigir.irclientserver.JobHandle_I.JobStatus;
 
@@ -48,8 +49,12 @@ public class TestPigScriptRunner {
 	};
 	
 	
+	/**
+	 * Test Pig script that does not include a DUMP or STORE call.
+	 * For that case client must call store() on the runner.
+	 * @throws IOException
+	 */
 	@Test
-	@Ignore
 	public void testScriptProgrammaticStore() throws IOException {
 		FileUtils.deleteQuietly(new File(resultFile));
 		PigScriptRunner runner = new PigScriptRunner(scriptFileNoStore, resultFile, "theCount", params);
@@ -75,41 +80,10 @@ public class TestPigScriptRunner {
 		} finally {
 			runner.shutDownPigRequest();
 		}
+		// Success!
+		assertTrue(true);
 	}
 	
-	@Test
-	@Ignore
-	public void testScriptRunFromStore() throws IOException {
-		FileUtils.deleteQuietly(new File(resultFile));
-		PigScriptRunner runner = new PigScriptRunner(scriptFileDoStore, resultFile, "theCount", params);
-		try {
-			runner.setScriptRootDir("src/test");
-			runner.store();
-			ensureFileAsExpected();
-		} finally {
-			runner.shutDownPigRequest();
-		}
-	}
-	
-	@Test
-	@Ignore
-	public void testScriptRunViaServicePigRequest() throws IOException, InterruptedException {
-		FileUtils.deleteQuietly(new File(resultFile));
-		PigScriptRunner runner = new PigScriptRunner();
-		try {
-			runner.setScriptRootDir("src/test");
-			JobHandle_I jobHandle = runner.asyncPigRequest("pigtestStoreResult", null); // null: no args
-			while (! new File(resultFile).canRead()) {
-				JobStatus jobStatus = jobHandle.getStatus();
-				Thread.sleep(3000);
-			}
-			System.out.println("Output file available; waiting for it to be written.");
-			Thread.sleep(5);
-			ensureFileAsExpected();
-		} finally {
-			runner.shutDownPigRequest();
-		}
-	}
 	
 	@Test
 	@Ignore
@@ -120,15 +94,49 @@ public class TestPigScriptRunner {
 		assertEquals(jobHandle.getClass().getName(), "edu.stanford.pigir.irclientserver.ArcspreadException$NotImplementedException");
 	}
 	
+	/**
+	 * The following test intentionally calls a non-existing script.
+	 * That action makes Pig not even initiate Hadoop activity, so 
+	 * PigScriptRunner.getProgress() only learns about the fault by
+	 * timing out. The timeout is normally IRServiceConfiguration.STARTUP_TIME_MAX,
+	 * but we set it to 5 secs so that test won't run so long.
+	 * @throws InterruptedException
+	 */
 	@Test
+	@Ignore
 	public void testEarlyDeath() throws InterruptedException {
 		PigScriptRunner runner = new PigScriptRunner();
+		runner.setScriptRootDir("src/test");
+		long startTime = System.currentTimeMillis();		
 		JobHandle_I jobHandle = runner.asyncPigRequest("pigtestBadPig", null);
-		
-		JobStatus jobStatus = null;
-		while (jobHandle.getStatus() == JobStatus.RUNNING) {
-			jobStatus = jobHandle.getStatus();
-			Thread.sleep(1000);
+
+		boolean failureDetected = false;
+		long originalTimeout = IRServiceConfiguration.STARTUP_TIME_MAX;
+		try {
+			// Set the timeout that's normally large (20sec at time of this writing)
+			// to something smaller so test won't take so long:
+			IRServiceConfiguration.STARTUP_TIME_MAX = 5000;
+			while (true) {
+				long timeNow = System.currentTimeMillis();
+				// Have we exceeded the maximum startup time without having gotten
+				// a JobStatus.FAILED? The '+ 2000' adds  two seconds to our 
+				// fault condition test to give PigScriptRunner.getProgress() a chance
+				// to detect the never-started Pig job:
+				if ((timeNow - startTime) > IRServiceConfiguration.STARTUP_TIME_MAX + 2000) {
+					fail("PigScriptRunner did not detect launch termination within STARTUP_TIME_MAX msecs");
+				}
+				jobHandle = runner.getProgress(jobHandle);
+				if (jobHandle.getStatus() == JobStatus.FAILED) {
+					failureDetected = true;
+					break;
+				}
+				System.out.println(String.format("Awaiting timeout from PigScriptRunner.getProgress() calls %d of %d",
+						(timeNow - startTime)/1000, IRServiceConfiguration.STARTUP_TIME_MAX/1000));
+				Thread.sleep(1000);
+			}
+			assertTrue(failureDetected);
+		} finally {
+			IRServiceConfiguration.STARTUP_TIME_MAX = originalTimeout;
 		}
 	}
 	

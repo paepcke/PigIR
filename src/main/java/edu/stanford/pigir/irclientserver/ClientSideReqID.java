@@ -134,6 +134,8 @@ public class ClientSideReqID implements ClientSideReqID_I {
 	}
 	
 	private URI ensurePortPresent(URI uri) {
+		if (uri == null)
+			return null;
 		if (uri.getPath() != null)
 			return uri;
 

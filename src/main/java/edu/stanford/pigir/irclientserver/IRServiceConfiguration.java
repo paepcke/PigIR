@@ -19,6 +19,11 @@ public class IRServiceConfiguration {
 	public static URI IR_RESPONSE_RECIPIENT_URI = null; 
 
 	public static URI IR_SERVICE_URI = null;
+	
+	// Max time in msecs of Pig inactivity before concluding
+	// that a Pig script has failed without even interacting
+	// with Hadoop (e.g. parsing error). Used in PigScriptRunner:
+	public static long STARTUP_TIME_MAX = 20000;
 
 	
 static {

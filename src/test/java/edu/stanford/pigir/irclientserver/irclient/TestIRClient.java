@@ -1,6 +1,7 @@
 package edu.stanford.pigir.irclientserver.irclient;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import java.io.File;
@@ -12,10 +13,15 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import edu.stanford.pigir.irclientserver.IRPacket.ServiceResponsePacket;
+import edu.stanford.pigir.irclientserver.IRServiceConfiguration;
+import edu.stanford.pigir.irclientserver.JobHandle_I;
+import edu.stanford.pigir.irclientserver.JobHandle_I.JobStatus;
+import edu.stanford.pigir.irclientserver.ResultRecipient_I;
 
-public class TestIRClient {
+public class TestIRClient implements ResultRecipient_I {
 	
 	static IRClient pigClient = null;
+	static ServiceResponsePacket testRespPaket = null;
 	String resultFile      =          "/tmp/pigtestResult007.txt";
 	String[] trueResult = new String[] {
 			"a	1",
@@ -42,22 +48,52 @@ public class TestIRClient {
 	
 	@BeforeClass
 	public static void setUpBeforeClass() throws Exception {
-		pigClient = new IRClient();
 		// Tell PigScriptRunner.java where to look for the 
 		// Script files.
-		@SuppressWarnings("unused")
-		ServiceResponsePacket response = pigClient.setScriptRootDir("src/test/");
+		JobHandle_I response = IRLib.setScriptRootDir("src/test/");
+		if (response.getStatus() != JobStatus.SUCCEEDED)
+			fail("Could not set script root to src/test");
+		pigClient = IRClient.getInstance();
 	}
 
 	@Test
-	public void test() throws IOException {
+	public void testScriptInvocationLocalhostServer() throws IOException, InterruptedException {
 		FileUtils.deleteQuietly(new File(resultFile));
-		pigClient.sendProcessRequest("pigtestStoreResult", null);
-		ensureFileAsExpected(); 
+		String origServerURI = IRServiceConfiguration.IR_SERVER;
+		try {
+			IRServiceConfiguration.IR_SERVER = "localhost";
+			// Script takes no params (null in 2nd parm). Pass this instance
+			// as recipients of responses:
+			ServiceResponsePacket resp = pigClient.sendProcessRequest("pigtestStoreResult", null, this);
+			JobHandle_I jobHandle = resp.getJobHandle();
+			if (jobHandle.getStatus() == JobStatus.FAILED)
+				fail(String.format("Request for pigtestStoreResult returned FAILED: '%s'", jobHandle.getMessage()));
+			
+			long startWaitTime = System.currentTimeMillis();
+			while (true) {
+				if ((System.currentTimeMillis() - startWaitTime) > IRServiceConfiguration.STARTUP_TIME_MAX)
+					fail("Did not receive response within IRServiceConfiguration.STARTUP_TIME_MAX");
+				jobHandle = IRLib.getProgress(jobHandle);
+				if (jobHandle.getStatus() == JobStatus.SUCCEEDED)
+					assertTrue(true);
+				Thread.sleep(1000);
+			}
+		} finally {
+			IRServiceConfiguration.IR_SERVER = origServerURI;
+		}
+			//*************ensureFileAsExpected();
 	}
 
 	// ------------------------------------ Utility Methods -----------------------
 
+	/**
+	 * Called when IRClient receives a response from a request.
+	 * @param resp
+	 */
+	public void resultAvailable(ServiceResponsePacket resp) {
+		testRespPaket = resp;
+	}
+	
 	private void ensureFileAsExpected() throws IOException {
 		Iterator<String> resultIt = null;		
 		try {

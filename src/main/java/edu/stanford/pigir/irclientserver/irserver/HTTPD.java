@@ -113,7 +113,10 @@ public class HTTPD {
 				BufferedWriter bw = new BufferedWriter(osw);
 				ServiceResponsePacket reqResult = null;
 
-				String command[] = br.readLine().split("\\s+");
+				String httpCommand = br.readLine();
+				if (httpCommand == null) 
+					return;
+				String command[] = httpCommand.split("\\s+");
 				if (3 == command.length) {
 					if ("POST".equals(command[0])) {
 						ServiceRequestPacket reqPacket = null;

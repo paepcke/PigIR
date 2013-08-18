@@ -26,8 +26,17 @@ public class PigProgressListener implements org.apache.pig.tools.pigstats.PigPro
 	// One logger for all progress listeners:
 	public static Logger log = Logger.getLogger("edu.stanford.pigir.irclientserver.hadoop");
 	
+	// Time when this instance was started,
+	// and therefore when the process of Pig script
+	// parsing/running has begun:
 	long startTime = System.currentTimeMillis();
+	
+	// Time when launchCompletedNotification() is called:
 	long endTime = -1;
+	
+	// Updated when any notification call arrives from Pig (see xxxNotification() methods below):
+	long recentNotificationTime = -1; 
+	
 	String scriptID = "";
 	
 	PigStats jobPigStats = null;
@@ -86,6 +95,10 @@ public class PigProgressListener implements org.apache.pig.tools.pigstats.PigPro
 			return (timeNow - startTime);
 	}
 	
+	public long getLatestActivityTime() {
+		return recentNotificationTime;
+	}
+	
 	public long getBytesWritten() {
 		if ((jobPigStats == null) && (outputStats == null))
 			return -1;
@@ -105,6 +118,7 @@ public class PigProgressListener implements org.apache.pig.tools.pigstats.PigPro
      * @param numJobsToLaunch the total number of MR jobs spawned by the script
      */
     public void launchStartedNotification(String scriptId, int theNumJobsToLaunch) {
+    	recentNotificationTime = System.currentTimeMillis();
     	numJobsToLaunch += theNumJobsToLaunch;
     	PigProgressListener.log.info(String.format("Launched; scriptID: %s; numJobsLaunched: %d", scriptId, theNumJobsToLaunch));    	
     }
@@ -115,6 +129,7 @@ public class PigProgressListener implements org.apache.pig.tools.pigstats.PigPro
      * @param numJobsSubmitted the number of MR jobs in the batch
      */
     public void jobsSubmittedNotification(String scriptId, int theNumJobsSubmitted) {
+    	recentNotificationTime = System.currentTimeMillis();
     	numJobsSubmitted += theNumJobsSubmitted;
     	PigProgressListener.log.info(String.format("Submitted; scriptID: %s; numJobsSubmitted: %d", scriptId, theNumJobsSubmitted));    	
     }
@@ -125,6 +140,7 @@ public class PigProgressListener implements org.apache.pig.tools.pigstats.PigPro
      * @param assignedJobId the MR job id
      */
     public void jobStartedNotification(String scriptId, String theAssignedJobId) {
+    	recentNotificationTime = System.currentTimeMillis();
     	assignedJobId = theAssignedJobId;
     	PigProgressListener.log.info(String.format("Started; scriptID: %s; jobID: %s", scriptId, theAssignedJobId));    	
     }
@@ -135,6 +151,7 @@ public class PigProgressListener implements org.apache.pig.tools.pigstats.PigPro
      * @param jobStats the {@link JobStats} object associated with the MR job
      */
     public void jobFinishedNotification(String scriptId, JobStats theFinishedJobStats) {
+    	recentNotificationTime = System.currentTimeMillis();
     	finishedJobStats = theFinishedJobStats;
     	//PigProgressListener.log.String.format("Finished; scriptID: %s; jobStats: %s", scriptId, theFinishedJobStats);
     }
@@ -145,6 +162,7 @@ public class PigProgressListener implements org.apache.pig.tools.pigstats.PigPro
      * @param jobStats the {@link JobStats} object associated with the MR job
      */
     public void jobFailedNotification(String scriptId, JobStats theFailedJobStats) {
+    	recentNotificationTime = System.currentTimeMillis();
     	failedJobStats = theFailedJobStats;
     	PigProgressListener.log.info(String.format("Failed; scriptID: %s; jobStats: %s", scriptId, theFailedJobStats));    	
     }
@@ -155,6 +173,7 @@ public class PigProgressListener implements org.apache.pig.tools.pigstats.PigPro
      * @param outputStats the {@link OutputStats} object associated with the output
      */
     public void outputCompletedNotification(String scriptId, OutputStats theOutputStats) {
+    	recentNotificationTime = System.currentTimeMillis();
     	outputStats = theOutputStats;
     	PigProgressListener.log.info(String.format("Output complete; scriptID: %s; outputStats: %s", scriptId, theOutputStats));
     }
@@ -165,6 +184,7 @@ public class PigProgressListener implements org.apache.pig.tools.pigstats.PigPro
      * @param progress the percentage of the execution progress
      */
     public void progressUpdatedNotification(String scriptId, int theProgress) {
+    	recentNotificationTime = System.currentTimeMillis();
     	progress = theProgress;
     	// The double percent below escapes the progress percent sign from
     	// being interpreted as a format char:
@@ -177,6 +197,7 @@ public class PigProgressListener implements org.apache.pig.tools.pigstats.PigPro
      * @param numJobsCompleted the total number of MR jobs succeeded
      */
     public void launchCompletedNotification(String scriptId, int theNumJobsSucceeded) {
+    	recentNotificationTime = System.currentTimeMillis();
     	numJobsCompleted += theNumJobsSucceeded;
     	jobComplete = true;
     	endTime = System.currentTimeMillis();

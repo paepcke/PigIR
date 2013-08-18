@@ -56,7 +56,7 @@ public class HTTPSender {
 			try {
 				respPack = ServiceResponsePacket.fromJSON(jsonResponse);
 			} catch (JSONException e) {
-				respPack = makeBadResponseErrorPacket(reqPack);
+				respPack = makeBadResponseErrorPacket(reqPack, e);
 			}
 		} 
 		//StatusLine status = response.getStatusLine();
@@ -64,9 +64,14 @@ public class HTTPSender {
 		return respPack;
 	}
 	
-	private static ServiceResponsePacket makeBadResponseErrorPacket(ServiceRequestPacket reqPack) {
+	private static ServiceResponsePacket makeBadResponseErrorPacket(ServiceRequestPacket reqPack, Exception e) {
 		ClientSideReqID_I clientReqID = reqPack.getClientSideReqId();
-		JobHandle_I fakeJobHandle = new PigServiceHandle("<unknown>", JobStatus.FAILED, "HTTP response body did not contain parsable JSON for request " + reqPack.toString());
+		JobHandle_I fakeJobHandle = new PigServiceHandle("<unknown>", 
+														 JobStatus.FAILED, 
+														 String.format("HTTP response body has no parsable JSON for request by clientID %s (operator: %s): %s",
+																 	   reqPack.getClientSideReqId().getID(),
+																 	   reqPack.getOperator(),
+																 	   e.getMessage()));
 		return new ServiceResponsePacket(clientReqID, fakeJobHandle);
 	}
 }

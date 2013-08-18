@@ -139,6 +139,8 @@ public class PigServiceHandle implements JobHandle_I {
 		stringer.value(getNumJobsRunning());
 		stringer.key("runtime");
 		stringer.value(getRuntime());
+		stringer.key("bytesWritten");
+		stringer.value(getBytesWritten());
 		stringer.key("errorCode");
 		stringer.value(getErrorCode());
 		stringer.key("message");

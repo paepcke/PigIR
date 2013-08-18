@@ -87,7 +87,7 @@ public class ArcspreadException extends Exception {
 			stringer.key("exceptionMsg");
 			stringer.value(getMessage());
 		} catch (JSONException e) {
-			throw new RuntimeException("Cannot convert NotImplementedException to JSON: " + e.getMessage());
+			throw new RuntimeException(String.format("Cannot convert %s to JSON: %s", this.getClass().getName(), e.getMessage()));
 		}
 		return stringer;
 	}
