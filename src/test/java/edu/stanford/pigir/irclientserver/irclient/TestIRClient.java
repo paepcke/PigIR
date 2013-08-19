@@ -1,7 +1,6 @@
 package edu.stanford.pigir.irclientserver.irclient;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import java.io.File;
@@ -75,13 +74,15 @@ public class TestIRClient implements ResultRecipient_I {
 					fail("Did not receive response within IRServiceConfiguration.STARTUP_TIME_MAX");
 				jobHandle = IRLib.getProgress(jobHandle);
 				if (jobHandle.getStatus() == JobStatus.SUCCEEDED)
-					assertTrue(true);
+					break;
+				if (jobHandle.getStatus() == JobStatus.FAILED)
+					fail(String.format("Call IRLib.getProgress() returned failure (error code %d): %s", jobHandle.getErrorCode(), jobHandle.getMessage()));
 				Thread.sleep(1000);
 			}
 		} finally {
 			IRServiceConfiguration.IR_SERVER = origServerURI;
 		}
-			//*************ensureFileAsExpected();
+		ensureFileAsExpected();
 	}
 
 	// ------------------------------------ Utility Methods -----------------------

@@ -20,12 +20,14 @@ import edu.stanford.pigir.irclientserver.JobHandle_I.JobStatus;
  */
 
 @SuppressWarnings("serial")
-public class ArcspreadException extends Exception {
+public abstract class ArcspreadException extends Exception {
 
 	private static String DEFAULT_JOBNAME = "<unnamed>";
 	protected String jobName = ArcspreadException.DEFAULT_JOBNAME;
-	protected static final int errorCode = 0;
-	protected static final String cause = "";
+	// errorCode gets overwritten by subclasses:
+	protected static int errorCode = 0;
+	// cause gets overwritten by subclasses:
+	protected static String cause = "";
 	
 	public ArcspreadException() {
 		super();
@@ -79,13 +81,23 @@ public class ArcspreadException extends Exception {
 	
 	public JSONStringer toJSON(JSONStringer stringer) {
 		try {
-			stringer.object();
+			stringer.key("jobName");
+			stringer.value(jobName);
 			stringer.key("errorCode");
 			stringer.value(Integer.toString(errorCode));
 			stringer.key("exceptionCause");
 			stringer.value(cause);
-			stringer.key("exceptionMsg");
-			stringer.value(getMessage());
+			stringer.key("message");
+			String msg = getMessage();
+			// Make sure there is *something* in the message
+			// fld. If no msg was provided, use the 'cause,' which
+			// every subclass is sure to set.
+			if (msg == null)
+				stringer.value(cause);
+			else
+				stringer.value(msg);
+			stringer.key("status");
+			stringer.value(JobStatus.FAILED.toJSONValue());
 		} catch (JSONException e) {
 			throw new RuntimeException(String.format("Cannot convert %s to JSON: %s", this.getClass().getName(), e.getMessage()));
 		}
@@ -99,8 +111,8 @@ public class ArcspreadException extends Exception {
 	 * -------------------------*/
 	
 	public static class NotImplementedException extends ArcspreadException implements JobHandle_I {
-		protected static final int errorCode = 1;
-		protected static final String cause = "Not Implemented";
+		{errorCode = 1;}
+		{cause = "Not Implemented";}
 	
 		
 		public NotImplementedException(String msg) {
@@ -125,9 +137,10 @@ public class ArcspreadException extends Exception {
 	 * CommIOException
 	 * -------------------------*/
 	public static class CommIOException extends ArcspreadException implements JobHandle_I {
-		protected static final int errorCode = 2;
-		protected static final String cause = "IO Exception During Communication";
 	
+		{errorCode = 2;}
+		{cause = "IO Exception During Communication";}
+		
 		public CommIOException(String msg) {
 			super(msg);
 		}
@@ -147,9 +160,10 @@ public class ArcspreadException extends Exception {
 	 * -------------------------*/
 	
 	public static class ParameterException extends ArcspreadException implements JobHandle_I {
-		protected static final int errorCode = 3;
-		protected static final String cause = "Bad or Missing Parameter";
 	
+		{errorCode = 3;}
+		{cause = "Bad or Missing Parameter";}
+		
 		public ParameterException(String msg) {
 			super(msg);
 		}
@@ -160,6 +174,29 @@ public class ArcspreadException extends Exception {
 		}
 		
 		public ParameterException() {
+			super();
+		}
+	}
+	
+	/*--------------------------
+	 * PreHadoopFailure
+	 * -------------------------*/
+	
+	public static class PreHadoopException extends ArcspreadException implements JobHandle_I {
+	
+		{errorCode = 4;}
+		{cause = "Pig could not launch Hadoop";}
+		
+		public PreHadoopException(String msg) {
+			super(msg);
+		}
+		
+		public PreHadoopException(String theJobName, String msg) {
+			super(msg);
+			jobName = theJobName;
+		}
+		
+		public PreHadoopException() {
 			super();
 		}
 	}

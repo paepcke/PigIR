@@ -23,7 +23,7 @@ public class IRLib {
 		final String jobName = jobHandle.getJobName();
 		ServiceResponsePacket resp = irclient.sendProcessRequest("getJobStatus", 
 																 new HashMap<String,String>(){{
-																	 	put("jobName",jobName);
+																	 	put("jobName", jobName);
 																	 	}});
 		return resp.getJobHandle();
 	}

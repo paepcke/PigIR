@@ -7,7 +7,9 @@ package edu.stanford.pigir.irclientserver.hadoop;
  * @author paepcke
  *    
  *    TODO: Ensure that very old PigProgressListener instances are eventually removed from PigScriptRunner.progressListeners.
- *    TODO: While getProgress() is still unimplemented in IRServer, ensure that the ArcSpreadExceptions are returned from IRServer to IRClient correctly. (Aren't right now).
+ *    TODO: Create IRLib.awaitResult() from while loop in TestIRClient
+ *    TODO: Implement job done notification
+ *    TODO: Unit test for NotImplemented return
  */
 
 import java.io.File;
@@ -188,6 +190,13 @@ public class PigScriptRunner implements PigServiceImpl_I {
 	}
 
 	/* (non-Javadoc)
+	 * @see edu.stanford.pigir.irclientserver.PigServiceImpl_I#getProgress(java.lang.String)
+	 */
+	public JobHandle_I getProgress(String jobName) {
+		return getProgress(new PigServiceHandle(jobName, JobStatus.UNKNOWN));
+	}
+	
+	/* (non-Javadoc)
 	 * @see edu.stanford.pigir.irclientserver.PigServiceImpl_I#getProgress(edu.stanford.pigir.irclientserver.JobHandle_I)
 	 */
 	@Override
@@ -205,6 +214,7 @@ public class PigScriptRunner implements PigServiceImpl_I {
 		// so we use heuristics:
 		if ((listener.getLatestActivityTime() == -1) &&
 			(listener.getRuntime() > IRServiceConfiguration.STARTUP_TIME_MAX)) {
+			jobHandle = new ArcspreadException.PreHadoopException(jobHandle.getJobName(), "Could not start Hadoop; check server side log for reason (maybe hadoop-site.xml nor core-site.xml in classpath? If so, put '-x'->'local' into parameter map)");
 			jobHandle.setStatus(JobStatus.FAILED);
 			return jobHandle;
 		}

@@ -167,26 +167,28 @@ public class PigServiceHandle implements JobHandle_I {
 
 		try {
 			JSONObject jObj = new JSONObject(jsonStr);
+			// Job name is required:
 			jobName = jObj.getString("jobName");
 			
 			decodeState = ServiceHandleJSONDecodeState.GET_PROGRESS;
-			progress = jObj.getInt("progress");
+			progress = jObj.optInt("progress", 0);
 
 			decodeState = ServiceHandleJSONDecodeState.GET_NUM_JOBS_RUNNING;
-			numJobsRunning = jObj.getInt("numJobsRunning");
+			numJobsRunning = jObj.optInt("numJobsRunning", 0);
 			
 			decodeState = ServiceHandleJSONDecodeState.GET_RUNTIME;
-			runtime = jObj.getLong("runtime");
+			runtime = jObj.optLong("runtime", 0);
 			
 			decodeState = ServiceHandleJSONDecodeState.GET_BYTES_WRITTEN;
-			bytesWritten = jObj.getLong("bytesWritten");
+			bytesWritten = jObj.optLong("bytesWritten", 0);
 			
 			decodeState = ServiceHandleJSONDecodeState.GET_ERROR_CODE;
-			errorCode = jObj.getInt("errorCode");
+			errorCode = jObj.optInt("errorCode",0);
 			
 			decodeState = ServiceHandleJSONDecodeState.GET_MESSAGE;
-			msg = jObj.getString("message");
+			msg = jObj.optString("message", "");
 			
+			// Required
 			decodeState = ServiceHandleJSONDecodeState.GET_JOB_STATUS;
 			status = JobStatus.fromJSONValue(jObj.getString("status"));			
 			
