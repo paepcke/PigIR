@@ -1,14 +1,17 @@
 package edu.stanford.pigir.irclientserver.irserver;
 
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 import org.apache.log4j.BasicConfigurator;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 
-import edu.stanford.pigir.irclientserver.ArcspreadException;
+import edu.stanford.pigir.irclientserver.ClientSideReqID_I;
+import edu.stanford.pigir.irclientserver.ClientSideReqID_I.Disposition;
 import edu.stanford.pigir.irclientserver.IRPacket.ServiceRequestPacket;
 import edu.stanford.pigir.irclientserver.IRPacket.ServiceResponsePacket;
 import edu.stanford.pigir.irclientserver.IRServiceConfiguration;
@@ -18,6 +21,7 @@ import edu.stanford.pigir.irclientserver.PigServiceHandle;
 import edu.stanford.pigir.irclientserver.PigServiceImpl_I;
 import edu.stanford.pigir.irclientserver.PigService_I;
 import edu.stanford.pigir.irclientserver.hadoop.PigScriptRunner;
+import edu.stanford.pigir.irclientserver.irclient.HTTPSender;
 
 public class IRServer implements PigService_I {
 
@@ -26,6 +30,7 @@ public class IRServer implements PigService_I {
 	private static HTTPD httpService = null;
 	private static IRServer theInstance = null;
 	public static Logger log = Logger.getLogger("edu.stanford.pigir.irclientserver.irserver.IRServer");
+	private static Map<String,ClientSideReqID_I> jobToClient = new HashMap<String,ClientSideReqID_I>();
 
 	@SuppressWarnings("serial")
 	private static Set<String> adminOps = new HashSet<String>() {{
@@ -62,26 +67,53 @@ public class IRServer implements PigService_I {
 	public ServiceResponsePacket newPigServiceRequest(ServiceRequestPacket req) {
 		
 		PigServiceImpl_I pigServiceImpl = new PigScriptRunner();
-		JobHandle_I res = null;
+		JobHandle_I resJobHandle = null;
 		
 		if (IRServer.adminOps.contains(req.operator))
-			res = processAdminOp(pigServiceImpl, req.operator, req);
-		else
-			res = pigServiceImpl.asyncPigRequest(req.operator, req.params);
+			resJobHandle = processAdminOp(pigServiceImpl, req.operator, req);
+		else {
+			// Get the job started (returns quickly):
+			resJobHandle = pigServiceImpl.asyncPigRequest(req.operator, req.params);
+			// If client wants anything other than discarding the result,
+			// remember which jobName is associated with the client that
+			// made this request:
+			ClientSideReqID_I clientInfo = req.getClientSideReqId(); 
+			if ((clientInfo != null) && (clientInfo.getDisposition() != Disposition.DISCARD_RESULTS)) {
+				jobToClient.put(resJobHandle.getJobName(), req.getClientSideReqId());
+			}
+		}
 		
-		ServiceResponsePacket resp = new ServiceResponsePacket(req.clientSideReqId, res);
-		
+		ServiceResponsePacket resp = new ServiceResponsePacket(req.clientSideReqId, resJobHandle);
 		log.info("[Server] responding " + resp.resultHandle.toString());
-		
 		return resp;
 	}
 	
-	public ServiceResponsePacket newPigServiceResponse(ServiceResponsePacket resp) {
-		ServiceResponsePacket res = new ServiceResponsePacket(resp.getClientSideReqId(),
-								    new ArcspreadException.NotImplementedException("IR service does not expect response packets for its result missives to clients."));
-		return res;
+	/* (non-Javadoc)
+	 * @see edu.stanford.pigir.irclientserver.PigService_I#pushResultNotification(edu.stanford.pigir.irclientserver.JobHandle_I)
+	 */
+	public void pushResultNotification(JobHandle_I jobHandle) {
+		// Get the client contact information for this job:
+		ClientSideReqID_I clientInfo = jobToClient.get(jobHandle.getJobName());
+		if (clientInfo == null) {
+			log.error(String.format("Could not push result for job '%s' to client: no record of this job in IRServer", jobHandle.getJobName()));
+			return;
+		}
+		if (clientInfo.getDisposition() == Disposition.DISCARD_RESULTS)
+			return;
+		ServiceResponsePacket resp = new ServiceResponsePacket(clientInfo, jobHandle);
+		try {
+			HTTPSender.sendPacket(resp, clientInfo.getResultRecipientURI());
+		} catch (IOException e) {
+			log.error(String.format("Encountered IO exception when attempting push result notification for job %s: %s.", jobHandle.getJobName(), e.getMessage()));
+			return;
+		}
 	}
-
+	
+	public void pushResultNotification(ServiceResponsePacket resp) {
+		ClientSideReqID_I clientInfo = resp.getClientSideReqId();
+		log.info("IR service does not expect response packets from clients, but got one from: " + clientInfo.getID());
+	}
+	
 	public String getJobName() {
 		// TODO Auto-generated method stub
 		return null;

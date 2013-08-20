@@ -144,7 +144,7 @@ public class HTTPD {
 							}
 							else if (jObj.has("response")) {
 								respPacket = ServiceResponsePacket.fromJSON(jsonStr);
-								postServer.newPigServiceResponse(respPacket);
+								postServer.pushResultNotification(respPacket);
 							}
 							else {
 								HTTPD.log.error(String.format("Bad JSON over HTTP: '%s'", jsonStr));

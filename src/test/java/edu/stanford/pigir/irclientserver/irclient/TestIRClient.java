@@ -5,12 +5,17 @@ import static org.junit.Assert.fail;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.Iterator;
+import java.util.Map;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.pig.PigRunner;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 
+import edu.stanford.pigir.irclientserver.ClientSideReqID_I.Disposition;
 import edu.stanford.pigir.irclientserver.IRPacket.ServiceResponsePacket;
 import edu.stanford.pigir.irclientserver.IRServiceConfiguration;
 import edu.stanford.pigir.irclientserver.JobHandle_I;
@@ -21,6 +26,7 @@ public class TestIRClient implements ResultRecipient_I {
 	
 	static IRClient pigClient = null;
 	static ServiceResponsePacket testRespPaket = null;
+	static ServiceResponsePacket pushResultReceived = null; 
 	String resultFile      =          "/tmp/pigtestResult007.txt";
 	String[] trueResult = new String[] {
 			"a	1",
@@ -56,14 +62,17 @@ public class TestIRClient implements ResultRecipient_I {
 	}
 
 	@Test
+	@Ignore
 	public void testScriptInvocationLocalhostServer() throws IOException, InterruptedException {
 		FileUtils.deleteQuietly(new File(resultFile));
 		String origServerURI = IRServiceConfiguration.IR_SERVER;
 		try {
 			IRServiceConfiguration.IR_SERVER = "localhost";
-			// Script takes no params (null in 2nd parm). Pass this instance
-			// as recipients of responses:
-			ServiceResponsePacket resp = pigClient.sendProcessRequest("pigtestStoreResult", null, this);
+			@SuppressWarnings("serial")
+			Map<String,String> params = new HashMap<String,String>() {{
+				put("exectype", "local");
+			}};
+			ServiceResponsePacket resp = pigClient.sendProcessRequest("pigtestStoreResult", params, this);
 			JobHandle_I jobHandle = resp.getJobHandle();
 			if (jobHandle.getStatus() == JobStatus.FAILED)
 				fail(String.format("Request for pigtestStoreResult returned FAILED: '%s'", jobHandle.getMessage()));
@@ -85,6 +94,58 @@ public class TestIRClient implements ResultRecipient_I {
 		ensureFileAsExpected();
 	}
 
+	@Test
+	@Ignore
+	public void testBadExecType() throws IOException, InterruptedException {
+		FileUtils.deleteQuietly(new File(resultFile));
+		String origServerURI = IRServiceConfiguration.IR_SERVER;
+		try {
+			IRServiceConfiguration.IR_SERVER = "localhost";
+			@SuppressWarnings("serial")
+			Map<String,String> params = new HashMap<String,String>() {{
+				put("exectype", "foobar");
+			}};
+			ServiceResponsePacket resp = pigClient.sendProcessRequest("pigtestStoreResult", params, this);
+			JobHandle_I jobHandle = resp.getJobHandle();
+			while(true) {
+				jobHandle = IRLib.getProgress(jobHandle);
+				assertEquals(PigRunner.ReturnCode.ILLEGAL_ARGS, jobHandle.getErrorCode());
+				return;
+			}
+		} finally {
+			IRServiceConfiguration.IR_SERVER = origServerURI;
+		}
+	}
+
+	@Test
+	public void testResultPushing() throws InterruptedException {
+		FileUtils.deleteQuietly(new File(resultFile));
+		String origServerURI = IRServiceConfiguration.IR_SERVER;
+		try {
+			IRServiceConfiguration.IR_SERVER = "localhost";
+			@SuppressWarnings("serial")
+			Map<String,String> params = new HashMap<String,String>() {{
+				put("exectype", "local");
+			}};
+			testRespPaket = null;
+			ServiceResponsePacket resp = pigClient.sendProcessRequest("pigtestStoreResult", params, this, Disposition.NOTIFY);
+			JobHandle_I jobHandle = resp.getJobHandle();
+			long startWaitTime = System.currentTimeMillis();
+			while(testRespPaket == null) {
+				if ((System.currentTimeMillis() - startWaitTime) > IRServiceConfiguration.STARTUP_TIME_MAX) {
+					jobHandle.setStatus(JobStatus.FAILED);
+					jobHandle.setMessage(String.format("Job '%s' did not either fail or succeed within timeout of %d seconds", jobHandle.getJobName(),IRServiceConfiguration.STARTUP_TIME_MAX/1000));
+					fail("Push response did not arrive soon enough.");
+				}
+				Thread.sleep(1000);
+			}
+		} catch (IOException e) {
+			fail("IOException in sendProcessRequest: " + e.getMessage());
+		} finally {
+			IRServiceConfiguration.IR_SERVER = origServerURI;
+		}
+	}
+	
 	// ------------------------------------ Utility Methods -----------------------
 
 	/**

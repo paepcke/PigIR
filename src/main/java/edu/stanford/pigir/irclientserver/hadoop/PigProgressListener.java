@@ -7,10 +7,13 @@ import java.util.List;
 
 import org.apache.log4j.BasicConfigurator;
 import org.apache.log4j.Logger;
+import org.apache.pig.PigRunner;
 import org.apache.pig.backend.hadoop.executionengine.mapReduceLayer.plans.MROperPlan;
 import org.apache.pig.tools.pigstats.JobStats;
 import org.apache.pig.tools.pigstats.OutputStats;
 import org.apache.pig.tools.pigstats.PigStats;
+
+import edu.stanford.pigir.irclientserver.irserver.IRPigProgressNotificationListener;
 
 /**
  * @author paepcke
@@ -21,7 +24,7 @@ import org.apache.pig.tools.pigstats.PigStats;
  * keeps track of them.
  * 
  */
-public class PigProgressListener implements org.apache.pig.tools.pigstats.PigProgressNotificationListener {
+public class PigProgressListener implements IRPigProgressNotificationListener {
 
 	// One logger for all progress listeners:
 	public static Logger log = Logger.getLogger("edu.stanford.pigir.irclientserver.hadoop");
@@ -40,7 +43,9 @@ public class PigProgressListener implements org.apache.pig.tools.pigstats.PigPro
 	String scriptID = "";
 	
 	PigStats jobPigStats = null;
+	
 	boolean jobComplete = false;
+	
 	int progress = 0;
 	int numJobsCompleted = 0;
 	
@@ -55,6 +60,28 @@ public class PigProgressListener implements org.apache.pig.tools.pigstats.PigPro
 		BasicConfigurator.configure();
 	}
 
+	/**
+	 * Starting a Pig script via PigRunner provides a return
+	 * code (see org.apache.pig.PigRunner.ReturnCode). For example,
+	 * the use of an unknown exectype causes a non-SUCCESS return code.
+	 * @return Pig script startup return value.
+	 */
+	public int getPigStartReturnCode() {
+		if (jobPigStats == null) 
+			return PigRunner.ReturnCode.UNKNOWN;
+		return jobPigStats.getReturnCode();
+	}
+	
+	/* (non-Javadoc)
+	 * @see edu.stanford.pigir.irclientserver.irserver.IRPigProgressNotificationListener#getErrorMessage()
+	 */
+	public String getErrorMessage() {
+		if (jobPigStats == null) 
+			return "No Pig statistics available, so no error message.";
+		return jobPigStats.getErrorMessage();
+		
+	}
+	
 	/**
 	 * Called from thread in PigScriptRunner. That thread receives
 	 * the PigStats for the Pig job that it submits to the Pig
@@ -110,6 +137,10 @@ public class PigProgressListener implements org.apache.pig.tools.pigstats.PigPro
 			written += outStats.getBytes();
 		}
 		return written;
+	}
+	
+	public boolean getJobComplete() {
+		return jobComplete;
 	}
 	
 	/**

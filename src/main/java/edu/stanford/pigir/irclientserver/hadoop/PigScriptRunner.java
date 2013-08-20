@@ -7,7 +7,7 @@ package edu.stanford.pigir.irclientserver.hadoop;
  * @author paepcke
  *    
  *    TODO: Ensure that very old PigProgressListener instances are eventually removed from PigScriptRunner.progressListeners.
- *    TODO: Create IRLib.awaitResult() from while loop in TestIRClient
+ *    TODO: Create result queue usage
  *    TODO: Implement job done notification
  *    TODO: Unit test for NotImplemented return
  */
@@ -207,6 +207,26 @@ public class PigScriptRunner implements PigServiceImpl_I {
 			jobHandle.setStatus(JobStatus.UNKNOWN);
 			return jobHandle;
 		}
+
+		// Did the script run call to PigRunner in the thread below
+		// finish? If so, what was the outcome?
+		int pigReturnErrorCode = listener.getPigStartReturnCode();
+		
+		// If no return code is available, then the thread is
+		// still working on submitting the Pig script:
+		if (pigReturnErrorCode == PigRunner.ReturnCode.UNKNOWN) {
+			jobHandle.setStatus(JobStatus.PREP);
+			return jobHandle;
+		}
+		
+		// Did Pig script startup fail?
+		if (pigReturnErrorCode != PigRunner.ReturnCode.SUCCESS) {
+			ArcspreadException.PreHadoopException retExc =
+					new ArcspreadException.PreHadoopException(jobHandle.getJobName(),
+															  listener.getErrorMessage());
+			return retExc;
+		}
+		
 		// Try to detect where the Pig processor found an error
 		// before submitting any work to Hadoop. Example: No Hadoop
 		// config file found, nor "-x local" specified. In that case
@@ -214,16 +234,19 @@ public class PigScriptRunner implements PigServiceImpl_I {
 		// so we use heuristics:
 		if ((listener.getLatestActivityTime() == -1) &&
 			(listener.getRuntime() > IRServiceConfiguration.STARTUP_TIME_MAX)) {
-			jobHandle = new ArcspreadException.PreHadoopException(jobHandle.getJobName(), "Could not start Hadoop; check server side log for reason (maybe hadoop-site.xml nor core-site.xml in classpath? If so, put '-x'->'local' into parameter map)");
+			jobHandle = new ArcspreadException.PreHadoopException(jobHandle.getJobName(), "Could not start Hadoop; check server side log for reason (maybe hadoop-site.xml nor core-site.xml in classpath? If so, put 'exectype'->'local' into parameter map)");
 			jobHandle.setStatus(JobStatus.FAILED);
 			return jobHandle;
 		}
-		
 		
 		jobHandle.setProgress(listener.getProgress());
 		jobHandle.setNumJobsRunning(listener.getNumSubjobsRunning());
 		jobHandle.setRuntime(listener.getRuntime()); // runtime so far
 		jobHandle.setBytesWritten(listener.getBytesWritten());
+		if (listener.getJobComplete())
+			jobHandle.setStatus(JobStatus.SUCCEEDED);
+		else
+			jobHandle.setStatus(JobStatus.RUNNING);
 		
 		return jobHandle;
 	}
@@ -301,7 +324,11 @@ public class PigScriptRunner implements PigServiceImpl_I {
 		return resultHandle;
 	}
 
-	//-------------------------   P R I V A T E  -------------------
+	//-------------------------   P R I V A T E  or I N T E R N A L  U S E  -------------------
+	
+	public void reportLaunchStatus(JobHandle_I jobHandle) {
+		
+	}
 	
 	private void ensureScriptFileOK(File theScriptFile) throws FileNotFoundException {
 		if (theScriptFile == null) {
@@ -393,7 +420,7 @@ public class PigScriptRunner implements PigServiceImpl_I {
 				params = new HashMap<String,String>();
 			// Create the commandline call:
 			for (String paramKey : params.keySet()) {
-				if (paramKey == "exectype") {
+				if (paramKey.equals("exectype")) {
 					cmd.add("-x");
 					cmd.add(params.get(paramKey));
 					continue;
@@ -407,6 +434,10 @@ public class PigScriptRunner implements PigServiceImpl_I {
 		}
 
 		public void run() {
+			// Note: PigRunner does not throw exceptions, just logs them,
+			// and notes them in its returned PigStats. The Exception catch
+			// is never invoked. But the try is still useful for its finally
+			// clause.
 			try {
 				String[] cmdArr = new String[cmd.size()];
 				cmd.toArray(cmdArr);

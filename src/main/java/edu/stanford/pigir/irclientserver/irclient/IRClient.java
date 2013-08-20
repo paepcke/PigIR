@@ -139,18 +139,17 @@ public class IRClient extends Thread implements PigService_I {
 	 * that we properly received the response from the server.
 	 * @param resp
 	 */
-	public ServiceResponsePacket newPigServiceResponse(ServiceResponsePacket resp) {
+	public void pushResultNotification(ServiceResponsePacket resp) {
 		ClientSideReqID_I clientReqId = resp.clientSideReqId;
 		JobHandle_I respJobHandle = resp.getJobHandle();
 		respJobHandle.setStatus(JobStatus.SUCCEEDED);
-		ServiceResponsePacket respToRespPack = new ServiceResponsePacket(clientReqId, respJobHandle);
 
 		Disposition disposition = clientReqId.getDisposition();
 		log.info(String.format("[Client] received response: %s; Disposition: %s, ReqClass: %s, ReqID: %s.",
 				resp.resultHandle.getStatus(), disposition, clientReqId.getRequestClass(), clientReqId.getID()));
 		switch (disposition) {
 		case DISCARD_RESULTS:
-			return respToRespPack;
+			return;
 		case QUEUE_RESULTS:
 			String reqClass = clientReqId.getRequestClass();
 			Queue<JobHandle_I> appropriateResultQueue = resultQueues.get(reqClass);
@@ -163,15 +162,16 @@ public class IRClient extends Thread implements PigService_I {
 			// ... and if a result callback recipient was included
 			// in the clientRequest then notify it in addition to queueing:
 			notifyListener(clientReqId, resp);
-			return respToRespPack;
 		case NOTIFY:
 			notifyListener(clientReqId, resp);
-			return respToRespPack;
 		}
-		return respToRespPack;
 	}
 	
-
+	public void pushResultNotification(JobHandle_I jobHandle) {
+		log.error("IRClient does not expect push notifications with JobHandle_I argument");
+	}
+	
+	
 	public ServiceResponsePacket newPigServiceRequest(ServiceRequestPacket req) {
 		ServiceResponsePacket res = new ServiceResponsePacket(req.getClientSideReqId(),
 								    new ArcspreadException.NotImplementedException("IR clients do not expect request packets, only responses to its requests to server."));
@@ -224,7 +224,6 @@ public class IRClient extends Thread implements PigService_I {
 		return result;
 	}
 	
-
 	private void notifyListener(ClientSideReqID_I reqID, ServiceResponsePacket resp) {
 		String requestID = reqID.getID();
 		ResultRecipient_I resultRecipient = IRClient.resultListeners.get(requestID);
@@ -239,4 +238,5 @@ public class IRClient extends Thread implements PigService_I {
 		// quits, which is why IRClient is a thread:
 		httpd = new HTTPD(IRServiceConfiguration.IR_SERVICE_RESPONSE_PORT, this);
 	}
+
 }

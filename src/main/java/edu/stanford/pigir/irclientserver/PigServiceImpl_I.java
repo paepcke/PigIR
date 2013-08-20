@@ -17,6 +17,8 @@ public interface PigServiceImpl_I {
 	 */
 	JobHandle_I asyncPigRequest(String operator, Map<String, String> params);
 	
+		// -------------------------  Public API ------------------------
+	
 	/**
 	 * Return selected status information about a Pig launch
 	 * @param jobName the job name that was returned in the JobHandle_I by asyncPigReques().
@@ -38,6 +40,16 @@ public interface PigServiceImpl_I {
 	 * @param scriptRoot
 	 */
 	public void setScriptRootDir(String scriptRoot);
+	
+	
+	// -------------------------  Internal Use ------------------------
+	
+	/**
+	 * Called by PigProgressListener when an entire launch has finished.
+	 * Used to provide push-callback service for client side applications.
+	 * @param jobHandle
+	 */
+	public void reportLaunchStatus(JobHandle_I jobHandle);
 	
 	/**
 	 * For testing class PigScriptRunner without involving a client-server

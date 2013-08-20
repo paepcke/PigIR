@@ -12,7 +12,6 @@ import java.util.Map;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.pig.data.Tuple;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import edu.stanford.pigir.irclientserver.IRServiceConfiguration;
@@ -63,7 +62,6 @@ public class TestPigScriptRunner {
 	}
 
 	@Test
-	@Ignore
 	public void testSimpleScriptIteration() throws IOException {
 		PigScriptRunner runner = new PigScriptRunner(scriptFileNoStore, "theCount", params);
 		try {
@@ -86,7 +84,6 @@ public class TestPigScriptRunner {
 	
 	
 	@Test
-	@Ignore
 	public void testNonImplementedPigMethod() {
 		PigScriptRunner runner = new PigScriptRunner();
 		// Non-existent Pig script:
@@ -103,7 +100,6 @@ public class TestPigScriptRunner {
 	 * @throws InterruptedException
 	 */
 	@Test
-	@Ignore
 	public void testEarlyDeath() throws InterruptedException {
 		PigScriptRunner runner = new PigScriptRunner();
 		runner.setScriptRootDir("src/test");
@@ -141,7 +137,6 @@ public class TestPigScriptRunner {
 	}
 	
 	@Test
-	@Ignore
 	public void testScriptWithParm() throws IOException, InterruptedException {
 		FileUtils.deleteQuietly(new File(resultFile));
 		PigScriptRunner runner = new PigScriptRunner();
