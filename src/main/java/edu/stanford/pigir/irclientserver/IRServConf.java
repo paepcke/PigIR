@@ -4,7 +4,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.UnknownHostException;
 
-public class IRServiceConfiguration {
+public class IRServConf {
 
 	// ---------------  Start Common Configuration Options
 	
@@ -12,6 +12,12 @@ public class IRServiceConfiguration {
 	//public static String IR_SERVER_STR = "ilhead2.stanford.edu";
 	public static int IR_SERVICE_REQUEST_PORT = 4040;
 	public static int IR_SERVICE_RESPONSE_PORT = 4041;
+	
+	public static HADOOP_EXECTYPE hadoopExecType = HADOOP_EXECTYPE.LOCAL;
+	public static enum HADOOP_EXECTYPE {
+		LOCAL,
+		MAPREDUCE
+	}
 	
 	// ---------------  End Common Configuration Options
 	
@@ -30,14 +36,14 @@ static {
 	try {
 		IR_SERVICE_URI = new URI("http",
 						 null, // no user into
-						 IRServiceConfiguration.IR_SERVER,
-						 IRServiceConfiguration.IR_SERVICE_REQUEST_PORT,
+						 IRServConf.IR_SERVER,
+						 IRServConf.IR_SERVICE_REQUEST_PORT,
 						 null, // no context
 						 null, // no query
 						 null); // no fragment
 
-		IR_RESPONSE_RECIPIENT_URI = Utils.getSelfURI(IRServiceConfiguration.IR_SERVICE_RESPONSE_PORT, 
-													 IRServiceConfiguration.IR_RESPONSE_CONTEXT);
+		IR_RESPONSE_RECIPIENT_URI = Utils.getSelfURI(IRServConf.IR_SERVICE_RESPONSE_PORT, 
+													 IRServConf.IR_RESPONSE_CONTEXT);
 	} catch (URISyntaxException e) {
 		throw new RuntimeException("Bad URI syntax: " + e.getMessage());
 	} catch (UnknownHostException e) {

@@ -19,7 +19,7 @@ import edu.stanford.pigir.irclientserver.ClientSideReqID_I;
 import edu.stanford.pigir.irclientserver.ClientSideReqID_I.Disposition;
 import edu.stanford.pigir.irclientserver.IRPacket.ServiceRequestPacket;
 import edu.stanford.pigir.irclientserver.IRPacket.ServiceResponsePacket;
-import edu.stanford.pigir.irclientserver.IRServiceConfiguration;
+import edu.stanford.pigir.irclientserver.IRServConf;
 import edu.stanford.pigir.irclientserver.JobHandle_I;
 import edu.stanford.pigir.irclientserver.JobHandle_I.JobStatus;
 import edu.stanford.pigir.irclientserver.PigService_I;
@@ -33,11 +33,23 @@ import edu.stanford.pigir.irclientserver.irserver.HTTPD;
  *	Class that interacts with IRServer. Sends hadoop processing requests
  *  to IRServer via HTTP POST requests, receives HTTP responses, and
  *  notifies its clients in the next layer up of incoming asynchronous
- *  results. Two types of HTTP responses are received: the HTTP responses
- *  to the HTTP POST requests sent, and the HTTP responses pushed to the client
- *  from IRServer with results of asynchronous requests. At the lowest level,
- *  HTTPD.java receives those push responses, and HTTP uses callbacks newPigServiceResponse()
- *  for processing and handing up to the application.
+ *  results.
+ *  
+ *  It is recommended that applications use methods in IRLib.java for
+ *  issuing processing requests, rather than directly calling the methods
+ *  in this class. 
+ *  
+ *  Two types of HTTP responses are received: the single-connection HTTP 
+ *  returns to the HTTP POST requests that this IRClient sends to theIRServer, 
+ *  and HTTP responses that the IRServer pushed to this client when the server
+ *  has finished processing an asynchronous processing request.
+ *  
+ *  At the lowest level, HTTPD.java receives those push responses, and HTTPD
+ *  uses callbacks to newPigServiceResponse() for processing and handing the received
+ *  results up to the application.
+ *  
+ *  The bulk of the methods in this class are polymorphisms of sendProcessRequest().
+ *  The signature variations mostly allow callers to specify what happens with results.
  *  
  *  This class is a singleton. Use getInstance() to obtain that instance.
  */
@@ -65,7 +77,7 @@ public class IRClient extends Thread implements PigService_I {
 	private IRClient() {
 		BasicConfigurator.configure();
 		start();
-		log.info("IR client response service running at " + IRServiceConfiguration.IR_SERVICE_RESPONSE_PORT);
+		log.info("IR client response service running at " + IRServConf.IR_SERVICE_RESPONSE_PORT);
 	}
 	
 	
@@ -94,24 +106,139 @@ public class IRClient extends Thread implements PigService_I {
 		return resultQueues.get(reqClass);
 	}
 	
+	/*---------------------------
+	* sendProcessRequest(operator, parameters)
+	*-------------------*/
+	/**
+	 * Send an IR request. Since no ResultRecipeint_I is provided in this 
+	 * method flavor, no asynchronous response should be expected. The return
+	 * value will provide the result of the request across the wire to the Server,
+	 * including a JobHandle that can be used in subsequent calls to getProgress().
+	 * The default for the result Disposition is Disposition.DISCARD_RESULTS. That
+	 * is asynchronous results delivered from IRServer are not queued for the caller
+	 * to be picked up at some point. This method is optimal when no response is
+	 * expected from the server, such as for admin operators that merely configure
+	 * the server.
+	 * @param operator IR script name to run at server
+	 * @param params name/value pairs for arguments expected by the script
+	 * @return a response packet object with status and a JobHandle_I for follow-on queries. 
+	 * @throws IOException
+	 */
 	public ServiceResponsePacket sendProcessRequest(String operator, Map<String,String> params) throws IOException {
 		// Create default client side request. They go into the GENERIC response queue:
 		return sendProcessRequestWorker(operator, params, new ClientSideReqID());
 	}
 	
-	public ServiceResponsePacket  sendProcessRequest(String operator, Map<String,String> params, ResultRecipient_I resultCallbackObj) throws IOException {
-		String timestamp = java.lang.String.valueOf(Common.getTimestamp());
+	/*---------------------------
+	* sendProcessRequest(operator, parameters, resultQueueName)
+	*-------------------*/
+	/**
+	 * Send an IR request. Since no ResultRecipeint_I is provided in this 
+	 * method flavor, no asynchronous response should be expected. The return
+	 * value will provide the result of the request across the wire to the Server,
+	 * including a JobHandle that can be used in subsequent calls to getProgress().
+	 * The default for the result Disposition is Disposition.DISCARD_RESULTS. That
+	 * is asynchronous results delivered from IRServer are not queued for the caller
+	 * to be picked up at some point. This method is optimal when no response is
+	 * expected from the server, such as for admin operators that merely configure
+	 * the server.
+	 * @param operator IR script name to run at server
+	 * @param params name/value pairs for arguments expected by the script
+	 * @param resultQueueName arbitrary name for referring to result queue. 
+	 * @return a response packet object with status and a JobHandle_I for follow-on queries. 
+	 * @throws IOException
+	 */
+	public ServiceResponsePacket sendProcessRequest(String operator, Map<String,String> params, String resultQueueName) throws IOException {
+		// Create default client side request. They go into the GENERIC response queue:
+		return sendProcessRequestWorker(operator, params, new ClientSideReqID());
+	}
+
+	/*---------------------------
+	* sendProcessRequest(operator, params, resultCallbackObj)
+	*-------------------*/
+	
+	/**
+	 * Send an IR request. A response disposition of Disposition.NOTIFY is 
+	 * implied. That is the passed-in ResultRecipient_I's resultAvailable()
+	 * method will be called when the IRServer signals that a script has 
+	 * finished.
+	 * @param operator IR script name to run at server
+	 * @param params params name/value pairs for arguments expected by the script
+	 * @param resultCallbackObj an object that is notified when a script has finished 
+	 * @return a response packet object with status and a JobHandle_I for follow-on queries.
+	 * @throws IOException
+	 */
+	public ServiceResponsePacket sendProcessRequest(String operator, Map<String,String> params, ResultRecipient_I resultCallbackObj) throws IOException {
+		return sendProcessRequest(operator, params, resultCallbackObj, "GENERIC");
+	}
+	
+	/*---------------------------
+	* sendProcessRequest(operator, params, resultCallbackObj, resultQueueName)
+	*-------------------*/
+	
+	/**
+	 * Send an IR request. A response disposition of Disposition.NOTIFY is 
+	 * implied. That is the passed-in ResultRecipient_I's resultAvailable()
+	 * method will be called when the IRServer signals that a script has 
+	 * finished.
+	 * @param operator IR script name to run at server
+	 * @param params params name/value pairs for arguments expected by the script
+	 * @param resultCallbackObj an object that is notified when a script has finished
+	 * @param resultQueueName arbitrary name for referring to result queue. 
+	 * @return a response packet object with status and a JobHandle_I for follow-on queries.
+	 * @throws IOException
+	 */
+	
+	public ServiceResponsePacket  sendProcessRequest(String operator, Map<String,String> params, ResultRecipient_I resultCallbackObj, String resultQueueName) throws IOException {
+		String clientID = createClientID();
 		// Event queue for results: "generic". ID: timestamp 
-		ClientSideReqID reqID = new ClientSideReqID("GENERIC", timestamp); // ID is the timestamp of this request
-		resultListeners.put(timestamp, resultCallbackObj);
-		reqID.setResultRecipientURI(getResponseURI(timestamp));
+		ClientSideReqID reqID = new ClientSideReqID(resultQueueName, clientID, Disposition.NOTIFY, getResponseURI(clientID));
+		resultListeners.put(clientID, resultCallbackObj);
+		reqID.setResultRecipientURI(getResponseURI(clientID));
 		return sendProcessRequestWorker(operator, params, reqID);
 	}
 	
+	/*---------------------------
+	* sendProcessRequest(operator, params, disposition)
+	*-------------------*/
+	/**
+	 * Send an IR request. Since no callback object is provided in 
+	 * this method, the Disposition must not be Disposition.NOTIFY.
+	 * It is still fine to use Disposition.QUEUE_RESULTS and Disposition.DISCARD_RESULTS.
+	 * @param operator IR script name to run at server
+	 * @param params params name/value pairs for arguments expected by the script
+	 * @param disposition instruction on what to do once a result is available from the script
+	 * @return a response packet object with status and a JobHandle_I for follow-on queries.
+	 * @throws IOException
+	 */
+	
 	public ServiceResponsePacket  sendProcessRequest(String operator, Map<String,String> params, Disposition disposition) throws IOException {
+		return sendProcessRequest(operator, params, disposition, "GENERIC");
+	}
+
+	/*---------------------------
+	* sendProcessRequest(operator, params, disposition, resultQueueName)
+	*-------------------*/
+	/**
+	 * Send an IR request. Since no callback object is provided in 
+	 * this method, the Disposition must not be Disposition.NOTIFY.
+	 * It is still fine to use Disposition.QUEUE_RESULTS and Disposition.DISCARD_RESULTS.
+	 * @param operator IR script name to run at server
+	 * @param params params name/value pairs for arguments expected by the script
+	 * @param disposition instruction on what to do once a result is available from the script
+	 * @param resultQueueName arbitrary name for referring to result queue. 
+	 * @return a response packet object with status and a JobHandle_I for follow-on queries.
+	 * @throws IOException
+	 */
+	
+	public ServiceResponsePacket  sendProcessRequest(String operator, Map<String,String> params, Disposition disposition, String resultQueueName) throws IOException {
+		if (disposition == Disposition.NOTIFY) {
+			throw new IllegalArgumentException("If result disposition is to be NOTIFY, must use sendProcessRequest() flavor that includes recipient of the notifications.");
+		}
+		String clientID = createClientID();
 		// Event queue for results: "generic". ID: timestamp 
-		ClientSideReqID reqID = new ClientSideReqID("GENERIC",
-													"<null>", // no callback id
+		ClientSideReqID reqID = new ClientSideReqID(resultQueueName,
+													clientID,
 													disposition);
 		if (disposition != Disposition.DISCARD_RESULTS) {
 			reqID.setResultRecipientURI(getResponseURI(java.lang.String.valueOf(Common.getTimestamp())));
@@ -119,13 +246,48 @@ public class IRClient extends Thread implements PigService_I {
 		return sendProcessRequestWorker(operator, params, reqID);
 	}
 	
+	/*---------------------------
+	* sendProcessRequest(operator, params, resultCallObj, disposition)
+	*-------------------*/
+	
+	/**
+	 * Send an IR request. The value of Disposition is not constrained in
+	 * this flavor of the sendProcessRequest() method.
+	 * @param operator IR script name to run at server
+	 * @param params params name/value pairs for arguments expected by the script
+	 * @param resultCallbackObj resultCallbackObj an object that is notified when a script has finished 
+	 * @param disposition instruction on what to do once a result is available from the script
+	 * @return
+	 * @throws IOException
+	 */
+	
 	public ServiceResponsePacket  sendProcessRequest(String operator, Map<String,String> params, ResultRecipient_I resultCallbackObj, Disposition disposition) throws IOException {
-		String timestamp = java.lang.String.valueOf(Common.getTimestamp());
-		// Event queue for results: "generic". ID: timestamp 
-		ClientSideReqID reqID = new ClientSideReqID("GENERIC", timestamp, disposition); // ID is the timestamp of this request
-		resultListeners.put(timestamp, resultCallbackObj);
+		return sendProcessRequest(operator, params, resultCallbackObj, disposition, "GENERIC");
+	}
+	
+	/*---------------------------
+	* sendProcessRequest(operator, params, resultCallObj, disposition, resultQueueName)
+	*-------------------*/
+	
+	/**
+	 * Send an IR request. The value of Disposition is not constrained in
+	 * this flavor of the sendProcessRequest() method.
+	 * @param operator IR script name to run at server
+	 * @param params params name/value pairs for arguments expected by the script
+	 * @param resultCallbackObj resultCallbackObj an object that is notified when a script has finished 
+	 * @param disposition instruction on what to do once a result is available from the script
+	 * @param resultQueueName arbitrary name for referring to result queue. 
+	 * @return
+	 * @throws IOException
+	 */
+	
+	public ServiceResponsePacket  sendProcessRequest(String operator, Map<String,String> params, ResultRecipient_I resultCallbackObj, Disposition disposition, String resultQueueName) throws IOException {
+		String clientID = createClientID();
+		URI responseURI = getResponseURI(clientID);
+		ClientSideReqID reqID = new ClientSideReqID(resultQueueName, clientID, disposition, responseURI);
+		resultListeners.put(clientID, resultCallbackObj);
 		if (disposition != Disposition.DISCARD_RESULTS) {
-			reqID.setResultRecipientURI(getResponseURI(timestamp));
+			reqID.setResultRecipientURI(getResponseURI(clientID));
 		}
 		return sendProcessRequestWorker(operator, params, reqID);
 	}
@@ -203,21 +365,26 @@ public class IRClient extends Thread implements PigService_I {
 		ServiceRequestPacket reqPaket = new ServiceRequestPacket(operator, params, reqID);
 		
 		// Ship the request to the server:
-		ServiceResponsePacket resp = HTTPSender.sendPacket(reqPaket, IRServiceConfiguration.IR_SERVICE_URI);
+		ServiceResponsePacket resp = HTTPSender.sendPacket(reqPaket, IRServConf.IR_SERVICE_URI);
 		return resp;
 	}
 
+	private String createClientID() {
+		String timestamp = java.lang.String.valueOf(Common.getTimestamp());
+		return "IRClient_" + timestamp;
+	}
+	
 	/**
-	 * Using settings in IRServiceConfiguration, create a 
+	 * Using settings in IRServConf, create a 
 	 * URI to which the IRService can send response packets.
-	 * @param responseID
-	 * @return
+	 * @param responseID will be appended to this machine's URI as the URI context.
+	 * @return fully formed URI to which the IRServer can send ServiceResponsPackets.
 	 */
 	private URI getResponseURI(String responseID) {
 		URI result = null;
 		try {
-			Utils.getSelfURI(IRServiceConfiguration.IR_SERVICE_RESPONSE_PORT,
-					IRServiceConfiguration.IR_RESPONSE_CONTEXT + "/" + responseID);
+			result = Utils.getSelfURI(IRServConf.IR_SERVICE_RESPONSE_PORT,
+					IRServConf.IR_RESPONSE_CONTEXT + "/" + responseID);
 		} catch (UnknownHostException | URISyntaxException e) {
 			throw new RuntimeException("Trouble creating a response URI: " + e.getMessage());			
 		}
@@ -236,7 +403,7 @@ public class IRClient extends Thread implements PigService_I {
 		super.run();
 		// Start the http demon. This call doesn't return until the demon
 		// quits, which is why IRClient is a thread:
-		httpd = new HTTPD(IRServiceConfiguration.IR_SERVICE_RESPONSE_PORT, this);
+		httpd = new HTTPD(IRServConf.IR_SERVICE_RESPONSE_PORT, this);
 	}
 
 }

@@ -13,6 +13,9 @@ import org.apache.pig.tools.pigstats.JobStats;
 import org.apache.pig.tools.pigstats.OutputStats;
 import org.apache.pig.tools.pigstats.PigStats;
 
+import edu.stanford.pigir.irclientserver.JobHandle_I;
+import edu.stanford.pigir.irclientserver.JobHandle_I.JobStatus;
+import edu.stanford.pigir.irclientserver.PigServiceImpl_I;
 import edu.stanford.pigir.irclientserver.irserver.IRPigProgressNotificationListener;
 
 /**
@@ -55,9 +58,14 @@ public class PigProgressListener implements IRPigProgressNotificationListener {
 	JobStats finishedJobStats = null;
 	JobStats failedJobStats = null;
 	OutputStats outputStats = null;
+	
+	PigServiceImpl_I launchDoneCallbackObj = null;
+	JobHandle_I jobHandle = null;
 
-	public PigProgressListener() {
+	public PigProgressListener(PigServiceImpl_I theLaunchDoneCallbackObj, JobHandle_I theJobHandle) {
 		BasicConfigurator.configure();
+		jobHandle = theJobHandle;
+		launchDoneCallbackObj = theLaunchDoneCallbackObj;
 	}
 
 	/**
@@ -233,6 +241,10 @@ public class PigProgressListener implements IRPigProgressNotificationListener {
     	jobComplete = true;
     	endTime = System.currentTimeMillis();
     	PigProgressListener.log.info(String.format("Launch completed for %s; numJobsCompleted: %d", scriptId, theNumJobsSucceeded));
+    	if (launchDoneCallbackObj != null) {
+    		jobHandle.setStatus(JobStatus.SUCCEEDED);
+    		launchDoneCallbackObj.reportLaunchStatus(jobHandle);
+    	}
     }
 
 	@Override

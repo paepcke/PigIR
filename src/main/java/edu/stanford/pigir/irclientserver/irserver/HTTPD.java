@@ -145,6 +145,7 @@ public class HTTPD {
 							else if (jObj.has("response")) {
 								respPacket = ServiceResponsePacket.fromJSON(jsonStr);
 								postServer.pushResultNotification(respPacket);
+								reqResult = new ServiceResponsePacket(respPacket.getClientSideReqId(), respPacket.getJobHandle());
 							}
 							else {
 								HTTPD.log.error(String.format("Bad JSON over HTTP: '%s'", jsonStr));
@@ -181,8 +182,9 @@ public class HTTPD {
 				log.error("IOError while handling HTTP request: " + ioe.getMessage());
 			} finally {
 				try {
-					if (mySocket != null)
+					if (mySocket != null) {
 						mySocket.close();
+					}
 				} catch(Exception ioe) {
 					HTTPD.log.error("IOException while trying to close socket: " + ioe.getMessage());
 				}

@@ -15,7 +15,7 @@ public interface PigServiceImpl_I {
 	 * @param params all parameters name-->value required by the script
 	 * @return a new JobHandle_I instance for use in subsequent calls to getProgress()
 	 */
-	JobHandle_I asyncPigRequest(String operator, Map<String, String> params);
+	JobHandle_I asyncPigRequest(String operator, Map<String, String> params, PigService_I notificationCallbackObj);
 	
 		// -------------------------  Public API ------------------------
 	

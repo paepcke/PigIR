@@ -7,9 +7,8 @@ package edu.stanford.pigir.irclientserver.hadoop;
  * @author paepcke
  *    
  *    TODO: Ensure that very old PigProgressListener instances are eventually removed from PigScriptRunner.progressListeners.
- *    TODO: Create result queue usage
- *    TODO: Implement job done notification
  *    TODO: Unit test for NotImplemented return
+ *    TODO: Provide cross-network access to the IRServer's Iterator method.
  */
 
 import java.io.File;
@@ -40,11 +39,12 @@ import org.apache.pig.tools.pigstats.PigProgressNotificationListener;
 import org.apache.pig.tools.pigstats.PigStats;
 
 import edu.stanford.pigir.irclientserver.ArcspreadException;
-import edu.stanford.pigir.irclientserver.IRServiceConfiguration;
+import edu.stanford.pigir.irclientserver.IRServConf;
 import edu.stanford.pigir.irclientserver.JobHandle_I;
 import edu.stanford.pigir.irclientserver.JobHandle_I.JobStatus;
 import edu.stanford.pigir.irclientserver.PigServiceHandle;
 import edu.stanford.pigir.irclientserver.PigServiceImpl_I;
+import edu.stanford.pigir.irclientserver.PigService_I;
 
 /**
  * @author paepcke
@@ -87,6 +87,7 @@ public class PigScriptRunner implements PigServiceImpl_I {
 	Properties props = new Properties();
 	Map<String,String> params = new HashMap<String,String>();
 	PigServer pserver;   // The Pig server that comes with Pig
+	PigService_I responseCallbackDest = null;
 	File scriptFile  = null;
 	String outFilePath = null;
 	String pigVar    = null;
@@ -134,11 +135,15 @@ public class PigScriptRunner implements PigServiceImpl_I {
 	}	
 	
 	public JobHandle_I asyncPigRequest(String operator, Map<String, String> theParams) {
+		return asyncPigRequest(operator, theParams, null); // no object to call back to with responses
+	}
+	public JobHandle_I asyncPigRequest(String operator, Map<String, String> theParams, PigService_I theResponseCallbackDest) {
 		
 		// Build a human-readable jobname to pass back to
 		// caller for referencing this job:
 		String jobName = "arcspread_" + PigServiceHandle.getPigTimestamp();
-		PigServiceHandle resultHandle = new PigServiceHandle(jobName, JobStatus.RUNNING);
+		PigServiceHandle jobHandle = new PigServiceHandle(jobName, JobStatus.RUNNING);
+		responseCallbackDest = theResponseCallbackDest;
 		
 		String pigScriptPath = knownOperators.get(operator);
 		if (pigScriptPath == null) {
@@ -181,12 +186,12 @@ public class PigScriptRunner implements PigServiceImpl_I {
 		
 		// Start a new thread to run this script:
 		PigRunThread scriptThread = runner.new PigRunThread();
-		PigProgressListener progressListener = new PigProgressListener();
+		PigProgressListener progressListener = new PigProgressListener(this, jobHandle);
 		PigScriptRunner.progressListeners.put(jobName, progressListener);
 		scriptThread.start(progressListener, pigScriptPath, params);
 		runner.runningThread = scriptThread;
 		
-		return resultHandle;
+		return jobHandle;
 	}
 
 	/* (non-Javadoc)
@@ -233,7 +238,7 @@ public class PigScriptRunner implements PigServiceImpl_I {
 		// Pig never calls any of the callbacks in PigProgressListener,
 		// so we use heuristics:
 		if ((listener.getLatestActivityTime() == -1) &&
-			(listener.getRuntime() > IRServiceConfiguration.STARTUP_TIME_MAX)) {
+			(listener.getRuntime() > IRServConf.STARTUP_TIME_MAX)) {
 			jobHandle = new ArcspreadException.PreHadoopException(jobHandle.getJobName(), "Could not start Hadoop; check server side log for reason (maybe hadoop-site.xml nor core-site.xml in classpath? If so, put 'exectype'->'local' into parameter map)");
 			jobHandle.setStatus(JobStatus.FAILED);
 			return jobHandle;
@@ -326,8 +331,13 @@ public class PigScriptRunner implements PigServiceImpl_I {
 
 	//-------------------------   P R I V A T E  or I N T E R N A L  U S E  -------------------
 	
+	/* (non-Javadoc)
+	 * @see edu.stanford.pigir.irclientserver.PigServiceImpl_I#reportLaunchStatus(edu.stanford.pigir.irclientserver.JobHandle_I)
+	 */
 	public void reportLaunchStatus(JobHandle_I jobHandle) {
-		
+		if (responseCallbackDest == null)
+			return;
+		responseCallbackDest.pushResultNotification(jobHandle);
 	}
 	
 	private void ensureScriptFileOK(File theScriptFile) throws FileNotFoundException {

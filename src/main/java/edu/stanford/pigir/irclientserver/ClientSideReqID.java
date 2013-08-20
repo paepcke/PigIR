@@ -24,7 +24,7 @@ public class ClientSideReqID implements ClientSideReqID_I {
 	}
 	
 	public ClientSideReqID() {
-		resultRecipientURI = IRServiceConfiguration.IR_RESPONSE_RECIPIENT_URI;
+		resultRecipientURI = IRServConf.IR_RESPONSE_RECIPIENT_URI;
 	}
 	
 	public ClientSideReqID(String theId) {
@@ -39,11 +39,9 @@ public class ClientSideReqID implements ClientSideReqID_I {
 	
 	public ClientSideReqID(String theRequestClass, String theId, Disposition theDisposition) {
 		this(theRequestClass, theId);
-		if (theDisposition == Disposition.NOTIFY) {
-			throw new IllegalArgumentException("If result disposition is to be NOTIFY, must use constructor that includes recipient of the notifications.");
-		}
-		// Not a NOTIFY disposition: don't need a callback recipient:
 		responseDisposition = theDisposition;
+		if (theDisposition != Disposition.DISCARD_RESULTS)
+			resultRecipientURI = IRServConf.IR_RESPONSE_RECIPIENT_URI;
 	}
 	
 	public ClientSideReqID(String theRequestClass, String theId, Disposition theDisposition, URI contactCallback) {
@@ -144,7 +142,7 @@ public class ClientSideReqID implements ClientSideReqID_I {
 			uri = new URI(uri.getScheme(),
 					null, // no "userInfo"
 					uri.getHost(),
-					IRServiceConfiguration.IR_SERVICE_RESPONSE_PORT,
+					IRServConf.IR_SERVICE_RESPONSE_PORT,
 					null, // no path
 					null, // no query
 					null); // no fragment;

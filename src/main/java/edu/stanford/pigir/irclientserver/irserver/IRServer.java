@@ -14,7 +14,7 @@ import edu.stanford.pigir.irclientserver.ClientSideReqID_I;
 import edu.stanford.pigir.irclientserver.ClientSideReqID_I.Disposition;
 import edu.stanford.pigir.irclientserver.IRPacket.ServiceRequestPacket;
 import edu.stanford.pigir.irclientserver.IRPacket.ServiceResponsePacket;
-import edu.stanford.pigir.irclientserver.IRServiceConfiguration;
+import edu.stanford.pigir.irclientserver.IRServConf;
 import edu.stanford.pigir.irclientserver.JobHandle_I;
 import edu.stanford.pigir.irclientserver.JobHandle_I.JobStatus;
 import edu.stanford.pigir.irclientserver.PigServiceHandle;
@@ -60,7 +60,7 @@ public class IRServer implements PigService_I {
 	private IRServer() {
 		// Create an HTTPD and set the incoming-packet
 		// handler to be this instance:
-		httpService = new HTTPD(IRServiceConfiguration.IR_SERVICE_REQUEST_PORT, this);
+		httpService = new HTTPD(IRServConf.IR_SERVICE_REQUEST_PORT, this);
 	}
 
 	
@@ -72,8 +72,9 @@ public class IRServer implements PigService_I {
 		if (IRServer.adminOps.contains(req.operator))
 			resJobHandle = processAdminOp(pigServiceImpl, req.operator, req);
 		else {
-			// Get the job started (returns quickly):
-			resJobHandle = pigServiceImpl.asyncPigRequest(req.operator, req.params);
+			// Get the job started (returns quickly); passing this IRServer as destination
+			// for launch-done callback to pushResultNotification():
+			resJobHandle = pigServiceImpl.asyncPigRequest(req.operator, req.params, this);
 			// If client wants anything other than discarding the result,
 			// remember which jobName is associated with the client that
 			// made this request:

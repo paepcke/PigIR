@@ -15,21 +15,16 @@
 
 
    Start this Pig script via the ngrams bash script, like this:
-      ngrams [options] <warcSourceFilePathOnHDFS>
-   where options are:
+      ngrams [options] <warcSourceFilePathOnHDFS> <arity>
+   for options see script warcNgrams.
 
-	 [{-h | --help}]
-	 [{-v | --version}]
-	 [{-x | --execmode] {local | mapreduce}]
-	 [{-d | --destdir} <destinationDirectory>] (default: pwd if execmode==local; 
-	      		   			   	     else '/user/<username>')
    Environment assumptions:
       * $USER_CONTRIB 	  points to location of piggybank.jar and jsoup-1.5.2.jar
       * $PIGIR_HOME   	  points to location project root (above target dir)
       * $ARITY        	  is the value of 'n' in ngrams
       * FILTER_STOPWORDS  is 1 if ngrams are to be removed if any of their words are stopwords
       * WORD_LEN_MIN      is min length of words in ngrams, or -1 if don't care
-      * WORD_LEN_MAXis 	  max length of words in ngrams, or -1 if don't care
+      * WORD_LEN_MAX      is max length of words in ngrams, or -1 if don't care
 */       
 
 -- STORE command for the final output:

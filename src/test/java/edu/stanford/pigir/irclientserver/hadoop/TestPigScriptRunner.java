@@ -14,7 +14,7 @@ import org.apache.commons.io.FileUtils;
 import org.apache.pig.data.Tuple;
 import org.junit.Test;
 
-import edu.stanford.pigir.irclientserver.IRServiceConfiguration;
+import edu.stanford.pigir.irclientserver.IRServConf;
 import edu.stanford.pigir.irclientserver.JobHandle_I;
 import edu.stanford.pigir.irclientserver.JobHandle_I.JobStatus;
 
@@ -95,7 +95,7 @@ public class TestPigScriptRunner {
 	 * The following test intentionally calls a non-existing script.
 	 * That action makes Pig not even initiate Hadoop activity, so 
 	 * PigScriptRunner.getProgress() only learns about the fault by
-	 * timing out. The timeout is normally IRServiceConfiguration.STARTUP_TIME_MAX,
+	 * timing out. The timeout is normally IRServConf.STARTUP_TIME_MAX,
 	 * but we set it to 5 secs so that test won't run so long.
 	 * @throws InterruptedException
 	 */
@@ -107,18 +107,18 @@ public class TestPigScriptRunner {
 		JobHandle_I jobHandle = runner.asyncPigRequest("pigtestBadPig", null);
 
 		boolean failureDetected = false;
-		long originalTimeout = IRServiceConfiguration.STARTUP_TIME_MAX;
+		long originalTimeout = IRServConf.STARTUP_TIME_MAX;
 		try {
 			// Set the timeout that's normally large (20sec at time of this writing)
 			// to something smaller so test won't take so long:
-			IRServiceConfiguration.STARTUP_TIME_MAX = 5000;
+			IRServConf.STARTUP_TIME_MAX = 5000;
 			while (true) {
 				long timeNow = System.currentTimeMillis();
 				// Have we exceeded the maximum startup time without having gotten
 				// a JobStatus.FAILED? The '+ 2000' adds  two seconds to our 
 				// fault condition test to give PigScriptRunner.getProgress() a chance
 				// to detect the never-started Pig job:
-				if ((timeNow - startTime) > IRServiceConfiguration.STARTUP_TIME_MAX + 2000) {
+				if ((timeNow - startTime) > IRServConf.STARTUP_TIME_MAX + 2000) {
 					fail("PigScriptRunner did not detect launch termination within STARTUP_TIME_MAX msecs");
 				}
 				jobHandle = runner.getProgress(jobHandle);
@@ -127,12 +127,12 @@ public class TestPigScriptRunner {
 					break;
 				}
 				System.out.println(String.format("Awaiting timeout from PigScriptRunner.getProgress() calls %d of %d",
-						(timeNow - startTime)/1000, IRServiceConfiguration.STARTUP_TIME_MAX/1000));
+						(timeNow - startTime)/1000, IRServConf.STARTUP_TIME_MAX/1000));
 				Thread.sleep(1000);
 			}
 			assertTrue(failureDetected);
 		} finally {
-			IRServiceConfiguration.STARTUP_TIME_MAX = originalTimeout;
+			IRServConf.STARTUP_TIME_MAX = originalTimeout;
 		}
 	}
 	

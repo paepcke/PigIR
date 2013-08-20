@@ -199,7 +199,7 @@ public class IRPacket {
 			JSONStringer stringer = new JSONStringer();
 			try {
 				stringer.object(); // outermost JSON obj
-				stringer.key("request");
+				stringer.key("response");
 
 				// Build the client side request ID object: 
 				JSONStringer subStringer = new JSONStringer();
@@ -237,7 +237,7 @@ public class IRPacket {
 			// Get the ClientSideReqID portion of the JSON string:
 			decodeState = ServiceRespPacketJSONDecodeStates.GET_REQUEST_ID;
 			JSONObject jObj = new JSONObject(jsonStr);
-			JSONObject jObjReqID = jObj.getJSONObject("request"); 
+			JSONObject jObjReqID = jObj.getJSONObject("response"); 
 			clientReqID = ClientSideReqID.fromJSON(jObjReqID.toString());
 			
 			// Get the job handle:
