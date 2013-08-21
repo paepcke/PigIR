@@ -15,7 +15,6 @@ PigScripts/orderErrorLocal.pig
 PigScripts/orderErrorLocal.pig~
 ilc0
 target
-pom.xml
 .externalToolBuilders/
 .project
 src/test/resources/tinyWarc1_0.warc_ngrams.csv.gz/

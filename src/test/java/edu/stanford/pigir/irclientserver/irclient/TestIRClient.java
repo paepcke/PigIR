@@ -63,7 +63,6 @@ public class TestIRClient implements ResultRecipient_I {
 	}
 
 	@Test
-	@Ignore
 	public void testScriptInvocationLocalhostServer() throws IOException, InterruptedException {
 		FileUtils.deleteQuietly(new File(resultFile));
 		String origServerURI = IRServConf.IR_SERVER;
@@ -96,7 +95,6 @@ public class TestIRClient implements ResultRecipient_I {
 	}
 
 	@Test
-	@Ignore
 	public void testBadExecType() throws IOException, InterruptedException {
 		FileUtils.deleteQuietly(new File(resultFile));
 		String origServerURI = IRServConf.IR_SERVER;
@@ -119,7 +117,6 @@ public class TestIRClient implements ResultRecipient_I {
 	}
 
 	@Test
-	@Ignore
 	public void testResultPushing() throws InterruptedException {
 		FileUtils.deleteQuietly(new File(resultFile));
 		String origServerURI = IRServConf.IR_SERVER;
@@ -149,7 +146,6 @@ public class TestIRClient implements ResultRecipient_I {
 	}
 	
 	@Test
-	@Ignore
 	public void testResultQueuing() throws InterruptedException{
 		FileUtils.deleteQuietly(new File(resultFile));
 		String origServerURI = IRServConf.IR_SERVER;
@@ -187,7 +183,6 @@ public class TestIRClient implements ResultRecipient_I {
 	}
 
 	@Test
-	@Ignore
 	public void testResultCustomQueuing() throws InterruptedException{
 		FileUtils.deleteQuietly(new File(resultFile));
 		String origServerURI = IRServConf.IR_SERVER;
