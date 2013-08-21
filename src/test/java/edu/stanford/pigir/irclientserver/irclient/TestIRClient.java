@@ -225,10 +225,6 @@ public class TestIRClient implements ResultRecipient_I {
 		}
 	}
 	
-	public void testNgramFrequencies() {
-		
-	}
-	
 	// ------------------------------------ Utility Methods -----------------------
 
 	/**

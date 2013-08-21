@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.UnknownHostException;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Queue;
@@ -57,9 +58,15 @@ public class IRClient extends Thread implements PigService_I {
 	
 	private static IRClient singletonInstance = null;
 	
+	// Mapping of result queue names to queues of JobHandle_Is. 
+	// Must be wrapped in synchronizedMap, to make sendProcessRequesWorker()
+	// and its feeders (sendProcessRequest()) thread safe:
 	private static Map<String, ConcurrentLinkedQueue<JobHandle_I>> resultQueues =
-			new HashMap<String,ConcurrentLinkedQueue<JobHandle_I>>();
-	private static Map<String, ResultRecipient_I> resultListeners = new HashMap<String, ResultRecipient_I>();
+			Collections.synchronizedMap(new HashMap<String,ConcurrentLinkedQueue<JobHandle_I>>());
+	// Mapping of result queue names to callers of sendProcessRequest() methods.
+	// Made thread safe by wrapping in synchronizedMap:
+	private static Map<String, ResultRecipient_I> resultListeners = 
+			Collections.synchronizedMap(new HashMap<String, ResultRecipient_I>());
 	private static Logger log = Logger.getLogger("edu.stanford.pigir.irclientserver.irclient.IRClient");
 	@SuppressWarnings("unused")
 	private HTTPD httpd = null;

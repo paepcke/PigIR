@@ -1,6 +1,3 @@
-/**
- * 
- */
 package edu.stanford.pigir.irclientserver.irclient;
 
 import java.io.File;
@@ -13,6 +10,7 @@ import org.apache.commons.io.FilenameUtils;
 import edu.stanford.pigir.irclientserver.IRPacket.ServiceResponsePacket;
 import edu.stanford.pigir.irclientserver.IRServConf;
 import edu.stanford.pigir.irclientserver.JobHandle_I;
+import edu.stanford.pigir.irclientserver.JobHandle_I.JobStatus;
 
 /**
  * @author paepcke
@@ -30,8 +28,19 @@ public class IRLib {
 
 	// ------------------------  Public  Methods --------------------
 	
+	/**
+	 * Given a WARC file and an ngram arity, generate ngrams from the WARC file.
+	 * The result will be stored in a subdirectory of the WARC file's directory.
+	 * That new subdirectoy will be named <warcFile>_ngrams.csv.gz, and it will
+	 * contain all the constituent 'part-xxxxx.gz' files. If the given WARC file
+	 * is in HDFS, the result will be there as well. If the file is local, so is
+	 * the the result subdirectoy.
+	 * @param warcFile readable WARC file
+	 * @param arity number of words in each ngram
+	 * @return a JobHandle_I, which will contain the status of the job
+	 */
 	public static JobHandle_I warcNgrams(File warcFile, int arity) {
-		File destDir = new File(getDefaultDestName(warcFile.getAbsoluteFile(), "ngrams.csv"));
+		File destDir = new File(FilenameUtils.getFullPath(warcFile.getAbsolutePath()));
 		return warcNgrams(warcFile, 
 						  arity, 
 						  false,  // no stopword removal
@@ -41,6 +50,22 @@ public class IRLib {
 						  );     
 	}
 	
+	/**
+	 * Given a WARC file and an ngram arity, generate ngrams from the WARC file.
+	 * The result will be stored in the given directory under the name
+	 * <warcFile>_ngrams.csv.gz, and it will contain all the constituent 'part-xxxxx.gz' 
+	 * files. If the given WARC file is in HDFS, the result will be there as well. 
+	 * If the file is local, so is the result subdirectoy. Callers may ask for
+	 * stopwords to be removed (see {@link edu.stanford.pigir.pigudf#isStopword stopwords).
+	 * The minimum and maximum length of ngram words can be controlled (default is 2 and 20,
+	 * respectively). Words of length outside this range are discarded.
+	 * @param warcFile readable WARC file
+	 * @param arity number of words in each ngram
+	 * @param minlength minimum length of words to be included in ngrams
+	 * @param maxlength maximum length of words to be included in ngrams
+	 * @param destDir destination directory for result
+	 * @return a JobHandle_I, which will contain the status of the job
+	 */
 	@SuppressWarnings("serial")
 	public static JobHandle_I warcNgrams(File warcFile,
 										 int arity,
@@ -131,6 +156,13 @@ public class IRLib {
 																	 	}});
 		return resp.getJobHandle();
 	}
+
+	public static JobHandle_I waitForResult(JobHandle_I jobHandle, long timeout) {
+		WaitThread waitThread = new WaitThread();
+		waitThread.start(jobHandle, timeout);
+		waitThread.join();
+		return jobHandle;
+	}
 	
 	/**
 	 * Set the Hadoop execution type for upcoming calls. Choices
@@ -139,7 +171,6 @@ public class IRLib {
 	 * are already running. 
 	 * @param newExectype LOCAL or MAPREDUCE
 	 */
-		
 	public static void setExectype(IRServConf.HADOOP_EXECTYPE newExectype) {
 		IRServConf.hadoopExecType = newExectype;
 		if (newExectype == IRServConf.HADOOP_EXECTYPE.LOCAL) 
@@ -149,6 +180,14 @@ public class IRLib {
 	}
 	
 	
+	/**
+	 * Set the root directory for Pig scripts. For default and explanation
+	 * of meaning, see
+	 * {@link  edu.stanford.pigir.irclientserver#IRServConf IRServConf.java}.
+	 * @param dir new directory.
+	 * @return JobHandle_I that reports success.
+	 * @throws IOException
+	 */
 	public static JobHandle_I setScriptRootDir(String dir) throws IOException {
 	
 		Map<String,String> params = new HashMap<String,String>();
@@ -170,10 +209,11 @@ public class IRLib {
 	 * @param newSuffix
 	 * @return the newly constructed result file where Pig script will place result.
 	 */
+	@SuppressWarnings("unused")
 	private static String getDefaultDestName(File warcPath, String newSuffix) {
 		String warcPathStr = warcPath.getAbsolutePath();
 		// Directory of given path:
-		String dir = FilenameUtils.getPath(warcPathStr);
+		String dir = FilenameUtils.getFullPath(warcPathStr);
 		return getDefaultDestName(warcPath, new File(dir), newSuffix);
 	}
 	
@@ -192,10 +232,7 @@ public class IRLib {
 	private static String getDefaultDestName(File warcPath, File destDir, String newSuffix) {
 
 		String warcPathStr = warcPath.getAbsolutePath();
-		String destDirStr  = destDir.getAbsolutePath();
-		
-		// Make really sure the destDir is a dir:
-		String dir = FilenameUtils.getPath(destDirStr);
+		String dir  = destDir.getAbsolutePath();
 		
 		// File name of given path:
 		String fileName = FilenameUtils.getName(warcPathStr);
@@ -203,5 +240,47 @@ public class IRLib {
 		String res = new File(dir, fileName + "_" + newSuffix + ".gz").getAbsolutePath(); 
 		
 		return res;
+	}
+	
+	private static class WaitThread extends Thread {
+		
+		JobHandle_I jobHandle = null;
+		long timeout = -1;
+		
+		public void start(JobHandle_I theJobHandle, long theTimeout) {
+			super.start();
+			jobHandle = theJobHandle;
+			timeout = theTimeout;
+			
+			long startTime = System.currentTimeMillis();
+			while (true) {
+				try {
+					jobHandle = getProgress(jobHandle);
+				} catch (IOException e) {
+					jobHandle.setStatus(JobStatus.FAILED);
+					jobHandle.setMessage(e.getMessage());
+					return;
+				}
+				if ((jobHandle.getStatus() == JobStatus.SUCCEEDED) ||
+					(jobHandle.getStatus() == JobStatus.FAILED)) {
+					return;
+				}
+				try {
+					Thread.sleep(500);
+				} catch (InterruptedException e) {
+					continue;
+				}
+				// If timeout requested, check:
+				if ((timeout > -1) &&
+					(System.currentTimeMillis() - startTime) > timeout) {
+					jobHandle.setStatus(JobStatus.FAILED);
+					jobHandle.setMessage(String.format("Timed out before success or failure progress report was obtained (%.2f secs)", timeout/1000));
+				}
+			}
+		}
+		
+		public void run() {
+			
+		}
 	}
 }

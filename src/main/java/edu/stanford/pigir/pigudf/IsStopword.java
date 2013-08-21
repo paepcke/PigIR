@@ -9,6 +9,9 @@ import org.apache.pig.data.Tuple;
 
 public class IsStopword extends FilterFunc {
 
+	/**
+	 * List of stopwords used throughout PigIR
+	 */
 	@SuppressWarnings("serial")
 	private static final HashMap<String, Boolean> stopwords = new HashMap<String,Boolean>() {
 		{

@@ -75,8 +75,7 @@ public class PigScriptRunner implements PigServiceImpl_I {
 
 	public static Logger log = Logger.getLogger("edu.stanford.pigir.irclientserver.hadoop");	
 
-	private static String DEFAULT_SCRIPT_ROOT_DIR = "src/main/";
-	private static String scriptRootDir = PigScriptRunner.DEFAULT_SCRIPT_ROOT_DIR;
+	private static String scriptRootDir = IRServConf.DEFAULT_SCRIPT_ROOT_DIR;
 	// Map from Pig script names (a.k.a. operators) to
 	// their respective full pathnanmes:
 	static Map<String,String> knownOperators = new HashMap<String,String>();
