@@ -25,6 +25,8 @@
       * FILTER_STOPWORDS  is 1 if ngrams are to be removed if any of their words are stopwords
       * WORD_LEN_MIN      is min length of words in ngrams, or -1 if don't care
       * WORD_LEN_MAX      is max length of words in ngrams, or -1 if don't care
+      * WARC_FILE         location of the WARC file from which to make ngrams
+      * NGRAM_DEST        absolute path of the target ngram file
 */       
 
 -- STORE command for the final output:

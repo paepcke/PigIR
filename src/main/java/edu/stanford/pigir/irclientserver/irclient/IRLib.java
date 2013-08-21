@@ -8,10 +8,11 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.commons.io.FilenameUtils;
+
 import edu.stanford.pigir.irclientserver.IRPacket.ServiceResponsePacket;
 import edu.stanford.pigir.irclientserver.IRServConf;
 import edu.stanford.pigir.irclientserver.JobHandle_I;
-import edu.stanford.pigir.irclientserver.JobHandle_I.JobStatus;
 
 /**
  * @author paepcke
@@ -28,21 +29,16 @@ public class IRLib {
 	}
 
 	// ------------------------  Public  Methods --------------------
-/*                           \t\t\t [{-s | --stopwords}] (default: no stopword removal) \n
-                           \t\t\t [{-i | --minlength}] (default: 2)\n
-                           \t\t\t [{-a | --maxlength}] (default: 20)\n
-                           \t\t\t [{-d | --destdir} <destinationDirectory>] (default: pwd if execmode==local; else '/user/<username>') \n
-                           \t\t\t <warcFilePathOnHDFS> \n
-                           \t\t\t <arity> \n
-*/
 	
 	public static JobHandle_I warcNgrams(File warcFile, int arity) {
+		File destDir = new File(getDefaultDestName(warcFile.getAbsoluteFile(), "ngrams.csv"));
 		return warcNgrams(warcFile, 
 						  arity, 
 						  false,  // no stopword removal
 						  2,      // min word len in ngrams,
-						  20);     // max word len in ngrams
-						  
+						  20,     // max word len in ngrams
+						  destDir    // no destDir spec  
+						  );     
 	}
 	
 	@SuppressWarnings("serial")
@@ -53,21 +49,24 @@ public class IRLib {
 										 int maxLength,
 										 File destDir) {
 		ServiceResponsePacket resp   = null;
-		final String filePath        = warcFile.getAbsolutePath();
+		
+		final String warcPath        = warcFile.getAbsolutePath();
 		final String theArity        = Integer.toString(arity);
 		final String stopwordRemoval = (removeStopwords ? "1" : "0");
 		final String theMinLen       = Integer.toString(minLength);
 		final String theMaxLen       = Integer.toString(maxLength);
-		final String destDirPath     = destDir.getAbsolutePath();
+		final String ngramDest       = getDefaultDestName(warcFile, destDir, "ngrams.csv");
 		try {
 			resp = irclient.sendProcessRequest("warcNgrams", 
 												new HashMap<String,String>(){{
-													            put("NGRAM_FILE", filePath);
+															    put("WARC_FILE", warcPath);
 																put("ARITY", theArity);
 																put("FILTER_STOPWORDS", stopwordRemoval);
 																put("WORD_LEN_MIN", theMinLen);
 																put("WORD_LEN_MAX", theMaxLen);
-															 	put("DEST_DIR", destDirPath);
+															 	put("NGRAM_DEST", ngramDest);
+															 	put("USER_CONTRIB", "target/classes");
+															 	put("PIGIR_HOME", ".");
 															 	put("exectype", IRLib.exectype);
 															 	}});
 		} catch (IOException e) {
@@ -157,50 +156,52 @@ public class IRLib {
 		return irclient.sendProcessRequest("setPigScriptRoot", params).getJobHandle();
 	}
 	
-	
-	/**
-	 * Busy-wait for a job to either succeed, fail, or be declared dead.
-	 * NOTE: consider using getResultQueue().**** instead
-	 * @param jobHandle
-	 * @return
-	 * @throws IOException 
-	 */
-	public JobHandle_I awaitResultPolling(JobHandle_I jobHandle) throws IOException {
-		return awaitResultPolling(jobHandle, IRServConf.STARTUP_TIME_MAX);
-	}
-	
-	/**
-	 * Busy-wait for a job to either succeed, fail, or be declared dead.
-	 * NOTE: consider using getResultQueue().**** instead
-	 * @param jobHandle
-	 * @param timeout
-	 * @return
-	 * @throws IOException 
-	 */
-	public JobHandle_I awaitResultPolling(JobHandle_I jobHandle, long timeout) throws IOException {
-		long startWaitTime = System.currentTimeMillis();
-		while (true) {
-			if ((System.currentTimeMillis() - startWaitTime) > timeout) {
-				jobHandle.setStatus(JobStatus.FAILED);
-				jobHandle.setMessage(String.format("Job '%s' did not either fail or succeed within timeout of %d seconds", jobHandle.getJobName(),timeout/1000));
-				return jobHandle;
-			}
-			jobHandle = getProgress(jobHandle);
-			if (jobHandle.getStatus() == JobStatus.SUCCEEDED)
-				return jobHandle;
-			if (jobHandle.getStatus() == JobStatus.FAILED) {
-				String errMsg = String.format("Job '%s' returned failure (error code %d): %s", jobHandle.getJobName(), jobHandle.getErrorCode(), jobHandle.getMessage());
-				jobHandle.setMessage(errMsg);
-				return jobHandle;
-			}
-			try {
-				Thread.sleep(1000);
-			} catch (InterruptedException e) {
-				continue;
-			}
-		}
-	}
-	
 	// --------------------------------  P R I V A T E -------------------
 
+	/**
+	 * From the source file name for an IRService operation, construct
+	 * the target file path into which the Pig script of the operation will
+	 * put the results. Ex:
+	 *       getDefaultDestName("/user/john/blue.txt.gz", "ngrams.csv")
+	 *    returns:
+	 *              /user/john/blue.txt.gz_ngrams.csv.gz  
+	 * @param warcPath
+	 * @param destDir
+	 * @param newSuffix
+	 * @return the newly constructed result file where Pig script will place result.
+	 */
+	private static String getDefaultDestName(File warcPath, String newSuffix) {
+		String warcPathStr = warcPath.getAbsolutePath();
+		// Directory of given path:
+		String dir = FilenameUtils.getPath(warcPathStr);
+		return getDefaultDestName(warcPath, new File(dir), newSuffix);
+	}
+	
+	/**
+	 * From the source file name for an IRService operation, construct
+	 * the target file path into which the Pig script of the operation will
+	 * put the results. Ex:
+	 *       getDefaultDestName("/user/john/blue.txt.gz", "/user/john/results", "ngrams.csv")
+	 *    returns:
+	 *              /user/john/results/blue.txt.gz_ngrams.csv.gz  
+	 * @param warcPath
+	 * @param destDir
+	 * @param newSuffix
+	 * @return the newly constructed result file where Pig script will place result.
+	 */
+	private static String getDefaultDestName(File warcPath, File destDir, String newSuffix) {
+
+		String warcPathStr = warcPath.getAbsolutePath();
+		String destDirStr  = destDir.getAbsolutePath();
+		
+		// Make really sure the destDir is a dir:
+		String dir = FilenameUtils.getPath(destDirStr);
+		
+		// File name of given path:
+		String fileName = FilenameUtils.getName(warcPathStr);
+		
+		String res = new File(dir, fileName + "_" + newSuffix + ".gz").getAbsolutePath(); 
+		
+		return res;
+	}
 }

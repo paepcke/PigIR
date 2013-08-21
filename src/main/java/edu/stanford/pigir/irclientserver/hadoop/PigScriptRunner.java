@@ -7,8 +7,9 @@ package edu.stanford.pigir.irclientserver.hadoop;
  * @author paepcke
  *    
  *    TODO: Ensure that very old PigProgressListener instances are eventually removed from PigScriptRunner.progressListeners.
- *    TODO: Unit test for NotImplemented return
  *    TODO: Provide cross-network access to the IRServer's Iterator method.
+ *    TODO: ngrams are put deep under ~/EclipseWorkspaces/PigIR/home/... 
+ *    TODO: continue in TestIRLib: hang on result queue.
  */
 
 import java.io.File;
