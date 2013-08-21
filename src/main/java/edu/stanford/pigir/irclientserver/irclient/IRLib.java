@@ -28,6 +28,10 @@ public class IRLib {
 
 	// ------------------------  Public  Methods --------------------
 	
+	/*---------------------------
+	* warcNgrams()
+	*-------------------*/
+	
 	/**
 	 * Given a WARC file and an ngram arity, generate ngrams from the WARC file.
 	 * The result will be stored in a subdirectory of the WARC file's directory.
@@ -101,6 +105,10 @@ public class IRLib {
 		return resp.getJobHandle();
 	}
 
+	/*---------------------------
+	* ngramFrequencies()
+	*-------------------*/
+	
 	/**
 	 *   Given an ngram file or a directory of compressed
 	 *   or non-compressed ngram files, produce a new file
@@ -146,6 +154,11 @@ public class IRLib {
 		}
 		return resp.getJobHandle();
 	}
+
+	
+	/*---------------------------
+	* getProgress()
+	*-------------------*/
 	
 	@SuppressWarnings("serial")
 	public static JobHandle_I getProgress(JobHandle_I jobHandle) throws IOException {
@@ -157,12 +170,47 @@ public class IRLib {
 		return resp.getJobHandle();
 	}
 
+	
+	/*---------------------------
+	* waitForResult()
+	*-------------------*/
+	
+	/**
+	 * Safely wait for a job to finish. The wait occurrs in 
+	 * a newly created thread, making waitForResult() reentrant.
+	 * If given timeout is zero, wait forever. Else return after at
+	 * most timeout milliseconds. This method calls getProgress()
+	 * every half second. The method will return when getProgress() indicates
+	 * either success or failure.
+	 * @param jobHandle the JobHandle_I returned from the job submission method.
+	 * @param timeout milliseconds to wait before concluding that something is wrong. Zero: wait forever.
+	 * @return the given JobHandle_I with status and message updated.
+	 */
 	public static JobHandle_I waitForResult(JobHandle_I jobHandle, long timeout) {
 		WaitThread waitThread = new WaitThread();
-		waitThread.start(jobHandle, timeout);
-		waitThread.join();
+		waitThread.start(jobHandle);
+		try {
+			waitThread.join(timeout);
+			if (waitThread.isAlive()) {
+				// timed out:
+				waitThread.stopThread();
+				jobHandle.setStatus(JobStatus.FAILED);
+				jobHandle.setMessage(String.format("Getting progress timed out for job %s",
+											       jobHandle.getJobName()));
+				return jobHandle;
+			}
+		}  catch (InterruptedException e) {
+			jobHandle.setStatus(JobStatus.FAILED);
+			jobHandle.setMessage(String.format("Wait for progress on job %s interrupted: %s",
+											   jobHandle.getJobName(), e.getMessage()));
+		}
 		return jobHandle;
 	}
+
+	
+	/*---------------------------
+	* setExectype()
+	*-------------------*/
 	
 	/**
 	 * Set the Hadoop execution type for upcoming calls. Choices
@@ -180,6 +228,9 @@ public class IRLib {
 	}
 	
 	
+	/*---------------------------
+	* setScriptRootDir()
+	*-------------------*/
 	/**
 	 * Set the root directory for Pig scripts. For default and explanation
 	 * of meaning, see
@@ -242,18 +293,20 @@ public class IRLib {
 		return res;
 	}
 	
+	//---------------------  Wait Thread ------------------------
+	
 	private static class WaitThread extends Thread {
 		
 		JobHandle_I jobHandle = null;
-		long timeout = -1;
+		boolean keepRunning = true;
 		
-		public void start(JobHandle_I theJobHandle, long theTimeout) {
+		public void start(JobHandle_I theJobHandle) {
 			super.start();
 			jobHandle = theJobHandle;
-			timeout = theTimeout;
+		}
 			
-			long startTime = System.currentTimeMillis();
-			while (true) {
+		public void run() {
+			while (keepRunning) {
 				try {
 					jobHandle = getProgress(jobHandle);
 				} catch (IOException e) {
@@ -270,17 +323,11 @@ public class IRLib {
 				} catch (InterruptedException e) {
 					continue;
 				}
-				// If timeout requested, check:
-				if ((timeout > -1) &&
-					(System.currentTimeMillis() - startTime) > timeout) {
-					jobHandle.setStatus(JobStatus.FAILED);
-					jobHandle.setMessage(String.format("Timed out before success or failure progress report was obtained (%.2f secs)", timeout/1000));
-				}
 			}
 		}
 		
-		public void run() {
-			
+		public void stopThread() {
+			keepRunning = false;
 		}
 	}
 }

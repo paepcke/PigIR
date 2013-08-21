@@ -445,7 +445,8 @@ public class PigScriptRunner implements PigServiceImpl_I {
 
 		public void run() {
 			// Note: PigRunner does not throw exceptions, just logs them,
-			// and notes them in its returned PigStats. The Exception catch
+			// and notes them in its returned PigStats. We have not control
+			// over this behavior. The Exception catch
 			// is never invoked. But the try is still useful for its finally
 			// clause.
 			try {
