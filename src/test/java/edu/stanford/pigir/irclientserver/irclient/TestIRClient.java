@@ -13,7 +13,6 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import org.apache.commons.io.FileUtils;
 import org.apache.pig.PigRunner;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import edu.stanford.pigir.irclientserver.ClientSideReqID_I.Disposition;
